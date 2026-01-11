@@ -1,0 +1,15 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Surf Tracker DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "surf_tracker",
+      "Username": "postgres",
+      "Password": "postgres",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpassfile"
+    }
+  }
+}
