@@ -11,5 +11,6 @@ class SurfSession(Base):
     duration_minutes = Column(Integer)
     wave_quality = Column(Integer)
     # user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer)
     notes = Column(String)
     created_at = Column(Date)
