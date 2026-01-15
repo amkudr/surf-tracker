@@ -25,7 +25,9 @@ async def create_surf_session_endpoint(
     return created
 
 
-@router.get("/", response_model=list[SurfSessionResponse])
+@router.get(
+    "/", status_code=status.HTTP_200_OK, response_model=list[SurfSessionResponse]
+)
 async def list_surf_sessions_endpoint(user_id: int, db: db_dependency):
     sessions = await list_surf_sessions(db, user_id)
 
