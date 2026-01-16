@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import User
-from app.schemas import UserCreate 
+from app.schemas.user import UserCreate 
 from app.core.security import hash_password
 
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
