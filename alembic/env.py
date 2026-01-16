@@ -4,9 +4,13 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from app.models.base import Base
-import app.models
 
+import os, sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from app.models.base import Base
+from app.models.users import User
+from app.models.surf_session import SurfSession 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
