@@ -50,14 +50,15 @@ async def update_surf_session(
     db: AsyncSession,
     surf_session_id: int,
     user_id: int,
-    update_data: dict,
+    update_data,
 ) -> Optional[SurfSession]:
 
     surf_session_model = await get_surf_session(db, surf_session_id, user_id)
     if surf_session_model is None:
         return None
 
-    for field, value in update_data.dict(exclude_unset=True).items():
+    update_dict = update_data.model_dump(exclude_unset=True)
+    for field, value in update_dict.items():
         setattr(surf_session_model, field, value)
 
     await db.commit()

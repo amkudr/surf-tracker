@@ -73,4 +73,4 @@ async def delete_surf_session_endpoint(
 ):
     result = await delete_surf_session(db, surf_session_id, user_id)
     if result is False:
-        raise HTTPException(status_code=500, detail="Error creating session")
+        raise HTTPException(status_code=404, detail="Surf session not found")
