@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status, Path
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.database import AsyncSession, db_dependency
 from app.schemas.surf_session import SurfSessionCreate, SurfSessionResponse
 from app.services.surf_session_service import (
@@ -9,6 +9,7 @@ from app.services.surf_session_service import (
     update_surf_session,
     delete_surf_session,
 )
+from app.api.v1.auth import CurrentUser
 
 router = APIRouter(prefix="/surf_session", tags=["surf_session"])
 
@@ -17,9 +18,9 @@ router = APIRouter(prefix="/surf_session", tags=["surf_session"])
     "/", status_code=status.HTTP_201_CREATED, response_model=SurfSessionResponse
 )
 async def create_surf_session_endpoint(
-    user_id: int, db: db_dependency, surf_session_create: SurfSessionCreate
+    current_user: CurrentUser, db: db_dependency,  surf_session_create: SurfSessionCreate
 ) -> SurfSessionResponse:
-    created = await create_surf_session(db, surf_session_create.model_dump(), user_id)
+    created = await create_surf_session(db, surf_session_create.model_dump(), current_user.id)
     if created is None:
         raise HTTPException(status_code=500, detail="Error creating session")
     return created
@@ -28,11 +29,8 @@ async def create_surf_session_endpoint(
 @router.get(
     "/", status_code=status.HTTP_200_OK, response_model=list[SurfSessionResponse]
 )
-async def list_surf_sessions_endpoint(user_id: int, db: db_dependency):
-    sessions = await list_surf_sessions(db, user_id)
-
-    if len(sessions) == 0:
-        raise HTTPException(status_code=404, detail="No surf sessions found")
+async def list_surf_sessions_endpoint(current_user: CurrentUser, db: db_dependency):
+    sessions = await list_surf_sessions(db, current_user.id)
     return sessions
 
 
@@ -42,9 +40,9 @@ async def list_surf_sessions_endpoint(user_id: int, db: db_dependency):
     response_model=SurfSessionResponse,
 )
 async def get_surf_session_endpoint(
-    surf_session_id: int, db: db_dependency, user_id: int
+    surf_session_id: int, db: db_dependency, current_user: CurrentUser
 ):
-    session = await get_surf_session(db, surf_session_id, user_id)
+    session = await get_surf_session(db, surf_session_id, current_user.id)
     if session is None:
         raise HTTPException(status_code=404, detail="No surf sessions found")
     return session
@@ -57,11 +55,11 @@ async def get_surf_session_endpoint(
 )
 async def update_surf_session_endpoint(
     surf_session_id: int,
-    user_id: int,
+    current_user: CurrentUser,
     db: db_dependency,
     update_data: SurfSessionCreate,
 ):
-    session = await update_surf_session(db, surf_session_id, user_id, update_data)
+    session = await update_surf_session(db, surf_session_id, current_user.id, update_data)
     if session is None:
         raise HTTPException(status_code=404, detail="No surf sessions found")
     return session
@@ -69,8 +67,8 @@ async def update_surf_session_endpoint(
 
 @router.delete("/{surf_session_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_surf_session_endpoint(
-    surf_session_id: int, db: db_dependency, user_id: int
+    surf_session_id: int, db: db_dependency, current_user: CurrentUser
 ):
-    result = await delete_surf_session(db, surf_session_id, user_id)
+    result = await delete_surf_session(db, surf_session_id, current_user.id)
     if result is False:
         raise HTTPException(status_code=404, detail="Surf session not found")

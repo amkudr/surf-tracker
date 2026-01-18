@@ -4,6 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import SurfSession
+from app.schemas.surf_session import SurfSessionCreate
 
 
 async def create_surf_session(
@@ -50,7 +51,7 @@ async def update_surf_session(
     db: AsyncSession,
     surf_session_id: int,
     user_id: int,
-    update_data,
+    update_data: SurfSessionCreate,
 ) -> Optional[SurfSession]:
 
     surf_session_model = await get_surf_session(db, surf_session_id, user_id)

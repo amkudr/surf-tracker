@@ -5,6 +5,7 @@ from collections.abc import Generator
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy import text
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
@@ -12,6 +13,7 @@ from app.main import app
 from app.database import get_db
 from app.models import Base
 from app.models.surf_session import SurfSession
+from app.models.users import User
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -43,7 +45,7 @@ async def test_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-def client(test_db: AsyncSession) -> Generator[TestClient, None, None]:  # Типизация
+def client(test_db: AsyncSession) -> Generator[TestClient, None, None]: 
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield test_db
 

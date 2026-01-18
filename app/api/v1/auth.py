@@ -1,12 +1,13 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Path
 from app.database import AsyncSession, db_dependency
-from app.schemas.user import UserCreate, UserLogin, UserResponse, TokenResponse
+from app.schemas.user import UserCreate, UserResponse, TokenResponse
 from app.services.user_service import create_user, get_user_by_email, get_user
 from app.core.security import create_access_token
 from app.core.security import verify_password
 from app.models import User
 from app.core.security import verify_token
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -18,11 +19,11 @@ async def register_user_endpoint(db: db_dependency, user_create: UserCreate) -> 
     return user
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=TokenResponse)
-async def login_user_endpoint(db: db_dependency, user_login: UserLogin) -> TokenResponse:
-    user = await get_user_by_email(db, user_login.email)
+async def login_user_endpoint(db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()] ) -> TokenResponse:
+    user = await get_user_by_email(db,form_data.username)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not verify_password(user_login.password, user.hashed_password):
+    if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     access_token = create_access_token({"sub": user.id})
     return TokenResponse(access_token=access_token, token_type="Bearer")
@@ -48,3 +49,6 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+CurrentUser = Annotated[User, Depends(get_current_user)]
