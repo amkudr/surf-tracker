@@ -46,6 +46,14 @@ API documentation: http://localhost:8000/docs
 pytest
 ```
 
+## Authentication
+
+The API uses Bearer token authentication. Register a user, login to get a token, then use the token in the `Authorization` header for protected endpoints.
+
+- `POST /auth/register` - Register a new user
+- `POST /auth/login` - Login and get Bearer token
+- `GET /auth/me` - Get current user (requires Bearer token)
+
 ## API Endpoints
 
 - `POST /surf_session/` - Create a session
