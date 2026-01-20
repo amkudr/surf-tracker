@@ -1,13 +1,11 @@
 from datetime import date
 from typing import AsyncGenerator
-from collections.abc import Generator
 
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy import text
 from sqlalchemy.pool import StaticPool
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.database import get_db
@@ -44,19 +42,20 @@ async def test_db() -> AsyncGenerator[AsyncSession, None]:
             await trans.rollback()
 
 
-@pytest.fixture
-def client(test_db: AsyncSession) -> Generator[TestClient, None, None]: 
+@pytest_asyncio.fixture
+async def client(test_db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
         yield test_db
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
     app.dependency_overrides.clear()
 
 
 @pytest_asyncio.fixture
-async def test_surf_sessions(test_db: AsyncSession):
+async def test_surf_sessions(test_db: AsyncSession, test_user):
 
     surf_sessions = [
         SurfSession(
@@ -65,7 +64,7 @@ async def test_surf_sessions(test_db: AsyncSession):
             duration_minutes=120,
             wave_quality=8,
             notes="It was really very good good",
-            user_id=1,
+            user_id=test_user.id,
         ),
         SurfSession(
             spot="Main Point",
@@ -73,10 +72,45 @@ async def test_surf_sessions(test_db: AsyncSession):
             duration_minutes=40,
             wave_quality=3,
             notes="It was really not very good good",
-            user_id=1,
+            user_id=test_user.id,
         ),
     ]
 
     for surf_session in surf_sessions:
         test_db.add(surf_session)
     await test_db.commit()
+
+
+@pytest_asyncio.fixture
+async def test_user(test_db: AsyncSession):
+    from app.core.security import hash_password
+    
+    user = User(
+        email="test@example.com",
+        hashed_password=hash_password("testpassword123")
+    )
+    
+    test_db.add(user)
+    await test_db.commit()
+    await test_db.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def auth_token(client: AsyncClient, test_user):
+    """Fixture that performs login and returns access token"""
+    login_data = {
+        "username": "test@example.com",
+        "password": "testpassword123"
+    }
+    response = await client.post("/auth/login", data=login_data)
+    assert response.status_code == 200
+    token_data = response.json()
+    return token_data["access_token"]
+
+
+@pytest_asyncio.fixture
+async def authenticated_client(client: AsyncClient, auth_token):
+    """Fixture that returns a client with authentication headers set"""
+    client.headers.update({"Authorization": f"Bearer {auth_token}"})
+    return client
