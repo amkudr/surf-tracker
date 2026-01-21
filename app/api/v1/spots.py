@@ -1,13 +1,9 @@
 from fastapi import APIRouter, HTTPException, status
 from app.database import db_dependency
 from app.schemas.spot import SpotCreate, SpotResponse
-from app.services.spot_service import (
-    create_spot,
-    get_spot_by_id,
-    list_spots,
-)
+from app.services.spot_service import create_spot, get_spot_by_id, list_spots
 
-router = APIRouter(prefix="/spots", tags=["spots"])
+router = APIRouter(prefix="/spot", tags=["spot"])
 
 
 @router.get(
