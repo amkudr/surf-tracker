@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app import models
 from app.database import async_engine
-from app.api.v1 import auth, surf_sessions
+from app.api.v1 import auth, surf_sessions, spots
 
 
 async def init_models():
@@ -22,3 +22,4 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth.router)
 app.include_router(surf_sessions.router)
+app.include_router(spots.router)
