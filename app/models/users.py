@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -11,3 +12,5 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+
+    surf_sessions = relationship("SurfSession", back_populates="user")

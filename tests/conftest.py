@@ -10,6 +10,7 @@ from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.database import get_db
 from app.models import Base
+from app.models.spot import Spot
 from app.models.surf_session import SurfSession
 from app.models.users import User
 
@@ -57,9 +58,19 @@ async def client(test_db: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 @pytest_asyncio.fixture
 async def test_surf_sessions(test_db: AsyncSession, test_user):
 
+    spots = [
+        Spot(name="Fisherman", latitude=None, longitude=None, difficulty=None),
+        Spot(name="Main Point", latitude=None, longitude=None, difficulty=None),
+    ]
+    for spot in spots:
+        test_db.add(spot)
+    await test_db.commit()
+    for spot in spots:
+        await test_db.refresh(spot)
+
     surf_sessions = [
         SurfSession(
-            spot="Fisherman",
+            spot_id=spots[0].id,
             date=date(2026, 1, 13),
             duration_minutes=120,
             wave_quality=8,
@@ -67,7 +78,7 @@ async def test_surf_sessions(test_db: AsyncSession, test_user):
             user_id=test_user.id,
         ),
         SurfSession(
-            spot="Main Point",
+            spot_id=spots[1].id,
             date=date(2026, 1, 5),
             duration_minutes=40,
             wave_quality=3,

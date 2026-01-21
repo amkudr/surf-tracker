@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 
 class SurfSessionBase(BaseModel):
-    spot: str = Field(min_length=3, max_length=15)
+    spot_id: int = Field(gt=0)
     date: date
     duration_minutes: int = Field(gt=0, lt=1000)
     wave_quality: int = Field(gt=0, lt=11)

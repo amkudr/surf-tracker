@@ -5,7 +5,7 @@ from unittest.mock import ANY
 @pytest.mark.asyncio
 async def test_create_session(authenticated_client):
     surf_session = {
-        "spot": "Plantations",
+        "spot_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 120,
         "wave_quality": 8,
@@ -18,7 +18,7 @@ async def test_create_session(authenticated_client):
 @pytest.mark.asyncio
 async def test_create_session_without_auth(client):
     surf_session = {
-        "spot": "Plantations",
+        "spot_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 120,
         "wave_quality": 8,
@@ -34,7 +34,7 @@ async def test_get_session(authenticated_client, test_surf_sessions):
 
     assert response.status_code == 200
     assert response.json() == {
-        "spot": "Fisherman",
+        "spot_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 120,
         "wave_quality": 8,
@@ -50,14 +50,14 @@ async def test_list_surf_session(authenticated_client, test_surf_sessions):
     response = await authenticated_client.get(f"/surf_session/")
     data = response.json()
     assert len(data) == 2
-    assert data[0]["spot"] == "Fisherman"
-    assert data[1]["spot"] == "Main Point"
+    assert data[0]["spot_id"] == 1
+    assert data[1]["spot_id"] == 2
 
 
 @pytest.mark.asyncio
 async def test_update_session(authenticated_client, test_surf_sessions):
     update_data = {
-        "spot": "Fisherman",
+        "spot_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 70,
         "wave_quality": 8,
@@ -65,7 +65,7 @@ async def test_update_session(authenticated_client, test_surf_sessions):
     }
     response = await authenticated_client.put(f"/surf_session/{1}", json=update_data)
     assert response.json() == {
-        "spot": "Fisherman",
+        "spot_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 70,
         "wave_quality": 8,
