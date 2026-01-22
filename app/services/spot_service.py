@@ -38,9 +38,9 @@ async def create_spot(
 
 async def get_spot_by_id(
     db: AsyncSession,
-    location_id: int,
+    spot_id: int,
 ) -> Optional[Spot]:
-    result = await db.execute(select(Spot).where(Spot.id == location_id))
+    result = await db.execute(select(Spot).where(Spot.id == spot_id))
     return result.scalars().first()
 
 
