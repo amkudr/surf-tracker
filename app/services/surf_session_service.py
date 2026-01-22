@@ -5,10 +5,10 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.external_apis import OpenMeteoClient
 from app.models import SurfSession
 from app.schemas.surf_session import SurfSessionCreate
 from app.services.spot_service import get_spot_by_id, get_spot_by_name
+from app.services.weather_service import get_surf_report
 
 
 async def _resolve_spot_name_to_id(db: AsyncSession, session_data: dict) -> None:
@@ -40,9 +40,8 @@ async def create_surf_session(
     if spot_id is not None:
         spot = await get_spot_by_id(db, spot_id)
         if spot and spot.latitude is not None and spot.longitude is not None:
-            client = OpenMeteoClient()
             try:
-                surf_report = await client.get_surf_report(
+                surf_report = await get_surf_report(
                     lat=spot.latitude,
                     lon=spot.longitude,
                     target_date=surf_session_data['date'],
@@ -59,8 +58,6 @@ async def create_surf_session(
             except Exception:
                 # Graceful degradation: continue without weather data if API fails
                 pass
-            finally:
-                await client.aclose()
 
     surf_session_model = SurfSession(
         **surf_session_data,
