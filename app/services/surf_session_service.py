@@ -1,9 +1,11 @@
 from typing import Optional
 
-from fastapi import HTTPException, status
+from fastapi import status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+from app.core.exceptions import BusinessLogicError, ExternalAPIError
 
 from app.models import SurfSession
 from app.schemas.surf_session import SurfSessionCreate
@@ -19,10 +21,7 @@ async def _resolve_spot_name_to_id(db: AsyncSession, session_data: dict) -> None
 
     spot = await get_spot_by_name(db, spot_name)
     if spot is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Spot '{spot_name}' not found"
-        )
+        raise BusinessLogicError(f"Spot '{spot_name}' not found", code="SPOT_NOT_FOUND", status_code=status.HTTP_404_NOT_FOUND)
     session_data['spot_id'] = spot.id
 
 
@@ -55,7 +54,7 @@ async def create_surf_session(
                         'wind_speed_kmh': surf_report.get('wind_speed'),
                         'wind_dir': surf_report.get('wind_direction'),
                     }
-            except Exception:
+            except ExternalAPIError:
                 # Graceful degradation: continue without weather data if API fails
                 pass
 

@@ -1,6 +1,26 @@
 # Surf Tracker
 
-FastAPI-based API for tracking surf sessions.
+A comprehensive surf session tracking application built with FastAPI that helps surfers log their sessions, track conditions, and discover new surf spots.
+
+## Features
+
+- **Session Tracking**: Record surf sessions with detailed information including date, duration, wave conditions, and difficulty ratings
+- **Weather Integration**: Automatic weather data retrieval using Open-Meteo API for accurate session conditions
+- **Spot Management**: Create and manage surf locations with GPS coordinates
+- **User Authentication**: Secure user registration and login with JWT tokens
+- **RESTful API**: Complete REST API with automatic OpenAPI documentation
+- **Database**: PostgreSQL with Alembic migrations for data persistence
+- **Testing**: Comprehensive test suite with pytest
+
+## Technology Stack
+
+- **Backend**: FastAPI (Python async web framework)
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Authentication**: JWT tokens with password hashing
+- **Weather API**: Open-Meteo for real-time weather data
+- **Migrations**: Alembic for database schema management
+- **Testing**: pytest with async support
+- **Containerization**: Docker & Docker Compose for easy deployment
 
 ## Requirements
 
@@ -56,8 +76,14 @@ The API uses Bearer token authentication. Register a user, login to get a token,
 
 ## API Endpoints
 
+### Surf Sessions
 - `POST /surf_session/` - Create a session
 - `GET /surf_session/` - List sessions
 - `GET /surf_session/{id}` - Get a session
 - `PUT /surf_session/{id}` - Update a session
 - `DELETE /surf_session/{id}` - Delete a session
+
+### Surf Spots
+- `POST /spot/` - Create a spot
+- `GET /spot/` - List spots
+- `GET /spot/{id}` - Get a spot

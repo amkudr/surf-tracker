@@ -1,3 +1,7 @@
 __pycache__/
 .cursor
+.todo/
 demo*
+
+# Frontend
+frontend

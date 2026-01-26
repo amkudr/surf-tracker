@@ -84,8 +84,6 @@ async def get_surf_report(
         }
 
         return result
-    except Exception:
-        return None
     finally:
         if owns_client:
             await client.aclose()

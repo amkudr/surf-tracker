@@ -5,6 +5,7 @@ import pytest
 
 from app.external_apis.openmeteo import OpenMeteoClient
 from app.services.weather_service import get_surf_report
+from app.core.exceptions import ExternalAPIError
 
 
 @pytest.mark.asyncio
@@ -74,9 +75,8 @@ async def test_get_surf_report_returns_none_on_api_error():
         transport=transport, base_url="https://marine-api.open-meteo.com"
     ) as client:
         om_client = OpenMeteoClient(http_client=client)
-        result = await get_surf_report(10, 20, client=om_client)
-
-    assert result is None
+        with pytest.raises(ExternalAPIError):
+            await get_surf_report(10, 20, client=om_client)
 
 
 @pytest.mark.asyncio
@@ -136,9 +136,8 @@ async def test_weather_api_failure():
 
     async with httpx.AsyncClient(transport=transport) as client:
         om_client = OpenMeteoClient(http_client=client)
-        result = await get_surf_report(40.7128, -74.0060, date(2024, 1, 1), client=om_client)
-
-    assert result is None
+        with pytest.raises(ExternalAPIError):
+            await get_surf_report(40.7128, -74.0060, date(2024, 1, 1), client=om_client)
 
 
 @pytest.mark.asyncio
@@ -152,6 +151,5 @@ async def test_weather_fallback_to_none():
 
     async with httpx.AsyncClient(transport=transport) as client:
         om_client = OpenMeteoClient(http_client=client)
-        result = await get_surf_report(51.5074, -0.1278, date(2024, 1, 1), client=om_client)
-
-    assert result is None
+        with pytest.raises(ExternalAPIError):
+            await get_surf_report(51.5074, -0.1278, date(2024, 1, 1), client=om_client)

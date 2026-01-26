@@ -1,8 +1,8 @@
 from typing import Optional
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.exceptions import BusinessLogicError
 
 from app.models import User
 from app.schemas.user import UserCreate 
@@ -21,10 +21,7 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
+        raise BusinessLogicError("Email already registered", code="EMAIL_EXISTS")
         
     await db.refresh(user_model)
     return user_model

@@ -1,8 +1,8 @@
 from typing import Optional
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.exceptions import BusinessLogicError
 
 from app.models.spot import Spot
 
@@ -27,10 +27,7 @@ async def create_spot(
         await db.commit()
     except IntegrityError:
         await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Spot name already exists"
-        )
+        raise BusinessLogicError("Spot name already exists", code="SPOT_NAME_EXISTS")
     
     await db.refresh(spot_model)
     return spot_model

@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional
 
 import httpx
 
+from app.core.exceptions import ExternalAPIError
+
 
 class OpenMeteoClient:
     """
@@ -50,9 +52,12 @@ class OpenMeteoClient:
             "end_date": end_date.isoformat(),
             "timezone": timezone,
         }
-        resp = await self._http.get(url, params=params)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            resp = await self._http.get(url, params=params)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError as e:
+            raise ExternalAPIError(f"OpenMeteo Marine API error: {str(e)}", original_error=e)
 
     async def get_weather_hourly_forecast(
         self,
@@ -76,7 +81,10 @@ class OpenMeteoClient:
             "end_date": end_date.isoformat(),
             "timezone": timezone,
         }
-        resp = await self._http.get(url, params=params)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            resp = await self._http.get(url, params=params)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPError as e:
+            raise ExternalAPIError(f"OpenMeteo Weather API error: {str(e)}", original_error=e)
 

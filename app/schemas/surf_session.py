@@ -33,3 +33,8 @@ class SurfSessionResponse(SurfSessionBase):
     user_id: int
     created_at: datetime
     spot: SpotResponse
+    wave_height_m: float | None = None
+    wave_period: float | None = None
+    wave_dir: int | None = None
+    wind_speed_kmh: float | None = None
+    wind_dir: int | None = None
