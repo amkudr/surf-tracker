@@ -15,6 +15,7 @@ class SurfSessionBase(BaseModel):
 class SurfSessionCreate(SurfSessionBase):
     spot_id: int | None = Field(None, gt=0)
     spot_name: str | None = Field(None)
+    surfboard_id: int | None = Field(None, gt=0)
 
     @model_validator(mode='after')
     def validate_spot_reference(self):
@@ -30,6 +31,7 @@ class SurfSessionResponse(SurfSessionBase):
     
     id: int
     spot_id: int
+    surfboard_id: int
     user_id: int
     created_at: datetime
     spot: SpotResponse

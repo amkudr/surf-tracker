@@ -14,3 +14,4 @@ class User(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     surf_sessions = relationship("SurfSession", back_populates="user")
+    surfboards = relationship("Surfboard", back_populates="owner")

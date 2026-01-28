@@ -9,6 +9,7 @@ class SurfSession(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     spot_id = Column(Integer, ForeignKey("spots.id"), nullable=True)
+    surfboard_id = Column(Integer, ForeignKey("surfboards.id"), nullable=True)
     date = Column(Date)
     duration_minutes = Column(Integer)
     wave_quality = Column(Integer)
@@ -25,4 +26,5 @@ class SurfSession(Base):
 
     # Relationships
     spot = relationship("Spot")
+    surfboard = relationship("Surfboard", back_populates="surf_sessions")
     user = relationship("User", back_populates="surf_sessions")

@@ -12,6 +12,7 @@ from app.models.base import Base
 from app.models.users import User
 from app.models.surf_session import SurfSession 
 from app.models.spot import Spot
+from app.models.surfboard import Surfboard
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config

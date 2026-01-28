@@ -5,7 +5,7 @@ from app.core.exceptions import BusinessLogicError, ExternalAPIError, Validation
 from app.schemas.error import ErrorResponse
 from app import models
 from app.database import async_engine
-from app.api.v1 import auth, surf_sessions, spots
+from app.api.v1 import auth, surf_sessions, spots, surfboards
 
 
 async def init_models():
@@ -48,3 +48,4 @@ async def validation_error_handler(request: Request, exc: ValidationError):
 app.include_router(auth.router)
 app.include_router(surf_sessions.router)
 app.include_router(spots.router)
+app.include_router(surfboards.router)
