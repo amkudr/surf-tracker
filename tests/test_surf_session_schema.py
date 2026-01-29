@@ -115,6 +115,7 @@ def test_surf_session_response_includes_spot():
     data = {
         "id": 1,
         "spot_id": 1,
+        "surfboard_id": None,
         "user_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 120,
@@ -142,6 +143,7 @@ def test_surf_session_response_includes_spot_id():
     data = {
         "id": 1,
         "spot_id": 1,
+        "surfboard_id": None,
         "user_id": 1,
         "date": "2026-01-13",
         "duration_minutes": 120,

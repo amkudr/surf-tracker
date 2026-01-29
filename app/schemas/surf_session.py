@@ -31,7 +31,7 @@ class SurfSessionResponse(SurfSessionBase):
     
     id: int
     spot_id: int
-    surfboard_id: int
+    surfboard_id: int | None = None
     user_id: int
     created_at: datetime
     spot: SpotResponse

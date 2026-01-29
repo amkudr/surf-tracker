@@ -35,6 +35,8 @@ async def test_get_session(authenticated_client, test_surf_sessions):
     assert response.status_code == 200
     data = response.json()
     assert data["spot_id"] == 1
+    assert "surfboard_id" in data
+    assert data["surfboard_id"] is None
     assert data["date"] == "2026-01-13"
     assert data["duration_minutes"] == 120
     assert data["wave_quality"] == 8
@@ -54,6 +56,8 @@ async def test_list_surf_session(authenticated_client, test_surf_sessions):
     assert len(data) == 2
     assert data[0]["spot_id"] == 1
     assert data[1]["spot_id"] == 2
+    assert "surfboard_id" in data[0]
+    assert "surfboard_id" in data[1]
     assert "spot" in data[0]
     assert "spot" in data[1]
     assert data[0]["spot"]["id"] == 1
