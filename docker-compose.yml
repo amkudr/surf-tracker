@@ -1,4 +1,28 @@
 services:
+  web:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/surf_tracker
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+
+  worker:
+    build: .
+    command: python -m app.worker
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/surf_tracker
+      SCHEDULE_HOUR_MORNING: 6
+      SCHEDULE_HOUR_NIGHT: 23
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:16-alpine
     ports:

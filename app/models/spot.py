@@ -9,7 +9,6 @@ from .base import Base
 
 
 class SpotDifficulty(IntEnum):
-    """Difficulty levels for a surf spot (0=beginner, 3=expert)."""
 
     beginner = 0
     intermediate = 1
@@ -18,16 +17,6 @@ class SpotDifficulty(IntEnum):
 
 
 class Spot(Base):
-    """
-    Surf spot reference data.
-
-    Fields:
-    - name: unique spot name (e.g., "Tangalle")
-    - latitude/longitude: coordinates in degrees (nullable to support backfill from existing session strings)
-    - difficulty: optional array of adjacent difficulty integers (0=beginner, 1=intermediate, 2=advanced, 3=expert)
-                 validated at DB level via CHECK constraint to ensure 1-3 adjacent values
-    """
-
     __tablename__ = "spots"
 
     id = Column(Integer, primary_key=True)
@@ -36,7 +25,6 @@ class Spot(Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
 
-    # Array of integers: 0=beginner, 1=intermediate, 2=advanced, 3=expert
-    # Postgres: INTEGER[] array
-    # SQLite (tests): fallback to JSON array of integers
     difficulty = Column(ARRAY(Integer).with_variant(JSON, "sqlite"), nullable=True)
+    
+    surf_forecast_name = Column(String, nullable=True)

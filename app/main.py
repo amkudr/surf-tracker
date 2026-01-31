@@ -6,6 +6,7 @@ from app.schemas.error import ErrorResponse
 from app import models
 from app.database import async_engine
 from app.api.v1 import auth, surf_sessions, spots, surfboards
+from app.routers import weather
 
 
 async def init_models():
@@ -49,3 +50,4 @@ app.include_router(auth.router)
 app.include_router(surf_sessions.router)
 app.include_router(spots.router)
 app.include_router(surfboards.router)
+app.include_router(weather.router)
