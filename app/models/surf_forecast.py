@@ -22,6 +22,7 @@ class SurfForecast(Base):
     wind_speed = Column(Float, nullable=True)
     wind_direction = Column(String, nullable=True)
     rating = Column(Integer, nullable=True)
+    updated_at = Column(DateTime, nullable=True, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     spot = relationship("Spot")
 

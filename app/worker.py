@@ -60,7 +60,8 @@ async def scrape_all_spots():
                     energy=data["energy"],
                     wind_speed=data["wind_speed"],
                     wind_direction=data["wind_direction"],
-                    rating=data["rating"]
+                    rating=data["rating"],
+                    updated_at=datetime.utcnow()
                 )
                 
                 do_update_stmt = stmt.on_conflict_do_update(
@@ -72,7 +73,8 @@ async def scrape_all_spots():
                         "energy": stmt.excluded.energy,
                         "wind_speed": stmt.excluded.wind_speed,
                         "wind_direction": stmt.excluded.wind_direction,
-                        "rating": stmt.excluded.rating
+                        "rating": stmt.excluded.rating,
+                        "updated_at": datetime.utcnow()
                     }
                 )
                 
