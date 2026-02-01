@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date
-from typing import Any, Dict, Optional
+from datetime import date, datetime
+from typing import Any, Dict, Optional, Union
 
 from app.external_apis import OpenMeteoClient
 
@@ -10,7 +10,7 @@ from app.external_apis import OpenMeteoClient
 async def get_surf_report(
     lat: float,
     lon: float,
-    target_date: Optional[date] = None,
+    target_date: Optional[Union[date, datetime]] = None,
     timezone: str = "GMT",
     client: Optional[OpenMeteoClient] = None,
 ) -> Optional[Dict[str, Any]]:
@@ -23,7 +23,7 @@ async def get_surf_report(
     Args:
         lat: Latitude
         lon: Longitude
-        target_date: Target date (defaults to today if not provided)
+        target_date: Target date or datetime (defaults to today if not provided)
         timezone: Timezone string (default: "GMT")
         client: Optional OpenMeteoClient instance for dependency injection (useful for testing).
                 If not provided, a new client will be created.
@@ -41,6 +41,8 @@ async def get_surf_report(
     if target_date is None:
         from datetime import date as date_class
         target_date = date_class.today()
+    elif hasattr(target_date, "date"):
+        target_date = target_date.date()
 
     try:
         # Make parallel calls to both APIs

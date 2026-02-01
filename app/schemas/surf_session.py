@@ -1,12 +1,12 @@
 from typing import Optional
 from pydantic import BaseModel, Field, model_validator, ConfigDict
-from datetime import date, datetime
+from datetime import datetime
 
 from app.schemas.spot import SpotResponse
 
 
 class SurfSessionBase(BaseModel):
-    date: date
+    datetime: datetime
     duration_minutes: int = Field(gt=0, lt=1000)
     wave_quality: int = Field(gt=0, lt=11)
     notes: str | None = Field(default=None, max_length=500)

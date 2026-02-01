@@ -6,7 +6,7 @@ from unittest.mock import ANY
 async def test_create_session(authenticated_client, test_spots):
     surf_session = {
         "spot_id": 1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
         "notes": "It was really very good good",
@@ -19,7 +19,7 @@ async def test_create_session(authenticated_client, test_spots):
 async def test_create_session_without_auth(client):
     surf_session = {
         "spot_id": 1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
         "notes": "It was really very good good",
@@ -37,7 +37,7 @@ async def test_get_session(authenticated_client, test_surf_sessions):
     assert data["spot_id"] == 1
     assert "surfboard_id" in data
     assert data["surfboard_id"] is None
-    assert data["date"] == "2026-01-13"
+    assert data["datetime"] == "2026-01-13T08:00:00"
     assert data["duration_minutes"] == 120
     assert data["wave_quality"] == 8
     assert data["notes"] == "It was really very good good"
@@ -70,7 +70,7 @@ async def test_list_surf_session(authenticated_client, test_surf_sessions):
 async def test_update_session(authenticated_client, test_surf_sessions):
     update_data = {
         "spot_id": 1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 70,
         "wave_quality": 8,
         "notes": "It was really very good good",
@@ -78,7 +78,7 @@ async def test_update_session(authenticated_client, test_surf_sessions):
     response = await authenticated_client.put(f"/surf_session/{1}", json=update_data)
     data = response.json()
     assert data["spot_id"] == 1
-    assert data["date"] == "2026-01-13"
+    assert data["datetime"] == "2026-01-13T08:00:00"
     assert data["duration_minutes"] == 70
     assert data["wave_quality"] == 8
     assert data["notes"] == "It was really very good good"
@@ -111,7 +111,7 @@ async def test_create_session_with_spot_name(authenticated_client, test_surf_ses
     """Test creating a session using spot_name instead of spot_id."""
     surf_session = {
         "spot_name": "Fisherman",
-        "date": "2026-01-14",
+        "datetime": "2026-01-14T08:00:00",
         "duration_minutes": 90,
         "wave_quality": 7,
         "notes": "Created with spot name",
@@ -122,7 +122,7 @@ async def test_create_session_with_spot_name(authenticated_client, test_surf_ses
     assert data["spot_id"] == 1
     assert "spot" in data
     assert data["spot"]["name"] == "Fisherman"
-    assert data["date"] == "2026-01-14"
+    assert data["datetime"] == "2026-01-14T08:00:00"
     assert data["duration_minutes"] == 90
 
 
@@ -131,7 +131,7 @@ async def test_create_session_with_nonexistent_spot_name(authenticated_client):
     """Test creating a session with non-existent spot_name returns 404."""
     surf_session = {
         "spot_name": "Nonexistent Spot",
-        "date": "2026-01-14",
+        "datetime": "2026-01-14T08:00:00",
         "duration_minutes": 90,
         "wave_quality": 7,
     }
@@ -145,7 +145,7 @@ async def test_update_session_with_spot_name(authenticated_client, test_surf_ses
     """Test updating a session using spot_name instead of spot_id."""
     update_data = {
         "spot_name": "Main Point",
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 80,
         "wave_quality": 9,
         "notes": "Updated with spot name",

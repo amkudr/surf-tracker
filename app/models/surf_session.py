@@ -1,5 +1,5 @@
 from .base import Base
-from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
 
@@ -10,7 +10,7 @@ class SurfSession(Base):
     id = Column(Integer, primary_key=True, index=True)
     spot_id = Column(Integer, ForeignKey("spots.id"), nullable=True)
     surfboard_id = Column(Integer, ForeignKey("surfboards.id"), nullable=True)
-    date = Column(Date)
+    datetime = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer)
     wave_quality = Column(Integer)
     user_id = Column(Integer, ForeignKey("users.id"))

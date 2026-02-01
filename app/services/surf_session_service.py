@@ -43,7 +43,7 @@ async def create_surf_session(
                 surf_report = await get_surf_report(
                     lat=spot.latitude,
                     lon=spot.longitude,
-                    target_date=surf_session_data['date'],
+                    target_date=surf_session_data["datetime"],
                     timezone="Asia/Colombo"
                 )
                 if surf_report:

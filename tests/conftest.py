@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from typing import AsyncGenerator
 
 import pytest
@@ -74,7 +74,7 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
     surf_sessions = [
         SurfSession(
             spot_id=test_spots[0].id,
-            date=date(2026, 1, 13),
+            datetime=datetime(2026, 1, 13, 8, 0, 0),
             duration_minutes=120,
             wave_quality=8,
             notes="It was really very good good",
@@ -82,7 +82,7 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
         ),
         SurfSession(
             spot_id=test_spots[1].id,
-            date=date(2026, 1, 5),
+            datetime=datetime(2026, 1, 5, 8, 0, 0),
             duration_minutes=40,
             wave_quality=3,
             notes="It was really not very good good",

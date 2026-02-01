@@ -1,5 +1,5 @@
 import pytest
-from datetime import date
+from datetime import datetime
 from pydantic import ValidationError
 
 from app.schemas.surf_session import SurfSessionCreate, SurfSessionResponse
@@ -10,7 +10,7 @@ def test_surf_session_create_with_spot_id_valid():
     """Test SurfSessionCreate with valid spot_id."""
     data = {
         "spot_id": 1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
         "notes": "Great session",
@@ -18,7 +18,7 @@ def test_surf_session_create_with_spot_id_valid():
     session = SurfSessionCreate(**data)
     assert session.spot_id == 1
     assert session.spot_name is None
-    assert session.date == date(2026, 1, 13)
+    assert session.datetime == datetime(2026, 1, 13, 8, 0, 0)
     assert session.duration_minutes == 120
     assert session.wave_quality == 8
     assert session.notes == "Great session"
@@ -28,7 +28,7 @@ def test_surf_session_create_with_spot_name_valid():
     """Test SurfSessionCreate with valid spot_name."""
     data = {
         "spot_name": "Fisherman",
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
         "notes": "Great session",
@@ -36,7 +36,7 @@ def test_surf_session_create_with_spot_name_valid():
     session = SurfSessionCreate(**data)
     assert session.spot_id is None
     assert session.spot_name == "Fisherman"
-    assert session.date == date(2026, 1, 13)
+    assert session.datetime == datetime(2026, 1, 13, 8, 0, 0)
 
 
 def test_surf_session_create_with_both_spot_id_and_name_invalid():
@@ -44,7 +44,7 @@ def test_surf_session_create_with_both_spot_id_and_name_invalid():
     data = {
         "spot_id": 1,
         "spot_name": "Fisherman",
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
     }
@@ -60,7 +60,7 @@ def test_surf_session_create_with_both_spot_id_and_name_invalid():
 def test_surf_session_create_with_neither_spot_id_nor_name_invalid():
     """Test SurfSessionCreate fails when neither spot_id nor spot_name is provided."""
     data = {
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
     }
@@ -77,7 +77,7 @@ def test_surf_session_create_with_invalid_spot_id_zero():
     """Test SurfSessionCreate fails when spot_id is 0."""
     data = {
         "spot_id": 0,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
     }
@@ -92,7 +92,7 @@ def test_surf_session_create_with_invalid_spot_id_negative():
     """Test SurfSessionCreate fails when spot_id is negative."""
     data = {
         "spot_id": -1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
     }
@@ -117,7 +117,7 @@ def test_surf_session_response_includes_spot():
         "spot_id": 1,
         "surfboard_id": None,
         "user_id": 1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
         "notes": "Great session",
@@ -145,7 +145,7 @@ def test_surf_session_response_includes_spot_id():
         "spot_id": 1,
         "surfboard_id": None,
         "user_id": 1,
-        "date": "2026-01-13",
+        "datetime": "2026-01-13T08:00:00",
         "duration_minutes": 120,
         "wave_quality": 8,
         "notes": None,
