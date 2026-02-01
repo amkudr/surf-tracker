@@ -1,9 +1,13 @@
 import asyncio
+import logging
 import re
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from playwright.async_api import async_playwright, Browser, Page
 from bs4 import BeautifulSoup
+
+logger = logging.getLogger(__name__)
+
 
 class SurfScraper:
     def __init__(self):
@@ -146,10 +150,14 @@ class SurfScraper:
                 height_val = self._safe_float(height_text)
                 
                 if formatted_time and height_val is not None:
-                    # Construct full datetime
                     full_time_str = f"{date_text} {formatted_time}"
                     timestamp = self._parse_datetime(full_time_str)
-                    
+                    if timestamp is None:
+                        logger.info(
+                            "Skipping tide row: unparseable timestamp (tide_type=%s, full_time_str=%r, column_index=%s)",
+                            tide_type, full_time_str, i,
+                        )
+                        continue
                     extracted_tides.append({
                         "timestamp": timestamp,
                         "height": height_val,
@@ -172,6 +180,12 @@ class SurfScraper:
                 time_24h = self._convert_to_24h(time_text)
                 full_time_str = f"{date_text} {time_24h}"
                 timestamp = self._parse_datetime(full_time_str)
+                if timestamp is None:
+                    logger.info(
+                        "Skipping forecast row: unparseable timestamp (column_index=%s, full_time_str=%r)",
+                        i, full_time_str,
+                    )
+                    continue
 
                 # 6b. Extract Wave Height and Direction
                 wh_text = wh_cells[i].get_text(strip=True) if i < len(wh_cells) else ""
@@ -239,8 +253,8 @@ class SurfScraper:
         stripped = text.strip()
         return float(stripped) if re.fullmatch(r"-?\d+(?:\.\d+)?", stripped) else None
 
-    def _parse_datetime(self, time_str: str) -> datetime:
-        # Logic to parse "Day Date Time" into a python datetime object
+    def _parse_datetime(self, time_str: str) -> Optional[datetime]:
+        """Parse 'DayName DayNum HH:MM' (e.g. 'Sun 1 08:00') to datetime. Returns None on failure."""
         try:
             parts = time_str.split()
             day_num = int(parts[1])
@@ -251,14 +265,17 @@ class SurfScraper:
             current_date = datetime.now()
             month = current_date.month
             year = current_date.year
-            
-            # Simple logic to handle month rollover (e.g. processing 2nd of next month on 30th of current)
+
             if day_num < current_date.day and (current_date.day - day_num) > 15:
-                 month += 1
-                 if month > 12:
-                     month = 1
-                     year += 1
-            
+                month += 1
+                if month > 12:
+                    month = 1
+                    year += 1
+
             return datetime(year, month, day_num, hour, minute)
-        except Exception:
-            return datetime.now()
+        except Exception as e:
+            logger.info(
+                "Timestamp parse failed, row will be skipped (time_str=%r, error=%s)",
+                time_str, e,
+            )
+            return None
