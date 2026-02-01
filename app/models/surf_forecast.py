@@ -16,8 +16,11 @@ class SurfForecast(Base):
     timestamp = Column(DateTime, nullable=False, index=True)
     
     wave_height = Column(Float, nullable=True)
+    wave_direction = Column(String, nullable=True)
     period = Column(Float, nullable=True)
+    energy = Column(Float, nullable=True)
     wind_speed = Column(Float, nullable=True)
+    wind_direction = Column(String, nullable=True)
     rating = Column(Integer, nullable=True)
 
     spot = relationship("Spot")

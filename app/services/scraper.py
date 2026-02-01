@@ -82,6 +82,7 @@ class SurfScraper:
 
         wh_row = get_row_by_data_name("wave-height")
         period_row = get_row_by_data_name("periods")
+        energy_row = get_row_by_data_name("energy-maxenergy")
         wind_row = get_row_by_data_name("wind")
         high_tide_row = get_row_by_data_name("high-tide")
         low_tide_row = get_row_by_data_name("low-tide")
@@ -93,6 +94,7 @@ class SurfScraper:
         time_cells = time_row.find_all("td")
         wh_cells = wh_row.find_all("td")
         period_cells = period_row.find_all("td") if period_row else []
+        energy_cells = energy_row.find_all("td") if energy_row else []
         wind_cells = wind_row.find_all("td")
         rating_cells = rating_row.find_all("td") if rating_row else []
         tide_high_cells = high_tide_row.find_all("td") if high_tide_row else []
@@ -116,39 +118,12 @@ class SurfScraper:
         # 5. Extract Tides Logic
         def build_tide_list(tide_cells, tide_type: str) -> List[Dict[str, Any]]:
             tides = []
-            # Tides are aligned with day/date columns, but the cells might span or be per-day.
-            # In surf-forecast, tide row usually has fewer cells or consistent with times?
-            # Actually, `tide_cells` length might match `time_cells` or `day_cells`?
-            # From demo_forecast.py, it seems we iterate `enumerat(tide_cells)`
-            # And use `col_date_map`? But `col_date_map` is per-hour-column.
-            # Tide cells often span differently?
-            # Wait, `get_row_by_data_name` returns `tr`. `find_all('td')` returns cells.
-            # In demo_forecast.py:
-            #  for i, cell in enumerate(tide_cells):
-            #      date_text = col_date_map[i] if i < len(col_date_map) else ...
-            # This implies tide_cells are aligned with the columns (1-to-1 or close).
-            # But tide cells usually have text "06:00PM" or similar inside them.
-            
-            # The demo logic iterates `enumerate(tide_cells)`. 
-            # If tide_cells count is small (per day?), then col_date_map[i] might be wrong if i exceeds map length?
-            # But wait, `col_date_map` length is `num_cols` (hours).
-            # If tide row has cells per hour, great. If per day, then i is small.
-            # Let's assume the demo logic holds: tide cells correspond to the layout.
-            
             extracted_tides = []
             for i, cell in enumerate(tide_cells):
                 raw = cell.get_text(" ", strip=True)
                 if not raw:
                     continue
                 
-                # Check mapping. If tide cells are fewer (e.g. 1 per day), we need the date from matching index?
-                # Actually, surf-forecast table is usually fully expanded hourly columns.
-                # So if tide event is at 6am, it shows in the 6am column? 
-                # OR it shows text "06:00AM" in a cell that spans?
-                # The demo logic seems to assume cell index 'i' maps to 'col_date_map[i]'.
-                # AND it regexes for time inside the cell text.
-                
-                # Let's trust the demo logic pattern.
                 date_text = col_date_map[i] if i < len(col_date_map) else "Unknown"
                 
                 time_match = re.search(r"(\d{1,2}:\d{2}\s*[AP]M)", raw)
@@ -198,29 +173,44 @@ class SurfScraper:
                 full_time_str = f"{date_text} {time_24h}"
                 timestamp = self._parse_datetime(full_time_str)
 
-                # 6b. Extract Wave Height
+                # 6b. Extract Wave Height and Direction
                 wh_text = wh_cells[i].get_text(strip=True) if i < len(wh_cells) else ""
                 wh_match = re.search(r"(\d+(\.\d+)?)", wh_text)
-                wave_height = float(wh_match.group(1)) if wh_match else None
+                wave_height = None
+                wave_direction = ""
+                if wh_match:
+                    wave_height = float(wh_match.group(1))
+                    wave_direction = wh_text.replace(wh_match.group(1), "").strip()
 
                 # 6c. Extract Period
                 period_text = period_cells[i].get_text(strip=True) if i < len(period_cells) else ""
                 period_value = self._safe_float(period_text)
 
-                # 6d. Extract Wind Speed
+                # 6d. Extract Energy
+                energy_text = energy_cells[i].get_text(strip=True) if i < len(energy_cells) else ""
+                energy_value = self._safe_float(energy_text)
+
+                # 6e. Extract Wind Speed and Direction
                 wind_text = wind_cells[i].get_text(strip=True) if i < len(wind_cells) else ""
                 wind_match = re.search(r"(\d+)", wind_text)
-                wind_speed = float(wind_match.group(1)) if wind_match else None
+                wind_speed = None
+                wind_direction = ""
+                if wind_match:
+                    wind_speed = float(wind_match.group(1))
+                    wind_direction = wind_text.replace(wind_match.group(1), "").strip()
 
-                # 6e. Extract Rating
+                # 6f. Extract Rating
                 rating_text = rating_cells[i].get_text(strip=True) if i < len(rating_cells) else ""
                 rating = int(rating_text) if rating_text.isdigit() else 0
 
                 forecasts.append({
                     "timestamp": timestamp,
                     "wave_height": wave_height,
+                    "wave_direction": wave_direction,
                     "period": period_value,
+                    "energy": energy_value,
                     "wind_speed": wind_speed,
+                    "wind_direction": wind_direction,
                     "rating": rating
                 })
             except Exception as e:

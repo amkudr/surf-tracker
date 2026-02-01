@@ -55,8 +55,11 @@ async def scrape_all_spots():
                     spot_id=spot.id,
                     timestamp=data["timestamp"],
                     wave_height=data["wave_height"],
+                    wave_direction=data["wave_direction"],
                     period=data["period"],
+                    energy=data["energy"],
                     wind_speed=data["wind_speed"],
+                    wind_direction=data["wind_direction"],
                     rating=data["rating"]
                 )
                 
@@ -64,8 +67,11 @@ async def scrape_all_spots():
                     constraint='uq_surf_forecast_spot_timestamp',
                     set_={
                         "wave_height": stmt.excluded.wave_height,
+                        "wave_direction": stmt.excluded.wave_direction,
                         "period": stmt.excluded.period,
+                        "energy": stmt.excluded.energy,
                         "wind_speed": stmt.excluded.wind_speed,
+                        "wind_direction": stmt.excluded.wind_direction,
                         "rating": stmt.excluded.rating
                     }
                 )
