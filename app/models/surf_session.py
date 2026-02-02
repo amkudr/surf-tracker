@@ -17,12 +17,14 @@ class SurfSession(Base):
     notes = Column(String)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     
-    # Weather data from OpenMeteo API
+    # Weather from SurfForecast (averaged over session window)
     wave_height_m = Column(Float, nullable=True)
     wave_period = Column(Float, nullable=True)
-    wave_dir = Column(Integer, nullable=True)
+    wave_dir = Column(String, nullable=True)
     wind_speed_kmh = Column(Float, nullable=True)
-    wind_dir = Column(Integer, nullable=True)
+    wind_dir = Column(String, nullable=True)
+    energy = Column(Float, nullable=True)
+    rating = Column(Integer, nullable=True)
 
     # Relationships
     spot = relationship("Spot")

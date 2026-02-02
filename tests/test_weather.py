@@ -1,155 +1,95 @@
-from datetime import date
+from datetime import datetime, timedelta
 
-import httpx
 import pytest
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.external_apis.openmeteo import OpenMeteoClient
-from app.services.weather_service import get_surf_report
-from app.core.exceptions import ExternalAPIError
+from app.models.surf_forecast import SurfForecast
+from app.services.session_forecast_service import get_weather_for_session
 
 
-@pytest.mark.asyncio
-async def test_get_surf_report_success_returns_normalized_dict():
-    async def handler(request: httpx.Request) -> httpx.Response:
-        assert float(request.url.params["latitude"]) == 10.0
-        assert float(request.url.params["longitude"]) == 20.0
-        assert request.url.params["start_date"] == "2024-01-01"
-        assert request.url.params["end_date"] == "2024-01-01"
-
-        if request.url.host == "marine-api.open-meteo.com" and request.url.path == "/v1/marine":
-            hourly = request.url.params["hourly"].split(",")
-            assert {"wave_height", "wave_direction", "wave_period"}.issubset(hourly)
-
-            return httpx.Response(
-                200,
-                json={
-                    "hourly": {
-                        "time": ["2024-01-01T00:00"],
-                        "wave_height": [1.2],
-                        "wave_period": [7.5],
-                        "wave_direction": [210],
-                    }
-                },
-            )
-        elif request.url.host == "api.open-meteo.com" and request.url.path == "/v1/forecast":
-            hourly = request.url.params["hourly"].split(",")
-            assert {"wind_speed_10m", "wind_direction_10m"}.issubset(hourly)
-
-            return httpx.Response(
-                200,
-                json={
-                    "hourly": {
-                        "time": ["2024-01-01T00:00"],
-                        "wind_speed_10m": [5.5],
-                        "wind_direction_10m": [190],
-                    }
-                },
-            )
-        else:
-            raise ValueError(f"Unexpected URL: {request.url}")
-
-    transport = httpx.MockTransport(handler)
-
-    async with httpx.AsyncClient(transport=transport) as client:
-        om_client = OpenMeteoClient(http_client=client)
-        result = await get_surf_report(10, 20, date(2024, 1, 1), client=om_client)
-
-    assert result == {
-        "time": "2024-01-01T00:00",
-        "wave_height": 1.2,
-        "wave_period": 7.5,
-        "wave_direction": 210,
-        "wind_speed": 5.5,
-        "wind_direction": 190,
-    }
+@pytest_asyncio.fixture
+async def test_surf_forecasts(test_db: AsyncSession, test_spots):
+    """Seed SurfForecast rows for spot 1: one in window, one outside."""
+    base = datetime(2026, 1, 13, 8, 0, 0)
+    rows = [
+        SurfForecast(
+            spot_id=test_spots[0].id,
+            timestamp=base + timedelta(hours=0),
+            wave_height=1.2,
+            period=7.0,
+            wave_direction="NE",
+            wind_speed=10.0,
+            wind_direction="S",
+        ),
+        SurfForecast(
+            spot_id=test_spots[0].id,
+            timestamp=base + timedelta(hours=1),
+            wave_height=1.4,
+            period=8.0,
+            wave_direction="NE",
+            wind_speed=12.0,
+            wind_direction="SW",
+        ),
+    ]
+    for r in rows:
+        test_db.add(r)
+    await test_db.commit()
+    return rows
 
 
 @pytest.mark.asyncio
-async def test_get_surf_report_returns_none_on_api_error():
-    async def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(500, json={"message": "server error"})
-
-    transport = httpx.MockTransport(handler)
-
-    async with httpx.AsyncClient(
-        transport=transport, base_url="https://marine-api.open-meteo.com"
-    ) as client:
-        om_client = OpenMeteoClient(http_client=client)
-        with pytest.raises(ExternalAPIError):
-            await get_surf_report(10, 20, client=om_client)
-
-
-@pytest.mark.asyncio
-async def test_get_weather_by_coordinates():
-    """Test successful weather retrieval by coordinates with mocked API response."""
-    async def handler(request: httpx.Request) -> httpx.Response:
-        if request.url.host == "marine-api.open-meteo.com":
-            return httpx.Response(
-                200,
-                json={
-                    "hourly": {
-                        "time": ["2024-01-01T12:00"],
-                        "wave_height": [2.1],
-                        "wave_period": [8.2],
-                        "wave_direction": [225],
-                    }
-                },
-            )
-        elif request.url.host == "api.open-meteo.com":
-            return httpx.Response(
-                200,
-                json={
-                    "hourly": {
-                        "time": ["2024-01-01T12:00"],
-                        "wind_speed_10m": [12.5],
-                        "wind_direction_10m": [180],
-                    }
-                },
-            )
-        else:
-            raise ValueError(f"Unexpected URL: {request.url}")
-
-    transport = httpx.MockTransport(handler)
-
-    async with httpx.AsyncClient(transport=transport) as client:
-        om_client = OpenMeteoClient(http_client=client)
-        result = await get_surf_report(37.7749, -122.4194, date(2024, 1, 1), client=om_client)
-
-    assert result == {
-        "time": "2024-01-01T12:00",
-        "wave_height": 2.1,
-        "wave_period": 8.2,
-        "wave_direction": 225,
-        "wind_speed": 12.5,
-        "wind_direction": 180,
-    }
+async def test_get_weather_for_session_in_window(
+    test_db: AsyncSession, test_spots, test_surf_forecasts
+):
+    """Forecasts in session window are averaged; direction is most common."""
+    start = datetime(2026, 1, 13, 8, 0, 0)
+    result = await get_weather_for_session(
+        test_db, test_spots[0].id, start, duration_minutes=120
+    )
+    assert result is not None
+    assert result["wave_height_m"] == pytest.approx(1.3)
+    assert result["wave_period"] == pytest.approx(7.5)
+    assert result["wind_speed_kmh"] == pytest.approx(11.0)
+    assert result["wave_dir"] == "NE"
+    assert result["wind_dir"] in ("S", "SW")
 
 
 @pytest.mark.asyncio
-async def test_weather_api_failure():
-    """Test weather API failure due to timeout."""
-    async def handler(request: httpx.Request) -> httpx.Response:
-        # Simulate timeout by raising an exception
-        raise httpx.TimeoutException("Request timed out")
-
-    transport = httpx.MockTransport(handler)
-
-    async with httpx.AsyncClient(transport=transport) as client:
-        om_client = OpenMeteoClient(http_client=client)
-        with pytest.raises(ExternalAPIError):
-            await get_surf_report(40.7128, -74.0060, date(2024, 1, 1), client=om_client)
+async def test_get_weather_for_session_no_forecasts_returns_none(
+    test_db: AsyncSession, test_spots
+):
+    """No SurfForecast rows for spot yields None."""
+    start = datetime(2026, 1, 13, 8, 0, 0)
+    result = await get_weather_for_session(
+        test_db, test_spots[0].id, start, duration_minutes=60
+    )
+    assert result is None
 
 
 @pytest.mark.asyncio
-async def test_weather_fallback_to_none():
-    """Test that weather service falls back to None when API is completely down."""
-    async def handler(request: httpx.Request) -> httpx.Response:
-        # Simulate complete API failure
-        raise httpx.ConnectError("Connection failed")
+async def test_get_weather_for_session_closest_too_far_returns_none(
+    test_db: AsyncSession, test_spots, test_surf_forecasts
+):
+    """Closest forecast beyond max_offset_hours yields None."""
+    start = datetime(2026, 1, 20, 12, 0, 0)
+    result = await get_weather_for_session(
+        test_db, test_spots[0].id, start, duration_minutes=60, max_offset_hours=1
+    )
+    assert result is None
 
-    transport = httpx.MockTransport(handler)
 
-    async with httpx.AsyncClient(transport=transport) as client:
-        om_client = OpenMeteoClient(http_client=client)
-        with pytest.raises(ExternalAPIError):
-            await get_surf_report(51.5074, -0.1278, date(2024, 1, 1), client=om_client)
+@pytest.mark.asyncio
+async def test_get_weather_for_session_closest_within_offset(
+    test_db: AsyncSession, test_spots, test_surf_forecasts
+):
+    """Single closest forecast within max_offset_hours is used."""
+    start = datetime(2026, 1, 13, 14, 0, 0)
+    result = await get_weather_for_session(
+        test_db, test_spots[0].id, start, duration_minutes=60, max_offset_hours=8
+    )
+    assert result is not None
+    assert result["wave_height_m"] == 1.4
+    assert result["wave_period"] == 8.0
+    assert result["wave_dir"] == "NE"
+    assert result["wind_dir"] == "SW"

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import AsyncGenerator
 
 import pytest
@@ -9,8 +9,10 @@ from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 from app.database import get_db
+
 from app.models import Base
 from app.models.spot import Spot
+from app.models.surf_forecast import SurfForecast
 from app.models.surf_session import SurfSession
 from app.models.users import User
 
@@ -93,6 +95,25 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
     for surf_session in surf_sessions:
         test_db.add(surf_session)
     await test_db.commit()
+
+
+@pytest_asyncio.fixture
+async def test_surf_forecasts(test_db: AsyncSession, test_spots):
+    """SurfForecast rows for spot 1 within a known window (2026-01-13 08:00 and 09:00)."""
+    base = datetime(2026, 1, 13, 8, 0, 0)
+    for i in range(2):
+        f = SurfForecast(
+            spot_id=test_spots[0].id,
+            timestamp=base + timedelta(hours=i),
+            wave_height=1.2 + i * 0.2,
+            period=7.0 + i,
+            wave_direction="NE",
+            wind_speed=10.0 + i * 2.0,
+            wind_direction="S" if i == 0 else "SW",
+        )
+        test_db.add(f)
+    await test_db.commit()
+    return test_spots[0].id
 
 
 @pytest_asyncio.fixture

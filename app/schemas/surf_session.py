@@ -1,5 +1,5 @@
-from typing import Optional
-from pydantic import BaseModel, Field, model_validator, ConfigDict
+from typing import Optional, Union
+from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 from datetime import datetime
 
 from app.schemas.spot import SpotResponse
@@ -28,7 +28,7 @@ class SurfSessionCreate(SurfSessionBase):
 
 class SurfSessionResponse(SurfSessionBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     spot_id: int
     surfboard_id: int | None = None
@@ -37,6 +37,15 @@ class SurfSessionResponse(SurfSessionBase):
     spot: SpotResponse
     wave_height_m: float | None = None
     wave_period: float | None = None
-    wave_dir: int | None = None
+    wave_dir: str | None = None
     wind_speed_kmh: float | None = None
-    wind_dir: int | None = None
+    wind_dir: str | None = None
+    energy: float | None = None
+    rating: int | None = None
+
+    @field_validator("wave_dir", "wind_dir", mode="before")
+    @classmethod
+    def coerce_dir_to_str(cls, v: Union[int, str, None]) -> Optional[str]:
+        if v is None:
+            return None
+        return str(v).strip() or None

@@ -25,9 +25,22 @@ async def create_spot(
     
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
-        raise BusinessLogicError("Spot name already exists", code="SPOT_NAME_EXISTS")
+        error_msg = str(e.orig) if hasattr(e, 'orig') else str(e)
+        
+        # Check if it's a unique constraint violation on name
+        if 'ix_spots_name' in error_msg or 'unique constraint' in error_msg.lower():
+            raise BusinessLogicError("Spot name already exists", code="SPOT_NAME_EXISTS")
+        # Check if it's the difficulty constraint violation
+        elif 'ck_spots_difficulty_adjacent' in error_msg:
+            raise BusinessLogicError(
+                "Difficulty levels must be consecutive and in ascending order (e.g., Beginner-Intermediate or Intermediate-Advanced-Expert)",
+                code="INVALID_DIFFICULTY_SEQUENCE"
+            )
+        else:
+            # Generic integrity error
+            raise BusinessLogicError("Failed to create spot due to data validation error", code="DATA_INTEGRITY_ERROR")
     
     await db.refresh(spot_model)
     return spot_model

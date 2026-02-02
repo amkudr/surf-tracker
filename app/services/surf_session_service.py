@@ -5,12 +5,12 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import BusinessLogicError, ExternalAPIError
+from app.core.exceptions import BusinessLogicError
 
 from app.models import SurfSession
 from app.schemas.surf_session import SurfSessionCreate
-from app.services.spot_service import get_spot_by_id, get_spot_by_name
-from app.services.weather_service import get_surf_report
+from app.services.session_forecast_service import get_weather_for_session
+from app.services.spot_service import get_spot_by_name
 
 
 async def _resolve_spot_name_to_id(db: AsyncSession, session_data: dict) -> None:
@@ -33,30 +33,17 @@ async def create_surf_session(
 
     await _resolve_spot_name_to_id(db, surf_session_data)
 
-    # Fetch weather data if spot has coordinates
-    weather_data = {}
-    spot_id = surf_session_data.get('spot_id')
+    weather_data: dict = {}
+    spot_id = surf_session_data.get("spot_id")
     if spot_id is not None:
-        spot = await get_spot_by_id(db, spot_id)
-        if spot and spot.latitude is not None and spot.longitude is not None:
-            try:
-                surf_report = await get_surf_report(
-                    lat=spot.latitude,
-                    lon=spot.longitude,
-                    target_date=surf_session_data["datetime"],
-                    timezone="Asia/Colombo"
-                )
-                if surf_report:
-                    weather_data = {
-                        'wave_height_m': surf_report.get('wave_height'),
-                        'wave_period': surf_report.get('wave_period'),
-                        'wave_dir': surf_report.get('wave_direction'),
-                        'wind_speed_kmh': surf_report.get('wind_speed'),
-                        'wind_dir': surf_report.get('wind_direction'),
-                    }
-            except ExternalAPIError:
-                # Graceful degradation: continue without weather data if API fails
-                pass
+        session_weather = await get_weather_for_session(
+            db,
+            spot_id,
+            surf_session_data["datetime"],
+            surf_session_data["duration_minutes"],
+        )
+        if session_weather:
+            weather_data = session_weather
 
     surf_session_model = SurfSession(
         **surf_session_data,
@@ -117,11 +104,23 @@ async def update_surf_session(
         return None
 
     update_dict = update_data.model_dump(exclude_unset=True)
-    
+    weather_keys = {"spot_id", "datetime", "duration_minutes"}
+    weather_relevant_changed = bool(weather_keys & set(update_dict.keys()))
+
     await _resolve_spot_name_to_id(db, update_dict)
-    
+
     for field, value in update_dict.items():
         setattr(surf_session_model, field, value)
+
+    if weather_relevant_changed and surf_session_model.spot_id is not None:
+        session_weather = await get_weather_for_session(
+            db,
+            surf_session_model.spot_id,
+            surf_session_model.datetime,
+            surf_session_model.duration_minutes,
+        )
+        for key in ("wave_height_m", "wave_period", "wave_dir", "wind_speed_kmh", "wind_dir", "energy", "rating"):
+            setattr(surf_session_model, key, session_weather.get(key) if session_weather else None)
 
     await db.commit()
     await db.refresh(surf_session_model)

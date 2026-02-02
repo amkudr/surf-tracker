@@ -107,6 +107,28 @@ async def test_error_404(authenticated_client):
 
 
 @pytest.mark.asyncio
+async def test_create_session_fills_weather_from_forecast(
+    authenticated_client, test_spots, test_surf_forecasts
+):
+    """Creating a session with a spot that has SurfForecast rows fills weather from forecast."""
+    surf_session = {
+        "spot_id": 1,
+        "datetime": "2026-01-13T08:00:00",
+        "duration_minutes": 120,
+        "wave_quality": 8,
+        "notes": "With forecast data",
+    }
+    response = await authenticated_client.post("/surf_session/", json=surf_session)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["wave_height_m"] is not None
+    assert data["wave_period"] is not None
+    assert data["wind_speed_kmh"] is not None
+    assert data["wave_dir"] is not None
+    assert data["wind_dir"] is not None
+
+
+@pytest.mark.asyncio
 async def test_create_session_with_spot_name(authenticated_client, test_surf_sessions):
     """Test creating a session using spot_name instead of spot_id."""
     surf_session = {
