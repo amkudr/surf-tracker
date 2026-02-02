@@ -1,0 +1,53 @@
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apple-like Minimal Base Styles */
+
+@layer base {
+  /* System font stack with font smoothing */
+  html {
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Base background - near white */
+  body {
+    @apply bg-background text-content-primary;
+    background-color: #ffffff;
+  }
+
+  /* Focus styles for accessibility - visible and consistent */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-white;
+  }
+
+  /* Ensure all interactive elements have consistent focus */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    @apply ring-2 ring-accent ring-offset-2 ring-offset-white;
+  }
+
+
+  /* Remove default button styles */
+  button {
+    @apply border-none bg-transparent cursor-pointer;
+  }
+
+  /* Form elements */
+  input, textarea, select {
+    @apply bg-background border-border;
+  }
+
+  /* Links - use accent sparingly */
+  a {
+    @apply text-accent hover:text-accent-hover transition-colors;
+  }
+}
