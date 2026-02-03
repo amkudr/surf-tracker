@@ -38,5 +38,6 @@ async def create_spot_endpoint(
         lat=spot_create.latitude,
         lon=spot_create.longitude,
         difficulty=spot_create.difficulty,
+        surf_forecast_name=spot_create.surf_forecast_name,
     )
     return created

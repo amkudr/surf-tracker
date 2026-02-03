@@ -8,6 +8,7 @@ class SpotCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     difficulty: Optional[list[int]] = None
+    surf_forecast_name: Optional[str] = None
 
 
 class SpotResponse(BaseModel):
@@ -19,3 +20,4 @@ class SpotResponse(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     difficulty: Optional[list[int]] = None
+    surf_forecast_name: Optional[str] = None

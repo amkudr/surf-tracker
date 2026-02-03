@@ -15,3 +15,4 @@ export { DifficultyBadge } from './DifficultyBadge';
 export { DifficultyBadges } from './DifficultyBadges';
 export { CoordinatesBadge } from './CoordinatesBadge';
 export { SimpleChart } from '../SimpleChart';
+export { SurfForecastWidget } from '../SurfForecastWidget';

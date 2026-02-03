@@ -13,12 +13,14 @@ async def create_spot(
     lat: Optional[float],
     lon: Optional[float],
     difficulty: Optional[list[int]],
+    surf_forecast_name: Optional[str] = None,
 ) -> Spot:
     spot_model = Spot(
         name=name,
         latitude=lat,
         longitude=lon,
         difficulty=difficulty,
+        surf_forecast_name=surf_forecast_name,
     )
     
     db.add(spot_model)

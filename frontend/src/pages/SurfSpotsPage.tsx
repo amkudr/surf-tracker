@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { spotsAPI } from '../services/api';
 import { SpotResponse, SpotCreate } from '../types/api';
-import { Plus, MapPin, Navigation, Hash, X, Save, LayoutGrid, Map as MapIcon, ExternalLink } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, EmptyState, Button, FormField, DifficultyBadges, CoordinatesBadge, SegmentedControl } from '../components/ui';
+import { Plus, MapPin, Navigation, Hash, X, Save, LayoutGrid, Map as MapIcon, ExternalLink, Waves } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent, EmptyState, Button, FormField, DifficultyBadges, CoordinatesBadge, SegmentedControl, SurfForecastWidget } from '../components/ui';
 import { PageHero } from '../components/PageHero';
 import { MapProvider } from '../components/MapProvider';
 import { SpotMap } from '../components/SpotMap';
@@ -17,6 +17,7 @@ const SurfSpotsPage = () => {
     latitude: undefined,
     longitude: undefined,
     difficulty: [],
+    surf_forecast_name: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -73,6 +74,7 @@ const SurfSpotsPage = () => {
         latitude: undefined,
         longitude: undefined,
         difficulty: [],
+        surf_forecast_name: '',
       });
       setShowForm(false);
       fetchSpots();
@@ -218,6 +220,22 @@ const SurfSpotsPage = () => {
                 </p>
               </FormField>
 
+              {/* Surf Forecast Name */}
+              <FormField label="Surf Forecast Name (optional)" icon={<Waves className="h-4 w-4" />}>
+                <input
+                  type="text"
+                  id="surf_forecast_name"
+                  name="surf_forecast_name"
+                  value={formData.surf_forecast_name}
+                  onChange={handleChange}
+                  placeholder="e.g., Bells Beach"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-content-primary"
+                />
+                <p className="text-caption text-content-secondary mt-2">
+                  Enter the name used by the surf forecast provider (e.g., Stormrdr, Magicseaweed)
+                </p>
+              </FormField>
+
               {/* Form Actions */}
               <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-border">
                 <Button
@@ -323,6 +341,13 @@ const SurfSpotsPage = () => {
                         <DifficultyBadges values={spot.difficulty} size="sm" />
                       )}
                     </div>
+
+                    {/* Surf Forecast Widget */}
+                    {spot.surf_forecast_name && (
+                      <div className="mt-3">
+                        <SurfForecastWidget spotName={spot.surf_forecast_name} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))

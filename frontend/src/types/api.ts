@@ -24,6 +24,7 @@ export interface SpotCreate {
   latitude?: number;
   longitude?: number;
   difficulty?: number[];
+  surf_forecast_name?: string;
 }
 
 export interface SpotResponse {
@@ -32,6 +33,7 @@ export interface SpotResponse {
   latitude?: number;
   longitude?: number;
   difficulty?: number[];
+  surf_forecast_name?: string;
 }
 
 export interface SurfSessionCreate {
