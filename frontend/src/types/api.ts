@@ -36,6 +36,31 @@ export interface SpotResponse {
   surf_forecast_name?: string;
 }
 
+export interface SurfboardCreate {
+  name: string;
+  brand?: string;
+  model?: string;
+  length_ft: number;
+  volume_liters: number;
+}
+
+export interface SurfboardResponse {
+  id: number;
+  name: string;
+  brand?: string;
+  model?: string;
+  length_ft: number;
+  volume_liters: number;
+}
+
+export interface SurfboardUpdate {
+  name?: string;
+  brand?: string;
+  model?: string;
+  length_ft?: number;
+  volume_liters?: number;
+}
+
 export interface SurfSessionCreate {
   datetime: string;
   duration_minutes: number;
@@ -43,6 +68,7 @@ export interface SurfSessionCreate {
   notes?: string;
   spot_id?: number;
   spot_name?: string;
+  surfboard_id?: number;
 }
 
 export interface SurfSessionResponse {
@@ -52,9 +78,11 @@ export interface SurfSessionResponse {
   wave_quality: number;
   notes?: string;
   spot_id: number;
+  surfboard_id?: number;
   user_id: number;
   created_at: string;
   spot: SpotResponse;
+  surfboard?: SurfboardResponse;
   wave_height_m?: number;
   wave_period?: number;
   wave_dir?: string;

@@ -20,6 +20,7 @@ const AppShell = () => {
     { path: '/', label: 'Dashboard' },
     { path: '/sessions', label: 'Sessions' },
     { path: '/spots', label: 'Spots' },
+    { path: '/surfboards', label: 'Surfboards' },
   ];
 
   return (

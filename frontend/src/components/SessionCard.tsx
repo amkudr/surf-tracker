@@ -66,6 +66,13 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
           <Waves className="h-4 w-4 text-content-tertiary" />
           <span>{formatWaveQuality(session.wave_quality)}</span>
         </div>
+        {session.surfboard && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full font-medium">
+              {session.surfboard.name} • {session.surfboard.length_ft}'
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Wave and Wind metrics with compasses */}

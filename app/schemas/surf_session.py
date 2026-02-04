@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, model_validator, field_validator, ConfigD
 from datetime import datetime
 
 from app.schemas.spot import SpotResponse
+from app.schemas.surfboard import SurfboardResponse
 
 
 class SurfSessionBase(BaseModel):
@@ -35,6 +36,7 @@ class SurfSessionResponse(SurfSessionBase):
     user_id: int
     created_at: datetime
     spot: SpotResponse
+    surfboard: Optional[SurfboardResponse] = None
     wave_height_m: float | None = None
     wave_period: float | None = None
     wave_dir: str | None = None

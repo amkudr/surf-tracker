@@ -56,7 +56,7 @@ async def create_surf_session(
     
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot))
+        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
         .where(SurfSession.id == surf_session_model.id)
     )
     return result.scalars().first()
@@ -70,7 +70,7 @@ async def get_surf_session(
 
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot))
+        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
         .where(
             SurfSession.id == surf_session_id,
             SurfSession.user_id == user_id,
@@ -86,7 +86,7 @@ async def list_surf_sessions(
 
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot))
+        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
         .where(SurfSession.user_id == user_id)
     )
     return result.scalars().all()
@@ -127,7 +127,7 @@ async def update_surf_session(
     
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot))
+        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
         .where(SurfSession.id == surf_session_model.id)
     )
     return result.scalars().first()

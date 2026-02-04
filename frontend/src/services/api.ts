@@ -7,7 +7,10 @@ import {
   SpotCreate,
   SpotResponse,
   SurfSessionCreate,
-  SurfSessionResponse
+  SurfSessionResponse,
+  SurfboardCreate,
+  SurfboardResponse,
+  SurfboardUpdate
 } from '../types/api';
 
 const api = axios.create({
@@ -76,6 +79,33 @@ export const surfSessionsAPI = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/surf_session/${id}`);
+  },
+};
+
+// Surfboards API
+export const surfboardsAPI = {
+  getAll: async (): Promise<SurfboardResponse[]> => {
+    const response = await api.get('/surfboard/');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<SurfboardResponse> => {
+    const response = await api.get(`/surfboard/${id}`);
+    return response.data;
+  },
+
+  create: async (surfboard: SurfboardCreate): Promise<SurfboardResponse> => {
+    const response = await api.post('/surfboard/', surfboard);
+    return response.data;
+  },
+
+  update: async (id: number, surfboard: SurfboardUpdate): Promise<SurfboardResponse> => {
+    const response = await api.put(`/surfboard/${id}`, surfboard);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/surfboard/${id}`);
   },
 };
 

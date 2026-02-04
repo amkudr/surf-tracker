@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import SurfSessionsPage from './pages/SurfSessionsPage';
 import SurfSessionFormPage from './pages/SurfSessionFormPage';
 import SurfSpotsPage from './pages/SurfSpotsPage';
+import SurfboardsPage from './pages/SurfboardsPage';
 import Layout from './components/Layout';
 import './App.css';
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="sessions/new" element={<SurfSessionFormPage />} />
             <Route path="sessions/:id/edit" element={<SurfSessionFormPage />} />
             <Route path="spots" element={<SurfSpotsPage />} />
+            <Route path="surfboards" element={<SurfboardsPage />} />
           </Route>
         </Routes>
       </div>

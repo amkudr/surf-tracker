@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { surfSessionsAPI, spotsAPI } from '../services/api';
-import { SurfSessionCreate, SpotResponse } from '../types/api';
+import { surfSessionsAPI, spotsAPI, surfboardsAPI } from '../services/api';
+import { SurfSessionCreate, SpotResponse, SurfboardResponse } from '../types/api';
 
 interface UseSurfSessionFormReturn {
   formData: SurfSessionCreate;
   spots: SpotResponse[];
+  surfboards: SurfboardResponse[];
   isLoading: boolean;
   isLoadingData: boolean;
   error: string;
@@ -32,9 +33,11 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     notes: '',
     spot_id: undefined,
     spot_name: '',
+    surfboard_id: undefined,
   });
 
   const [spots, setSpots] = useState<SpotResponse[]>([]);
+  const [surfboards, setSurfboards] = useState<SurfboardResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(isEditing);
   const [error, setError] = useState('');
@@ -45,10 +48,14 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
 
     const fetchData = async () => {
       try {
-        const spotsData = await spotsAPI.getAll();
+        const [spotsData, surfboardsData] = await Promise.all([
+          spotsAPI.getAll(),
+          surfboardsAPI.getAll()
+        ]);
         
         if (!isMounted) return;
         setSpots(spotsData);
+        setSurfboards(surfboardsData);
 
         if (isEditing && id) {
           const sessionData = await surfSessionsAPI.getById(parseInt(id));
@@ -60,6 +67,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
               notes: sessionData.notes || '',
               spot_id: sessionData.spot_id,
               spot_name: '',
+              surfboard_id: sessionData.surfboard_id,
             });
           }
         }
@@ -93,7 +101,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     }
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'duration_minutes' || name === 'wave_quality' || name === 'spot_id'
+      [name]: name === 'duration_minutes' || name === 'wave_quality' || name === 'spot_id' || name === 'surfboard_id'
         ? (value === '' ? undefined : parseInt(value))
         : value,
     }));
@@ -151,6 +159,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
   return {
     formData,
     spots,
+    surfboards,
     isLoading,
     isLoadingData,
     error,

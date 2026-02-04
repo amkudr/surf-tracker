@@ -16,3 +16,4 @@ export { DifficultyBadges } from './DifficultyBadges';
 export { CoordinatesBadge } from './CoordinatesBadge';
 export { SimpleChart } from '../SimpleChart';
 export { SurfForecastWidget } from '../SurfForecastWidget';
+export { PageHero } from '../PageHero';

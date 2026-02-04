@@ -17,6 +17,7 @@ const TABLE_HEADERS: { label: string; unit?: string; key: string; width?: string
   { label: 'Date', key: 'date' },
   { label: 'Time', key: 'time' },
   { label: 'Spot', key: 'spot' },
+  { label: 'Board', key: 'board' },
   { label: 'Duration', unit: 'min', key: 'duration' },
   { label: 'Quality', key: 'quality' },
   { label: 'Wave', unit: 'm', key: 'wave' },

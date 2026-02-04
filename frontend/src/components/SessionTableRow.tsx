@@ -29,6 +29,14 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
       </td>
       <td className={cellBase}>{formatSessionTime(session.datetime)}</td>
       <td className={`${cellBase} font-medium`}>{session.spot.name}</td>
+      <td className={cellBase}>
+        <span className="block font-medium">{session.surfboard?.name || '—'}</span>
+        {session.surfboard && (
+          <span className="block text-xs text-content-secondary mt-0.5">
+            {session.surfboard.length_ft}'
+          </span>
+        )}
+      </td>
       <td className={cellBase}>{formatDurationClean(session.duration_minutes)}</td>
       <td className={cellBase}>{formatWaveQuality(session.wave_quality)}</td>
       <td className={cellBase}>{formatWaveHeightClean(session.wave_height_m)}</td>

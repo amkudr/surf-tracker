@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, String, Column
+from sqlalchemy import ForeignKey, Integer, String, Column, Float
 from .base import Base
 from sqlalchemy.orm import relationship
 
@@ -11,8 +11,8 @@ class Surfboard(Base):
     name = Column(String, nullable=False)
     brand = Column(String, nullable=True)
     model = Column(String, nullable=True)
-    length_ft = Column(Integer, nullable=False)
-    volume_liters = Column(Integer, nullable=False)
+    length_ft = Column(Float, nullable=False)
+    volume_liters = Column(Float, nullable=False)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     owner = relationship("User", back_populates="surfboards")

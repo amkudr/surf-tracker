@@ -7,6 +7,7 @@ const SurfSessionFormPage = () => {
   const {
     formData,
     spots,
+    surfboards,
     isLoading,
     isLoadingData,
     error,
@@ -82,6 +83,22 @@ const SurfSessionFormPage = () => {
               {spots.map((spot) => (
                 <option key={spot.id} value={spot.id}>
                   {spot.name}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+          
+          {/* Surfboard selection */}
+          <FormField label="Surfboard">
+            <Select
+              name="surfboard_id"
+              value={formData.surfboard_id || ''}
+              onChange={handleChange}
+            >
+              <option value="">Select a surfboard...</option>
+              {surfboards.map((board) => (
+                <option key={board.id} value={board.id}>
+                  {board.name} {board.brand ? `(${board.brand})` : ''} - {board.length_ft}'
                 </option>
               ))}
             </Select>
