@@ -44,6 +44,11 @@ class SurfSessionResponse(SurfSessionBase):
     wind_dir: str | None = None
     energy: float | None = None
     rating: int | None = None
+    
+    # Tide data
+    tide_height_m: float | None = None
+    tide_low_m: float | None = None
+    tide_high_m: float | None = None
 
     @field_validator("wave_dir", "wind_dir", mode="before")
     @classmethod

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 from collections import Counter
 from datetime import datetime, timedelta
@@ -11,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.surf_forecast import SurfForecast
+from app.models.tide import Tide
 
 MAX_FORECAST_OFFSET_HOURS = int(os.environ.get("MAX_FORECAST_OFFSET_HOURS", "6"))
 
@@ -112,4 +114,77 @@ async def get_weather_for_session(
     if wnd is not None:
         result["wind_dir"] = wnd
 
+    # Add tide data
+    tide_data = await get_tide_for_session(db, spot_id, session_datetime)
+    if tide_data:
+        result.update(tide_data)
+
     return result if result else None
+
+
+async def get_tide_for_session(
+    db: AsyncSession,
+    spot_id: int,
+    session_datetime: datetime,
+) -> Optional[dict[str, Any]]:
+    """
+    Find surrounding low/high tides and interpolate actual height at session_datetime.
+    Uses cosine interpolation: h(t) = h_low + (h_high - h_low) * (1 - cos(pi * (t - t_low) / (t_high - t_low))) / 2
+    """
+    # Fetch tides for the spot within +/- 12 hours to ensure we get bounding High and Low
+    window_start = session_datetime - timedelta(hours=12)
+    window_end = session_datetime + timedelta(hours=12)
+
+    result = await db.execute(
+        select(Tide)
+        .where(
+            Tide.spot_id == spot_id,
+            Tide.timestamp >= window_start,
+            Tide.timestamp <= window_end,
+        )
+        .order_by(Tide.timestamp)
+    )
+    tides = list(result.scalars().all())
+
+    if len(tides) < 2:
+        return None
+
+    # Find bounding tides
+    prev_tide = None
+    next_tide = None
+    for i in range(len(tides) - 1):
+        if tides[i].timestamp <= session_datetime <= tides[i+1].timestamp:
+            prev_tide = tides[i]
+            next_tide = tides[i+1]
+            break
+
+    if not prev_tide or not next_tide:
+        return None
+
+    # Identify which is High and which is Low (or just use their heights)
+    h1, h2 = prev_tide.height, next_tide.height
+    t1, t2 = prev_tide.timestamp, next_tide.timestamp
+    
+    # Cosine interpolation
+    dt_total = (t2 - t1).total_seconds()
+    if dt_total == 0:
+        interpolated_height = h1
+    else:
+        dt_segment = (session_datetime - t1).total_seconds()
+        # Progress from 0 to 1
+        fraction = dt_segment / dt_total
+        # Cosine curve from 0 to 1: (1 - cos(pi * fraction)) / 2
+        formula_fraction = (1 - math.cos(math.pi * fraction)) / 2
+        interpolated_height = h1 + (h2 - h1) * formula_fraction
+
+    # Determine tide_low and tide_high from the bounding pair
+    # Note: Sometimes we might have two Highs or two Lows if scraping is weird, 
+    # but usually it's one of each.
+    tide_low = min(h1, h2)
+    tide_high = max(h1, h2)
+
+    return {
+        "tide_height_m": round(interpolated_height, 2),
+        "tide_low_m": tide_low,
+        "tide_high_m": tide_high,
+    }

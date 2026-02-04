@@ -27,6 +27,7 @@ const TABLE_HEADERS: { label: string; unit?: string; key: string; width?: string
   { label: 'Wind dir', key: 'windDir' },
   { label: 'Energy', unit: 'kJ', key: 'energy' },
   { label: 'Rating', key: 'rating' },
+  { label: 'Tide', unit: 'm', key: 'tide' },
   { label: '', key: 'actions' },
 ];
 

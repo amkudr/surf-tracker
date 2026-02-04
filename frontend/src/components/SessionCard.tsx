@@ -116,6 +116,20 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
       <div className="flex items-center gap-3 pt-4 border-t border-gray-200 text-base">
         <span className="font-medium text-content-secondary">Rating</span>
         <span className="font-medium">{session.rating != null ? session.rating : '—'}</span>
+        
+        {session.tide_height_m != null && (
+          <div className="flex items-center gap-3 ml-auto">
+            <span className="font-medium text-content-secondary">Tide</span>
+            <span className="font-medium">
+              {session.tide_height_m}
+              {(session.tide_low_m != null || session.tide_high_m != null) && (
+                <span className="text-xs text-content-secondary ml-1 font-normal">
+                  ({session.tide_low_m ?? '?'}-{session.tide_high_m ?? '?'})
+                </span>
+              )}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Notes section */}

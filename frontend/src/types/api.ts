@@ -90,4 +90,7 @@ export interface SurfSessionResponse {
   wind_dir?: string;
   energy?: number;
   rating?: number;
+  tide_height_m?: number;
+  tide_low_m?: number;
+  tide_high_m?: number;
 }

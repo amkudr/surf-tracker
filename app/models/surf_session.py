@@ -25,6 +25,11 @@ class SurfSession(Base):
     wind_dir = Column(String, nullable=True)
     energy = Column(Float, nullable=True)
     rating = Column(Integer, nullable=True)
+    
+    # Tide data
+    tide_height_m = Column(Float, nullable=True)
+    tide_low_m = Column(Float, nullable=True)
+    tide_high_m = Column(Float, nullable=True)
 
     # Relationships
     spot = relationship("Spot")

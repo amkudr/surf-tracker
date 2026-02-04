@@ -119,7 +119,7 @@ async def update_surf_session(
             surf_session_model.datetime,
             surf_session_model.duration_minutes,
         )
-        for key in ("wave_height_m", "wave_period", "wave_dir", "wind_speed_kmh", "wind_dir", "energy", "rating"):
+        for key in ("wave_height_m", "wave_period", "wave_dir", "wind_speed_kmh", "wind_dir", "energy", "rating", "tide_height_m", "tide_low_m", "tide_high_m"):
             setattr(surf_session_model, key, session_weather.get(key) if session_weather else None)
 
     await db.commit()

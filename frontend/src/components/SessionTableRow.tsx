@@ -59,6 +59,20 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
       </td>
       <td className={cellBase}>{session.rating != null ? session.rating : '—'}</td>
       <td className={cellBase}>
+        {session.tide_height_m != null ? (
+          <div className="flex flex-col items-center">
+            <span className="font-medium">{session.tide_height_m}</span>
+            {(session.tide_low_m != null || session.tide_high_m != null) && (
+              <span className="text-[10px] text-content-secondary mt-0.5">
+                {session.tide_low_m != null ? session.tide_low_m : '?'} - {session.tide_high_m != null ? session.tide_high_m : '?'}
+              </span>
+            )}
+          </div>
+        ) : (
+          '—'
+        )}
+      </td>
+      <td className={cellBase}>
         <Link
           to={`/sessions/${session.id}/edit`}
           className="inline-flex p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
