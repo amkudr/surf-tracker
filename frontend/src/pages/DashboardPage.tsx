@@ -13,8 +13,10 @@ import {
   formatDuration,
   formatWaveQuality,
   formatSessionDate,
+  groupSessionsBySpot,
   type TimeRange
 } from '../utils/stats';
+import { SpotDistributionChart } from '../components/SpotDistributionChart';
 
 const DashboardPage = () => {
   const [sessions, setSessions] = useState<SurfSessionResponse[]>([]);
@@ -43,6 +45,7 @@ const DashboardPage = () => {
 
   // Prepare chart data for selected time range
   const chartData = getChartDataForTimeRange(sessions, timeRange);
+  const spotDistributionData = groupSessionsBySpot(timeRangeSessions);
 
   if (isLoading) {
     return (
@@ -118,18 +121,34 @@ const DashboardPage = () => {
               />
             </div>
             
-            <div className="pt-4 border-t border-border">
-              <h4 className="text-sm font-medium text-content-secondary mb-4">
-                Surf Time ({
-                  timeRange === 'all' ? 'All time' :
-                  timeRange === 'week' ? 'Week' :
-                  'Month'
-                })
-              </h4>
-              <SimpleChart
-                data={chartData}
-                height={240}
-              />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4 border-t border-border">
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-content-secondary">
+                  Surf Time ({
+                    timeRange === 'all' ? 'All time' :
+                    timeRange === 'week' ? 'Week' :
+                    'Month'
+                  })
+                </h4>
+                <SimpleChart
+                  data={chartData}
+                  height={240}
+                />
+              </div>
+
+              <div className="space-y-4 pt-8 lg:pt-0 lg:pl-8 border-t lg:border-t-0 lg:border-l border-border">
+                <h4 className="text-sm font-medium text-content-secondary">
+                  Spot Distribution ({
+                    timeRange === 'all' ? 'All time' :
+                    timeRange === 'week' ? 'Week' :
+                    'Month'
+                  })
+                </h4>
+                <SpotDistributionChart
+                  data={spotDistributionData}
+                  height={240}
+                />
+              </div>
             </div>
           </div>
         </CardContent>

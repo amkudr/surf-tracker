@@ -17,6 +17,12 @@ export interface ChartDataPoint {
   avgWaveQuality?: number;
 }
 
+export interface PieChartDataPoint {
+  name: string;
+  value: number;
+  color?: string;
+}
+
 /**
  * Calculate statistics for a given set of sessions
  */
@@ -206,6 +212,37 @@ export function groupSessionsByMonth(sessions: SurfSessionResponse[]): ChartData
   }
 
   return dataPoints;
+}
+
+/**
+ * Group sessions by spot for the selected time range
+ */
+export function groupSessionsBySpot(sessions: SurfSessionResponse[]): PieChartDataPoint[] {
+  const spotCounts: Record<string, number> = {};
+  
+  sessions.forEach(session => {
+    const spotName = session.spot.name;
+    spotCounts[spotName] = (spotCounts[spotName] || 0) + 1;
+  });
+
+  const colors = [
+    '#06b6d4', // cyan-500
+    '#22c55e', // green-500
+    '#eab308', // yellow-500
+    '#f97316', // orange-500
+    '#ef4444', // red-500
+    '#a855f7', // purple-500
+    '#ec4899', // pink-500
+    '#6366f1', // indigo-500
+  ];
+
+  return Object.entries(spotCounts)
+    .sort((a, b) => b[1] - a[1]) // Sort by count descending
+    .map(([name, value], index) => ({
+      name,
+      value,
+      color: colors[index % colors.length]
+    }));
 }
 
 /**
