@@ -3,8 +3,42 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { surfSessionsAPI, spotsAPI, surfboardsAPI } from '../services/api';
 import { SurfSessionCreate, SpotResponse, SurfboardResponse } from '../types/api';
 
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+function normalizeDatetime(s: string): string {
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) {
+    const fallback = new Date();
+    fallback.setHours(8, 0, 0, 0);
+    return fallback.toISOString().slice(0, 19);
+  }
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+}
+
+function getDatePart(datetime: string): string {
+  const normalized = normalizeDatetime(datetime);
+  return normalized.slice(0, 10);
+}
+
+function getTimePart(datetime: string): string {
+  const normalized = normalizeDatetime(datetime);
+  return normalized.slice(11, 16);
+}
+
+function formatValidationError(detail: unknown): string {
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((d) => (typeof d === 'object' && d != null && 'msg' in d ? String((d as { msg: unknown }).msg) : String(d)))
+      .join('. ');
+  }
+  return 'Failed to save session';
+}
+
 interface UseSurfSessionFormReturn {
   formData: SurfSessionCreate;
+  dateForInput: string;
+  timeForInput: string;
   spots: SpotResponse[];
   surfboards: SurfboardResponse[];
   isLoading: boolean;
@@ -61,7 +95,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
           const sessionData = await surfSessionsAPI.getById(parseInt(id));
           if (isMounted) {
             setFormData({
-              datetime: sessionData.datetime.slice(0, 19),
+              datetime: normalizeDatetime(sessionData.datetime),
               duration_minutes: sessionData.duration_minutes,
               wave_quality: sessionData.wave_quality,
               notes: sessionData.notes || '',
@@ -92,11 +126,11 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'date') {
-      setFormData(prev => ({ ...prev, datetime: value + prev.datetime.slice(10) }));
+      setFormData(prev => ({ ...prev, datetime: value + 'T' + getTimePart(prev.datetime) + ':00' }));
       return;
     }
     if (name === 'time') {
-      setFormData(prev => ({ ...prev, datetime: prev.datetime.slice(0, 11) + value + ':00' }));
+      setFormData(prev => ({ ...prev, datetime: getDatePart(prev.datetime) + 'T' + value + ':00' }));
       return;
     }
     setFormData(prev => ({
@@ -135,7 +169,8 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
       }
       navigate('/sessions');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save session');
+      const detail = err.response?.data?.detail;
+      setError(detail != null ? formatValidationError(detail) : 'Failed to save session');
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +193,8 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
 
   return {
     formData,
+    dateForInput: getDatePart(formData.datetime),
+    timeForInput: getTimePart(formData.datetime),
     spots,
     surfboards,
     isLoading,

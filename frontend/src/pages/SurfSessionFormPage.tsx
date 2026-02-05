@@ -6,6 +6,8 @@ import { useSurfSessionForm } from '../hooks/useSurfSessionForm';
 const SurfSessionFormPage = () => {
   const {
     formData,
+    dateForInput,
+    timeForInput,
     spots,
     surfboards,
     isLoading,
@@ -55,7 +57,7 @@ const SurfSessionFormPage = () => {
               <Input
                 type="date"
                 name="date"
-                value={formData.datetime.slice(0, 10)}
+                value={dateForInput}
                 onChange={handleChange}
                 required
               />
@@ -64,7 +66,7 @@ const SurfSessionFormPage = () => {
               <Input
                 type="time"
                 name="time"
-                value={formData.datetime.slice(11, 16)}
+                value={timeForInput}
                 onChange={handleChange}
                 required
               />
