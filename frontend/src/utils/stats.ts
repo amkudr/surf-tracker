@@ -1,5 +1,5 @@
 import { SurfSessionResponse } from '../types/api';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subDays, isWithinInterval, format, parseISO, eachDayOfInterval, startOfDay } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subDays, isWithinInterval, format, parseISO, eachDayOfInterval, startOfDay, addMinutes } from 'date-fns';
 
 export type TimeRange = 'week' | 'month' | '3month' | 'all';
 
@@ -412,12 +412,15 @@ export function formatSessionDateTable(dateString: string): { dateLine: string; 
 /**
  * Format time from datetime string (e.g. "08:00")
  */
-export function formatSessionTime(datetimeString: string): string {
-  return new Date(datetimeString).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+export function formatSessionTime(datetimeString: string, durationMinutes?: number): string {
+  const startDate = parseISO(datetimeString);
+  const startTime = format(startDate, 'HH:mm');
+  if (durationMinutes == null || Number.isNaN(durationMinutes)) {
+    return startTime;
+  }
+  const endDate = addMinutes(startDate, durationMinutes);
+  const endTime = format(endDate, 'HH:mm');
+  return `${startTime} - ${endTime}`;
 }
 
 /**

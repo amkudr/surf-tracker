@@ -27,7 +27,7 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
         <span className="block">{dateLine}</span>
         <span className="block text-content-secondary">{yearLine}</span>
       </td>
-      <td className={cellBase}>{formatSessionTime(session.datetime)}</td>
+      <td className={cellBase}>{formatSessionTime(session.datetime, session.duration_minutes)}</td>
       <td className={`${cellBase} font-medium overflow-hidden`}>
         <span className="block truncate">{session.spot.name}</span>
       </td>

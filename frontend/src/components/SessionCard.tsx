@@ -1,6 +1,7 @@
+import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SurfSessionResponse } from '../types/api';
-import { Calendar, Clock, Timer, Waves, Edit, Trash2 } from 'lucide-react';
+import { Calendar, ChevronDown, Clock, Edit, Trash2 } from 'lucide-react';
 import {
   formatDurationClean,
   formatWaveQuality,
@@ -18,125 +19,178 @@ interface SessionCardProps {
 }
 
 export function SessionCard({ session, onDelete }: SessionCardProps) {
+  const [isForecastOpen, setIsForecastOpen] = useState(false);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
+  const forecastPanelId = useId();
+  const notesPanelId = useId();
+  const formattedDate = formatSessionDate(session.datetime);
+  const formattedTime = formatSessionTime(session.datetime, session.duration_minutes);
+  const durationLabel = `${formatDurationClean(session.duration_minutes)} min`;
+  const qualityLabel = formatWaveQuality(session.wave_quality);
+  const waveHeightLabel = `${formatWaveHeightClean(session.wave_height_m)} m`;
+  const wavePeriodLabel = session.wave_period != null ? session.wave_period.toFixed(1) : '—';
+  const windSpeedLabel = `${formatWindSpeedClean(session.wind_speed_kmh)} km/h`;
+  const energyLabel = session.energy != null ? `${session.energy.toFixed(1)} kJ` : '—';
+  const ratingLabel = session.rating != null ? session.rating : '—';
+  const tideLabel = session.tide_height_m != null ? session.tide_height_m : '—';
+  const tideRangeLabel =
+    session.tide_low_m != null || session.tide_high_m != null
+      ? `(${session.tide_low_m ?? '?'}-${session.tide_high_m ?? '?'})`
+      : null;
+  const hasWaveHeight = session.wave_height_m != null;
+  const hasWavePeriod = session.wave_period != null;
+  const hasWaveEnergy = session.energy != null;
+  const hasWaveDir = session.wave_dir != null && `${session.wave_dir}`.trim() !== '';
+  const hasWaveData = hasWaveHeight || hasWavePeriod || hasWaveEnergy || hasWaveDir;
+  const hasWindSpeed = session.wind_speed_kmh != null;
+  const hasWindDir = session.wind_dir != null && `${session.wind_dir}`.trim() !== '';
+  const hasWindData = hasWindSpeed || hasWindDir;
+  const hasForecastData = hasWaveData || hasWindData;
+
   return (
-    <div className="p-6 space-y-4">
-      {/* Header: Spot name with actions */}
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-xl font-semibold text-content-primary">
-          {session.spot.name}
-        </h3>
+    <div className="p-4 sm:p-6 space-y-4">
+      {/* Header: Spot name + actions */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-content-primary leading-snug">{session.spot.name}</h3>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-content-secondary">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-background-secondary px-2.5 py-1">
+              <Calendar className="h-3.5 w-3.5" />
+              {formattedDate}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-background-secondary px-2.5 py-1">
+              <Clock className="h-3.5 w-3.5" />
+              {formattedTime}
+            </span>
+            {session.surfboard && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 font-medium text-accent">
+                {session.surfboard.name} · {session.surfboard.length_ft}'
+              </span>
+            )}
+          </div>
+        </div>
         <div className="flex items-center gap-1 shrink-0">
           <Link
             to={`/sessions/${session.id}/edit`}
-            className="p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-background-secondary transition-colors"
+            className="p-1.5 rounded-lg text-content-secondary hover:text-accent hover:bg-background-secondary transition-colors"
             title="Edit session"
           >
-            <Edit className="h-5 w-5" />
+            <Edit className="h-4 w-4" />
           </Link>
           <button
             type="button"
             onClick={() => onDelete(session.id)}
-            className="p-2 rounded-lg text-content-secondary hover:text-destructive hover:bg-background-secondary transition-colors"
+            className="p-1.5 rounded-lg text-content-secondary hover:text-destructive hover:bg-background-secondary transition-colors"
             title="Delete session"
           >
-            <Trash2 className="h-5 w-5" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Date and Time */}
-      <div className="flex items-center gap-6 text-base text-content-secondary">
-        <span className="inline-flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          {formatSessionDate(session.datetime)}
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <Clock className="h-4 w-4" />
-          {formatSessionTime(session.datetime)}
-        </span>
-      </div>
-
-      {/* Duration and Quality */}
-      <div className="flex items-center gap-6 text-base">
-        <div className="flex items-center gap-2">
-          <Timer className="h-4 w-4 text-content-tertiary" />
-          <span>{formatDurationClean(session.duration_minutes)} min</span>
+      {/* Key stats */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2">
+          <span className="block text-[11px] uppercase tracking-wide text-content-tertiary">Duration</span>
+          <span className="text-sm font-semibold text-content-primary">{durationLabel}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <Waves className="h-4 w-4 text-content-tertiary" />
-          <span>{formatWaveQuality(session.wave_quality)}</span>
+        <div className="rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2">
+          <span className="block text-[11px] uppercase tracking-wide text-content-tertiary">Quality</span>
+          <span className="text-sm font-semibold text-content-primary">{qualityLabel}</span>
         </div>
-        {session.surfboard && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-0.5 bg-accent/10 text-accent rounded-full font-medium">
-              {session.surfboard.name} • {session.surfboard.length_ft}'
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Wave and Wind metrics with compasses */}
-      <div className="space-y-4 pt-4 border-t border-border">
-        {/* Wave row */}
-        <div className="flex items-center text-base">
-          <div className="flex items-center gap-3">
-            <span className="font-medium text-content-secondary">Wave</span>
-            <span className="font-medium">{formatWaveHeightClean(session.wave_height_m)} m</span>
-          </div>
-          <div className="ml-3">
-            <DirectionCompass deg={compassLetterToDegrees(session.wave_dir)} type="wave" size={40} />
-          </div>
-          <div className="flex items-center gap-3 ml-auto">
-            <span className="font-medium text-content-secondary">Period</span>
-            <span className="font-medium">
-              {session.wave_period != null ? session.wave_period.toFixed(1) : '—'}
-            </span>
-          </div>
+        <div className="rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2">
+          <span className="block text-[11px] uppercase tracking-wide text-content-tertiary">Rating</span>
+          <span className="text-sm font-semibold text-content-primary">{ratingLabel}</span>
         </div>
-
-        {/* Wind row */}
-        <div className="flex items-center text-base">
-          <div className="flex items-center gap-3">
-            <span className="font-medium text-content-secondary">Wind</span>
-            <span className="font-medium">{formatWindSpeedClean(session.wind_speed_kmh)} km/h</span>
-          </div>
-          <div className="ml-3">
-            <DirectionCompass deg={compassLetterToDegrees(session.wind_dir)} type="wind" size={40} />
-          </div>
-          <div className="flex items-center gap-3 ml-auto">
-            <span className="font-medium text-content-secondary">Energy</span>
-            <span className="font-medium">
-              {session.energy != null ? `${session.energy.toFixed(1)} kJ` : '—'}
-            </span>
-          </div>
+        <div className="rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2">
+          <span className="block text-[11px] uppercase tracking-wide text-content-tertiary">Tide</span>
+          <span className="text-sm font-semibold text-content-primary">
+            {tideLabel}
+            {tideRangeLabel && (
+              <span className="text-[11px] text-content-secondary ml-1 font-normal">
+                {tideRangeLabel}
+              </span>
+            )}
+          </span>
         </div>
       </div>
 
-      {/* Rating */}
-      <div className="flex items-center gap-3 pt-4 border-t border-border text-base">
-        <span className="font-medium text-content-secondary">Rating</span>
-        <span className="font-medium">{session.rating != null ? session.rating : '—'}</span>
-        
-        {session.tide_height_m != null && (
-          <div className="flex items-center gap-3 ml-auto">
-            <span className="font-medium text-content-secondary">Tide</span>
-            <span className="font-medium">
-              {session.tide_height_m}
-              {(session.tide_low_m != null || session.tide_high_m != null) && (
-                <span className="text-xs text-content-secondary ml-1 font-normal">
-                  ({session.tide_low_m ?? '?'}-{session.tide_high_m ?? '?'})
-                </span>
+      {/* Forecast details (expandable) */}
+      {hasForecastData && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setIsForecastOpen((open) => !open)}
+            className="w-full flex items-center justify-between rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2 text-left"
+            aria-expanded={isForecastOpen}
+            aria-controls={forecastPanelId}
+          >
+            <span className="block text-sm font-semibold text-content-primary">Wave &amp; wind details</span>
+            <ChevronDown
+              className={`h-4 w-4 text-content-secondary transition-transform ${isForecastOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {isForecastOpen && (
+            <div id={forecastPanelId} className="space-y-2">
+              {hasWaveData && (
+                <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2">
+                  {hasWaveDir && (
+                    <DirectionCompass deg={compassLetterToDegrees(session.wave_dir)} type="wave" size={32} />
+                  )}
+                  <div className="space-y-0.5">
+                    <span className="block text-[11px] uppercase tracking-wide text-content-tertiary">Wave</span>
+                    {hasWaveHeight && (
+                      <span className="block text-sm font-semibold text-content-primary">{waveHeightLabel}</span>
+                    )}
+                    {hasWavePeriod && (
+                      <span className="block text-xs text-content-secondary">Period {wavePeriodLabel}</span>
+                    )}
+                    {hasWaveEnergy && (
+                      <span className="block text-xs text-content-secondary">Energy {energyLabel}</span>
+                    )}
+                  </div>
+                </div>
               )}
-            </span>
-          </div>
-        )}
-      </div>
+              {hasWindData && (
+                <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2">
+                  {hasWindDir && (
+                    <DirectionCompass deg={compassLetterToDegrees(session.wind_dir)} type="wind" size={32} />
+                  )}
+                  <div className="space-y-0.5">
+                    <span className="block text-[11px] uppercase tracking-wide text-content-tertiary">Wind</span>
+                    {hasWindSpeed && (
+                      <span className="block text-sm font-semibold text-content-primary">{windSpeedLabel}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Notes section */}
       {session.notes && (
-        <p className="text-sm text-content-secondary line-clamp-2 pt-4 border-t border-border">
-          {session.notes}
-        </p>
+        <div className="space-y-2 pt-1 border-t border-border">
+          <button
+            type="button"
+            onClick={() => setIsNotesOpen((open) => !open)}
+            className="w-full flex items-center justify-between rounded-lg border border-border/60 bg-background-secondary/40 px-3 py-2 text-left"
+            aria-expanded={isNotesOpen}
+            aria-controls={notesPanelId}
+          >
+            <span className="block text-sm font-semibold text-content-primary">Notes</span>
+            <ChevronDown
+              className={`h-4 w-4 text-content-secondary transition-transform ${isNotesOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {isNotesOpen && (
+            <p id={notesPanelId} className="text-sm text-content-secondary px-3 pb-1">
+              {session.notes}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
