@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { SurfSessionResponse } from '../types/api';
 import { Calendar, ChevronDown, Clock, Edit, Trash2 } from 'lucide-react';
@@ -18,7 +18,7 @@ interface SessionCardProps {
   onDelete: (id: number) => void;
 }
 
-export function SessionCard({ session, onDelete }: SessionCardProps) {
+function SessionCardComponent({ session, onDelete }: SessionCardProps) {
   const [isForecastOpen, setIsForecastOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const forecastPanelId = useId();
@@ -27,9 +27,9 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
   const formattedTime = formatSessionTime(session.datetime, session.duration_minutes);
   const durationLabel = `${formatDurationClean(session.duration_minutes)} min`;
   const qualityLabel = formatWaveQuality(session.wave_quality);
-  const waveHeightLabel = `${formatWaveHeightClean(session.wave_height_m)} m`;
+  const waveHeightLabel = session.wave_height_m != null ? `${formatWaveHeightClean(session.wave_height_m)} m` : '—';
   const wavePeriodLabel = session.wave_period != null ? session.wave_period.toFixed(1) : '—';
-  const windSpeedLabel = `${formatWindSpeedClean(session.wind_speed_kmh)} km/h`;
+  const windSpeedLabel = session.wind_speed_kmh != null ? `${formatWindSpeedClean(session.wind_speed_kmh)} km/h` : '—';
   const energyLabel = session.energy != null ? `${session.energy.toFixed(1)} kJ` : '—';
   const ratingLabel = session.rating != null ? session.rating : '—';
   const tideLabel = session.tide_height_m != null ? session.tide_height_m : '—';
@@ -195,3 +195,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
     </div>
   );
 }
+
+const SessionCard = memo(SessionCardComponent);
+
+export { SessionCard };

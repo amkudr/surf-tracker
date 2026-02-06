@@ -64,6 +64,12 @@ const DashboardPage = () => {
     return groupSessionsBySpot(timeRangeSessions);
   }, [timeRangeSessions]);
 
+  const recentSessions = useMemo(() => {
+    return [...sessions]
+      .sort((a, b) => new Date(b.datetime).getTime() - new Date(a.datetime).getTime())
+      .slice(0, 5);
+  }, [sessions]);
+
   const handlePrevious = () => {
     if (timeRange === 'week') {
       setCurrentDate(prev => {
@@ -371,7 +377,7 @@ const DashboardPage = () => {
 
               {/* Recent sessions list - show last 5 */}
               <div className="divide-y divide-border rounded-xl overflow-hidden border border-border/70">
-                {sessions.slice(0, 5).map((session) => (
+                {recentSessions.map((session) => (
                   <div key={session.id} className="p-3 sm:p-4 hover:bg-background-secondary transition-colors">
                     {/* Mobile layout */}
                     <div className="md:hidden space-y-3">

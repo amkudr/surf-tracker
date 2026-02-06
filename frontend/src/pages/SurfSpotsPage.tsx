@@ -27,9 +27,11 @@ const SurfSpotsPage = () => {
   }, []);
 
   const fetchSpots = async () => {
+    setError('');
     try {
       const data = await spotsAPI.getAll();
       setSpots(data);
+      setError('');
     } catch (err: any) {
       setError('Failed to load spots');
     } finally {
@@ -65,7 +67,7 @@ const SurfSpotsPage = () => {
       // Sort difficulty array to ensure ascending order (required by database constraint)
       const sortedFormData = {
         ...formData,
-        difficulty: formData.difficulty?.sort((a, b) => a - b) || [],
+        difficulty: [...(formData.difficulty || [])].sort((a, b) => a - b),
       };
       
       await spotsAPI.create(sortedFormData);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -33,6 +33,91 @@ const QUALITY_LEVELS = [
   { label: 'Epic', min: 8, max: 10, color: '#06b6d4', text: '8-10' },
 ];
 
+const CustomTooltip = React.memo(({ active, payload, timeRange }: any) => {
+  if (active && payload && payload.length) {
+    const dataPoint = payload[0].payload;
+    const sessions = dataPoint.sessions || [];
+    const quality = dataPoint.avgWaveQuality;
+    const level = quality !== undefined && quality !== 0 
+      ? (QUALITY_LEVELS.find((l) => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1])
+      : null;
+
+    const formatTime = (datetime: string) => {
+      return new Date(datetime).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+    };
+
+    const formatDate = (date: Date) => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      return `${day}.${month}`;
+    };
+
+    const getDayName = (date: Date) => {
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    };
+
+    const getTitle = () => {
+      if (timeRange === '3month') {
+        const weekEnd = addDays(dataPoint.date, 6);
+        return `${formatDate(dataPoint.date)} - ${formatDate(weekEnd)}`;
+      } else if (timeRange === 'all') {
+        return dataPoint.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+      return `${getDayName(dataPoint.date)} ${formatDate(dataPoint.date)}`;
+    };
+
+    const getQualityLevel = (q: number) => {
+      return QUALITY_LEVELS.find((l) => q < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
+    };
+
+    return (
+      <div className="bg-background border border-border rounded-lg shadow-lg p-3 min-w-[220px]">
+        <p className="text-sm font-bold text-content-primary mb-3 pb-2 border-b border-border">
+          {getTitle()}
+        </p>
+        
+        {sessions.length === 0 ? (
+          <div className="text-xs text-content-tertiary">No sessions</div>
+        ) : (
+          <div className="space-y-3">
+            {sessions.map((session: any, index: number) => {
+              const sessionLevel = getQualityLevel(session.wave_quality);
+              return (
+                <div key={index} className="space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-sm font-semibold text-content-primary">{session.spot.name}</span>
+                    <span className="text-xs text-content-tertiary whitespace-nowrap">{formatTime(session.datetime)}</span>
+                  </div>
+                  <div className="text-xs text-content-secondary">
+                    Duration: {session.duration_minutes} min
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: sessionLevel.color }}></div>
+                    <span className="font-semibold text-content-primary">{session.wave_quality.toFixed(1)}</span>
+                    <span className="text-content-tertiary">({sessionLevel.label})</span>
+                  </div>
+                </div>
+              );
+            })}
+            
+            {sessions.length > 1 && (
+              <div className="pt-2 mt-2 border-t border-border flex justify-between text-xs text-content-secondary">
+                <span>Total: {payload[0].value} min</span>
+                <span>Avg: {quality?.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+  return null;
+});
+
 const SimpleChart: React.FC<SimpleChartProps> = ({
   data,
   height = 200,
@@ -52,95 +137,6 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
     if (quality === undefined || quality === 0) return '#e5e5ea'; // border secondary
     const level = QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
     return level.color;
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const dataPoint = payload[0].payload;
-      const sessions = dataPoint.sessions || [];
-      const quality = dataPoint.avgWaveQuality;
-      const level = quality !== undefined && quality !== 0 
-        ? (QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1])
-        : null;
-
-      const formatTime = (datetime: string) => {
-        return new Date(datetime).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
-        });
-      };
-
-      const formatDate = (date: Date) => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `${day}.${month}`;
-      };
-
-      const getDayName = (date: Date) => {
-        return date.toLocaleDateString('en-US', { weekday: 'short' });
-      };
-
-      const getTitle = () => {
-        if (timeRange === '3month') {
-          // For 3M view, show week range
-          const weekEnd = addDays(dataPoint.date, 6);
-          return `${formatDate(dataPoint.date)} - ${formatDate(weekEnd)}`;
-        } else if (timeRange === 'all') {
-          // For All view, show month name
-          return dataPoint.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        } else {
-          // For W and M views, show day name and date
-          return `${getDayName(dataPoint.date)} ${formatDate(dataPoint.date)}`;
-        }
-      };
-
-      const getQualityLevel = (q: number) => {
-        return QUALITY_LEVELS.find(l => q < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
-      };
-
-      return (
-        <div className="bg-background border border-border rounded-lg shadow-lg p-3 min-w-[220px]">
-          <p className="text-sm font-bold text-content-primary mb-3 pb-2 border-b border-border">
-            {getTitle()}
-          </p>
-          
-          {sessions.length === 0 ? (
-            <div className="text-xs text-content-tertiary">No sessions</div>
-          ) : (
-            <div className="space-y-3">
-              {sessions.map((session: any, index: number) => {
-                const sessionLevel = getQualityLevel(session.wave_quality);
-                return (
-                  <div key={index} className="space-y-1.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-sm font-semibold text-content-primary">{session.spot.name}</span>
-                      <span className="text-xs text-content-tertiary whitespace-nowrap">{formatTime(session.datetime)}</span>
-                    </div>
-                    <div className="text-xs text-content-secondary">
-                      Duration: {session.duration_minutes} min
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: sessionLevel.color }}></div>
-                      <span className="font-semibold text-content-primary">{session.wave_quality.toFixed(1)}</span>
-                      <span className="text-content-tertiary">({sessionLevel.label})</span>
-                    </div>
-                  </div>
-                );
-              })}
-              
-              {sessions.length > 1 && (
-                <div className="pt-2 mt-2 border-t border-border flex justify-between text-xs text-content-secondary">
-                  <span>Total: {payload[0].value} min</span>
-                  <span>Avg: {quality?.toFixed(1)}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    }
-    return null;
   };
 
   const getDateLabel = (label: string, date: Date, range: string) => {
@@ -169,6 +165,8 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
       isToday: pointDateStr === todayStr
     };
   });
+
+  const tooltipContent = useMemo(() => <CustomTooltip timeRange={timeRange} />, [timeRange]);
 
   // Keep ticks readable: show all for week, throttle others to ~12
   const tickStep = timeRange === 'week' ? 1 : Math.max(1, Math.ceil(chartDataWithLabels.length / 12));
@@ -228,7 +226,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
               tickFormatter={(value) => value.toLocaleString()}
             />
             <Tooltip 
-              content={<CustomTooltip />} 
+              content={tooltipContent} 
               cursor={{ fill: 'currentColor', opacity: 0.05 }}
               isAnimationActive={false}
             />
