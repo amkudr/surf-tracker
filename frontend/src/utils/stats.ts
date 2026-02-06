@@ -1,7 +1,7 @@
 import { SurfSessionResponse } from '../types/api';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, subDays, isWithinInterval, format, parseISO, eachDayOfInterval, startOfDay } from 'date-fns';
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subDays, isWithinInterval, format, parseISO, eachDayOfInterval, startOfDay } from 'date-fns';
 
-export type TimeRange = 'week' | 'month' | 'all';
+export type TimeRange = 'week' | 'month' | '3month' | 'all';
 
 export interface SessionStats {
   sessionsCount: number;
@@ -15,6 +15,7 @@ export interface ChartDataPoint {
   value: number;
   date: Date;
   avgWaveQuality?: number;
+  sessions?: SurfSessionResponse[];
 }
 
 export interface PieChartDataPoint {
@@ -66,59 +67,77 @@ export function calculateStats(sessions: SurfSessionResponse[]): SessionStats {
 }
 
 /**
- * Filter sessions from the last 30 days (rolling window)
+ * Filter sessions for the last 7 days ending on baseDate
  */
-export function getLastMonthSessions(sessions: SurfSessionResponse[]): SurfSessionResponse[] {
-  const now = new Date();
-  const thirtyDaysAgo = subDays(now, 30);
+export function getSessionsForWeek(sessions: SurfSessionResponse[], baseDate: Date): SurfSessionResponse[] {
+  const weekEnd = startOfDay(subDays(baseDate, -1));
+  const weekStart = startOfDay(subDays(baseDate, 6));
 
   return sessions.filter(session => {
     const sessionDate = parseISO(session.datetime);
-    return sessionDate >= thirtyDaysAgo && sessionDate <= now;
+    return sessionDate >= weekStart && sessionDate < weekEnd;
   });
 }
 
 /**
- * Get sessions for the selected time range
+ * Filter sessions for the last 30 days ending on baseDate
  */
-export function getSessionsForTimeRange(sessions: SurfSessionResponse[], timeRange: TimeRange): SurfSessionResponse[] {
+export function getSessionsForMonth(sessions: SurfSessionResponse[], baseDate: Date): SurfSessionResponse[] {
+  const monthEnd = startOfDay(subDays(baseDate, -1));
+  const monthStart = startOfDay(subDays(baseDate, 29));
+
+  return sessions.filter(session => {
+    const sessionDate = parseISO(session.datetime);
+    return sessionDate >= monthStart && sessionDate < monthEnd;
+  });
+}
+
+/**
+ * Filter sessions for the last 90 days ending on baseDate
+ */
+export function getSessionsFor3Months(sessions: SurfSessionResponse[], baseDate: Date): SurfSessionResponse[] {
+  const monthEnd = startOfDay(subDays(baseDate, -1));
+  const threeMonthsStart = startOfDay(subDays(baseDate, 89));
+
+  return sessions.filter(session => {
+    const sessionDate = parseISO(session.datetime);
+    return sessionDate >= threeMonthsStart && sessionDate < monthEnd;
+  });
+}
+
+/**
+ * Get sessions for the selected time range and base date
+ */
+export function getSessionsForTimeRange(
+  sessions: SurfSessionResponse[], 
+  timeRange: TimeRange, 
+  baseDate: Date = new Date()
+): SurfSessionResponse[] {
   switch (timeRange) {
     case 'week':
-      return getLastWeekSessions(sessions);
+      return getSessionsForWeek(sessions, baseDate);
     case 'month':
-      return getLastMonthSessions(sessions);
+      return getSessionsForMonth(sessions, baseDate);
+    case '3month':
+      return getSessionsFor3Months(sessions, baseDate);
     default:
       return sessions;
   }
 }
 
 /**
- * Filter sessions from the last 7 days (rolling window)
+ * Group sessions by day for a specific N-day range ending on baseDate
  */
-export function getLastWeekSessions(sessions: SurfSessionResponse[]): SurfSessionResponse[] {
-  const now = new Date();
-  const sevenDaysAgo = subWeeks(now, 1);
-
-  return sessions.filter(session => {
-    const sessionDate = parseISO(session.datetime);
-    return sessionDate >= sevenDaysAgo && sessionDate <= now;
-  });
-}
-
-/**
- * Group sessions by day for the last N days
- */
-export function groupSessionsByDay(sessions: SurfSessionResponse[], days: number): ChartDataPoint[] {
-  const now = new Date();
-  const startDate = startOfDay(subDays(now, days - 1));
-  const endDate = startOfDay(now);
+export function groupSessionsByDay(sessions: SurfSessionResponse[], days: number, baseDate: Date = new Date()): ChartDataPoint[] {
+  const startDate = startOfDay(subDays(baseDate, days - 1));
+  const endDate = startOfDay(baseDate);
 
   const daysArray = eachDayOfInterval({ start: startDate, end: endDate });
   const dataPoints: ChartDataPoint[] = [];
 
   daysArray.forEach(day => {
     const dayStart = startOfDay(day);
-    const dayEnd = startOfDay(subDays(day, -1)); // End of the day
+    const dayEnd = startOfDay(subDays(day, -1));
 
     const daySessions = sessions.filter(session => {
       const sessionDate = parseISO(session.datetime);
@@ -129,9 +148,10 @@ export function groupSessionsByDay(sessions: SurfSessionResponse[], days: number
 
     dataPoints.push({
       label: format(day, 'MMM d'),
-      value: dayStats.totalSurfTime, // Default to total surf time
+      value: dayStats.totalSurfTime,
       date: day,
       avgWaveQuality: dayStats.avgWaveQuality,
+      sessions: daySessions,
     });
   });
 
@@ -139,46 +159,122 @@ export function groupSessionsByDay(sessions: SurfSessionResponse[], days: number
 }
 
 /**
- * Group sessions by week for the last 12 weeks
+ * Group sessions by day for the last 7 days ending on baseDate
  */
-export function groupSessionsByWeek(sessions: SurfSessionResponse[]): ChartDataPoint[] {
-  const now = new Date();
+export function groupSessionsForCalendarWeek(sessions: SurfSessionResponse[], baseDate: Date): ChartDataPoint[] {
+  const weekEnd = startOfDay(baseDate);
+  const weekStart = startOfDay(subDays(baseDate, 6));
+
+  const daysArray = eachDayOfInterval({ start: weekStart, end: weekEnd });
   const dataPoints: ChartDataPoint[] = [];
 
-  for (let i = 11; i >= 0; i--) {
-    const weekStart = startOfWeek(subWeeks(now, i));
-    const weekEnd = endOfWeek(subWeeks(now, i));
+  daysArray.forEach(day => {
+    const dayStart = startOfDay(day);
+    const dayEnd = startOfDay(subDays(day, -1));
 
-    const weekSessions = sessions.filter(session => {
+    const daySessions = sessions.filter(session => {
       const sessionDate = parseISO(session.datetime);
-      return isWithinInterval(sessionDate, { start: weekStart, end: weekEnd });
+      return sessionDate >= dayStart && sessionDate < dayEnd;
     });
 
-    const weekStats = calculateStats(weekSessions);
+    const dayStats = calculateStats(daySessions);
 
     dataPoints.push({
-      label: format(weekStart, 'MMM d'),
-      value: weekStats.sessionsCount, // Default to session count
-      date: weekStart,
+      label: format(day, 'MMM d'),
+      value: dayStats.totalSurfTime,
+      date: day,
+      avgWaveQuality: dayStats.avgWaveQuality,
+      sessions: daySessions,
     });
-  }
+  });
 
   return dataPoints;
 }
 
 /**
- * Get chart data for the selected time range
+ * Group sessions by day for the last 30 days ending on baseDate
  */
-export function getChartDataForTimeRange(sessions: SurfSessionResponse[], timeRange: TimeRange): ChartDataPoint[] {
+export function groupSessionsForCalendarMonth(sessions: SurfSessionResponse[], baseDate: Date): ChartDataPoint[] {
+  const monthEnd = startOfDay(baseDate);
+  const monthStart = startOfDay(subDays(baseDate, 29));
+
+  const daysArray = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const dataPoints: ChartDataPoint[] = [];
+
+  daysArray.forEach(day => {
+    const dayStart = startOfDay(day);
+    const dayEnd = startOfDay(subDays(day, -1));
+
+    const daySessions = sessions.filter(session => {
+      const sessionDate = parseISO(session.datetime);
+      return sessionDate >= dayStart && sessionDate < dayEnd;
+    });
+
+    const dayStats = calculateStats(daySessions);
+
+    dataPoints.push({
+      label: format(day, 'MMM d'),
+      value: dayStats.totalSurfTime,
+      date: day,
+      avgWaveQuality: dayStats.avgWaveQuality,
+      sessions: daySessions,
+    });
+  });
+
+  return dataPoints;
+}
+
+/**
+ * Group sessions by week for the last 90 days ending on baseDate
+ */
+export function groupSessionsFor3Months(sessions: SurfSessionResponse[], baseDate: Date): ChartDataPoint[] {
+  const monthEnd = startOfDay(baseDate);
+  const threeMonthsStart = startOfDay(subDays(baseDate, 89));
+
+  const weeksArray: ChartDataPoint[] = [];
+  let currentWeekStart = threeMonthsStart;
+
+  while (currentWeekStart <= monthEnd) {
+    const currentWeekEnd = startOfDay(subDays(currentWeekStart, -7));
+    const actualWeekEnd = currentWeekEnd > startOfDay(subDays(monthEnd, -1)) ? startOfDay(subDays(monthEnd, -1)) : currentWeekEnd;
+
+    const weekSessions = sessions.filter(session => {
+      const sessionDate = parseISO(session.datetime);
+      return sessionDate >= currentWeekStart && sessionDate < actualWeekEnd;
+    });
+
+    const weekStats = calculateStats(weekSessions);
+
+    weeksArray.push({
+      label: format(currentWeekStart, 'MMM d'),
+      value: weekStats.totalSurfTime,
+      date: currentWeekStart,
+      avgWaveQuality: weekStats.avgWaveQuality,
+      sessions: weekSessions,
+    });
+
+    currentWeekStart = actualWeekEnd;
+  }
+
+  return weeksArray;
+}
+
+/**
+ * Get chart data for the selected time range and navigated date
+ */
+export function getChartDataForTimeRange(
+  sessions: SurfSessionResponse[], 
+  timeRange: TimeRange,
+  baseDate: Date = new Date()
+): ChartDataPoint[] {
   switch (timeRange) {
     case 'week':
-      const weekSessions = getSessionsForTimeRange(sessions, timeRange);
-      return groupSessionsByDay(weekSessions, 7);
+      return groupSessionsForCalendarWeek(sessions, baseDate);
     case 'month':
-      const monthSessions = getSessionsForTimeRange(sessions, timeRange);
-      return groupSessionsByDay(monthSessions, 30);
+      return groupSessionsForCalendarMonth(sessions, baseDate);
+    case '3month':
+      return groupSessionsFor3Months(sessions, baseDate);
     case 'all':
-      // Show last 12 months aggregated by month
       return groupSessionsByMonth(sessions);
     default:
       return [];
@@ -205,13 +301,45 @@ export function groupSessionsByMonth(sessions: SurfSessionResponse[]): ChartData
 
     dataPoints.push({
       label: format(monthStart, 'MMM yyyy'),
-      value: monthStats.totalSurfTime, // Default to total surf time
+      value: monthStats.totalSurfTime,
       date: monthStart,
       avgWaveQuality: monthStats.avgWaveQuality,
+      sessions: monthSessions,
     });
   }
 
   return dataPoints;
+}
+
+/**
+ * Get a readable label for the current time range
+ */
+export function getTimeRangeLabel(timeRange: TimeRange, baseDate: Date): string {
+  if (timeRange === 'all') return 'All time';
+
+  if (timeRange === 'week') {
+    const start = startOfDay(subDays(baseDate, 6));
+    const end = startOfDay(baseDate);
+    
+    if (format(start, 'MMM') === format(end, 'MMM')) {
+      return `${format(start, 'd')}-${format(end, 'd')} ${format(end, 'MMM yyyy')}`;
+    }
+    return `${format(start, 'd')} ${format(start, 'MMM')} - ${format(end, 'd')} ${format(end, 'MMM yyyy')}`;
+  }
+
+  if (timeRange === '3month') {
+    const start = startOfDay(subDays(baseDate, 89));
+    const end = startOfDay(baseDate);
+    return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
+  }
+
+  if (timeRange === 'month') {
+    const start = startOfDay(subDays(baseDate, 29));
+    const end = startOfDay(baseDate);
+    return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
+  }
+
+  return format(baseDate, 'MMMM yyyy');
 }
 
 /**

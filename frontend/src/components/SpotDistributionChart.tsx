@@ -27,11 +27,13 @@ const SpotDistributionChart: React.FC<SpotDistributionChartProps> = ({
   const total = data.reduce((sum, point) => sum + point.value, 0);
   const activeItem = activeIndex !== null ? data[activeIndex] : null;
 
+  const chartSize = height * 0.8;
+  
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 ${className}`} style={{ height }}>
+    <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 ${className}`} style={{ minHeight: `${height}px` }}>
       {/* Chart Section */}
-      <div className="relative flex-shrink-0" style={{ width: height * 0.8, height: height * 0.8 }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="relative flex-shrink-0" style={{ width: `${chartSize}px`, height: `${chartSize}px` }}>
+        <ResponsiveContainer width={chartSize} height={chartSize}>
           <PieChart>
             <Pie
               data={data}

@@ -1,16 +1,44 @@
 import React from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell
+} from 'recharts';
 import { ChartDataPoint } from '../utils/stats';
 
 interface SimpleChartProps {
   data: ChartDataPoint[];
   height?: number;
   className?: string;
+  showLabels?: boolean;
+  timeRange?: 'week' | 'month' | '3month' | 'all';
 }
+
+const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+const QUALITY_LEVELS = [
+  { label: 'Poor', min: 0, max: 2, color: '#ef4444', text: '0-2' },
+  { label: 'Fair', min: 2, max: 4, color: '#f97316', text: '2-4' },
+  { label: 'Average', min: 4, max: 6, color: '#eab308', text: '4-6' },
+  { label: 'Good', min: 6, max: 8, color: '#22c55e', text: '6-8' },
+  { label: 'Epic', min: 8, max: 10, color: '#06b6d4', text: '8-10' },
+];
 
 const SimpleChart: React.FC<SimpleChartProps> = ({
   data,
   height = 200,
-  className = ''
+  className = '',
+  showLabels = false,
+  timeRange = 'week'
 }) => {
   if (data.length === 0) {
     return (
@@ -20,144 +48,185 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
     );
   }
 
-  const maxValue = Math.max(...data.map(d => d.value));
-  const minValue = Math.min(...data.map(d => d.value));
+  const getQualityColor = (quality?: number) => {
+    if (quality === undefined || quality === 0) return 'rgb(229 231 235)'; // gray-200
+    const level = QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
+    return level.color;
+  };
 
-  const chartWidth = 400;
-  const chartHeight = height - 40; // Leave space for labels
-  const bottomPadding = 20;
-  const leftPadding = 30;
-  const rightPadding = 10;
-  const topPadding = 10;
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      const sessions = dataPoint.sessions || [];
+      const quality = dataPoint.avgWaveQuality;
+      const level = quality !== undefined && quality !== 0 
+        ? (QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1])
+        : null;
 
-  const usableWidth = chartWidth - leftPadding - rightPadding;
-  const usableHeight = chartHeight - topPadding - bottomPadding;
+      const formatTime = (datetime: string) => {
+        return new Date(datetime).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+      };
 
-  const barWidth = (usableWidth / data.length) * 0.8;
-  const gap = (usableWidth / data.length) * 0.2;
+      const formatDate = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return `${day}.${month}`;
+      };
 
-  const bars = data.map((point, index) => {
-    const x = leftPadding + index * (barWidth + gap) + gap / 2;
-    const barHeight = ((point.value - (minValue < 0 ? minValue : 0)) / (maxValue === 0 ? 1 : maxValue)) * usableHeight;
-    const y = chartHeight - bottomPadding - barHeight;
-    return { x, y, width: barWidth, height: barHeight, ...point };
+      const getDayName = (date: Date) => {
+        return date.toLocaleDateString('en-US', { weekday: 'short' });
+      };
+
+      const getTitle = () => {
+        if (timeRange === '3month') {
+          // For 3M view, show week range
+          const weekEnd = addDays(dataPoint.date, 6);
+          return `${formatDate(dataPoint.date)} - ${formatDate(weekEnd)}`;
+        } else if (timeRange === 'all') {
+          // For All view, show month name
+          return dataPoint.date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        } else {
+          // For W and M views, show day name and date
+          return `${getDayName(dataPoint.date)} ${formatDate(dataPoint.date)}`;
+        }
+      };
+
+      const getQualityLevel = (q: number) => {
+        return QUALITY_LEVELS.find(l => q < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
+      };
+
+      return (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[220px]">
+          <p className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+            {getTitle()}
+          </p>
+          
+          {sessions.length === 0 ? (
+            <div className="text-xs text-gray-500">No sessions</div>
+          ) : (
+            <div className="space-y-3">
+              {sessions.map((session: any, index: number) => {
+                const sessionLevel = getQualityLevel(session.wave_quality);
+                return (
+                  <div key={index} className="space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold text-gray-900">{session.spot.name}</span>
+                      <span className="text-xs text-gray-500 whitespace-nowrap">{formatTime(session.datetime)}</span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Duration: {session.duration_minutes} min
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: sessionLevel.color }}></div>
+                      <span className="font-semibold text-gray-900">{session.wave_quality.toFixed(1)}</span>
+                      <span className="text-gray-500">({sessionLevel.label})</span>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {sessions.length > 1 && (
+                <div className="pt-2 mt-2 border-t border-gray-200 flex justify-between text-xs text-gray-600">
+                  <span>Total: {payload[0].value} min</span>
+                  <span>Avg: {quality?.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const getDateLabel = (label: string, date: Date, range: string) => {
+    if (!showLabels) return '';
+    
+    if (range === 'week') {
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    } else if (range === 'month') {
+      return date.getDate().toString();
+    } else if (range === '3month') {
+      return `${date.getDate()}/${date.getMonth() + 1}`;
+    } else if (range === 'all') {
+      return date.toLocaleDateString('en-US', { month: 'short' });
+    }
+    return '';
+  };
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  const chartDataWithLabels = data.map(point => {
+    const pointDateStr = `${point.date.getFullYear()}-${String(point.date.getMonth() + 1).padStart(2, '0')}-${String(point.date.getDate()).padStart(2, '0')}`;
+    return {
+      ...point,
+      displayLabel: getDateLabel(point.label, point.date, timeRange),
+      isToday: pointDateStr === todayStr
+    };
   });
 
-  // Generate grid lines
-  const gridLines = [];
-  for (let i = 0; i <= 4; i++) {
-    const y = topPadding + (i / 4) * usableHeight;
-    const value = maxValue - (i / 4) * maxValue;
-    gridLines.push(
-      <g key={`grid-${i}`}>
-        <line
-          x1={leftPadding}
-          y1={y}
-          x2={chartWidth - rightPadding}
-          y2={y}
-          stroke="currentColor"
-          strokeWidth="0.5"
-          opacity="0.1"
-        />
+  const CustomXAxisTick = (props: any) => {
+    const { x, y, payload, index } = props;
+    const isToday = chartDataWithLabels[index]?.isToday || false;
+    
+    return (
+      <g transform={`translate(${x},${y})`}>
         <text
-          x={leftPadding - 8}
-          y={y + 4}
-          textAnchor="end"
-          className="text-[10px] fill-content-tertiary font-medium"
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor="middle"
+          fill={isToday ? '#ef4444' : '#9ca3af'}
+          fontSize={11}
+          fontWeight={500}
         >
-          {Math.round(value)}
+          {payload.value}
         </text>
       </g>
     );
-  }
-
-  const getQualityColor = (quality?: number) => {
-    if (quality === undefined || quality === 0) return 'rgb(229 231 235)'; // gray-200
-    if (quality < 2) return '#ef4444'; // red-500
-    if (quality < 4) return '#f97316'; // orange-500
-    if (quality < 6) return '#eab308'; // yellow-500
-    if (quality < 8) return '#22c55e'; // green-500
-    return '#06b6d4'; // cyan-500 (Epic)
   };
 
   return (
     <div className={`w-full ${className}`}>
-      <div className="relative">
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-          className="overflow-visible"
-        >
-          {/* Grid lines and Y-axis labels */}
-          {gridLines}
-
-          {/* X-axis base line */}
-          <line
-            x1={leftPadding}
-            y1={chartHeight - bottomPadding}
-            x2={chartWidth - rightPadding}
-            y2={chartHeight - bottomPadding}
-            stroke="currentColor"
-            strokeWidth="1"
-            opacity="0.2"
-          />
-
-          {/* Bars */}
-          {bars.map((bar, index) => (
-            <rect
-              key={`bar-${index}`}
-              x={bar.x}
-              y={bar.y}
-              width={bar.width}
-              height={bar.height}
-              fill={getQualityColor(bar.avgWaveQuality)}
-              rx="2"
-            >
-              <title>{`${bar.label}: ${bar.value} min (Quality: ${bar.avgWaveQuality?.toFixed(1) || 0})`}</title>
-            </rect>
-          ))}
-
-          {/* X-axis labels */}
-          {bars.filter((_, index) => {
-            if (bars.length <= 10) return true;
-            return index % Math.ceil(bars.length / 8) === 0;
-          }).map((bar, index) => (
-            <text
-              key={`x-label-${index}`}
-              x={bar.x + bar.width / 2}
-              y={chartHeight - bottomPadding + 15}
-              textAnchor="middle"
-              className="text-[10px] fill-content-tertiary font-medium"
-            >
-              {bar.label}
-            </text>
-          ))}
-        </svg>
-
-        {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-4 mt-6 pt-4 border-t border-border/50">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#ef4444' }}></div>
-            <span className="text-[10px] font-medium text-content-secondary">Poor (0-2)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#f97316' }}></div>
-            <span className="text-[10px] font-medium text-content-secondary">Fair (2-4)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#eab308' }}></div>
-            <span className="text-[10px] font-medium text-content-secondary">Average (4-6)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#22c55e' }}></div>
-            <span className="text-[10px] font-medium text-content-secondary">Good (6-8)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: '#06b6d4' }}></div>
-            <span className="text-[10px] font-medium text-content-secondary">Epic (8-10)</span>
-          </div>
-        </div>
+      <div style={{ width: '100%', height: `${height}px`, minHeight: `${height}px` }}>
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart
+            data={chartDataWithLabels}
+            margin={{ top: 10, right: 20, left: -10, bottom: showLabels ? 20 : 5 }}
+            barGap={2}
+          >
+            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#e5e7eb" opacity={0.5} />
+            <XAxis
+              dataKey="displayLabel"
+              axisLine={false}
+              tickLine={false}
+              tick={showLabels ? <CustomXAxisTick /> : false}
+              height={showLabels ? 20 : 0}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              width={50}
+              tick={{ fontSize: 12, fill: '#9ca3af', fontWeight: 400 }}
+              tickFormatter={(value) => value.toLocaleString()}
+            />
+            <Tooltip 
+              content={<CustomTooltip />} 
+              cursor={{ fill: 'currentColor', opacity: 0.05 }}
+              isAnimationActive={false}
+            />
+            <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
+              {chartDataWithLabels.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getQualityColor(entry.avgWaveQuality)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
