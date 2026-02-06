@@ -62,7 +62,7 @@ const SpotDistributionChart: React.FC<SpotDistributionChartProps> = ({
                 />
               ))}
             </Pie>
-            <Tooltip content={<div className="hidden" />} />
+            <Tooltip content={() => null} />
           </PieChart>
         </ResponsiveContainer>
         

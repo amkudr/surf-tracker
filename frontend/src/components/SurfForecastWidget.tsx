@@ -84,7 +84,6 @@ export const SurfForecastWidget = ({
               <div className="relative w-full" style={{ minHeight: '410px' }}>
                 <iframe
                   className="w-full"
-                  allowTransparency={true}
                   src={`//www.surf-forecast.com/breaks/${spotName}/forecasts/widget/m`}
                   scrolling="no"
                   frameBorder="0"
