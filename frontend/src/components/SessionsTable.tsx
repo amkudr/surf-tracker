@@ -58,7 +58,7 @@ export function SessionsTable({
             />
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-border">
             {sessions.map((session) => (
               <SessionCard key={session.id} session={session} onDelete={onDelete} />
             ))}
@@ -75,7 +75,7 @@ export function SessionsTable({
             ))}
           </colgroup>
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-100">
+            <tr className="border-b border-border bg-background-secondary">
               {TABLE_HEADERS.map(({ label, unit, key, className }) => (
                 <th
                   key={key}

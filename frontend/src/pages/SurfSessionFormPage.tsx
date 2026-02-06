@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
-import { Card, Button, FormField, Input, Select, Textarea } from '../components/ui';
+import { Card, Button, FormField, Input, Select, Textarea, Loading, Alert, AlertDescription } from '../components/ui';
 import { useSurfSessionForm } from '../hooks/useSurfSessionForm';
 
 const SurfSessionFormPage = () => {
@@ -23,7 +23,7 @@ const SurfSessionFormPage = () => {
   if (isLoadingData) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent"></div>
+        <Loading />
       </div>
     );
   }
@@ -146,9 +146,9 @@ const SurfSessionFormPage = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-              <p className="text-body text-destructive">{error}</p>
-            </div>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {/* Form Actions */}

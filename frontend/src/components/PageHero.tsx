@@ -26,14 +26,14 @@ const PageHero: React.FC<PageHeroProps> = ({
           loading="lazy"
           style={{ aspectRatio: '3 / 1' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-transparent" />
       </div>
       <div className="relative px-6 py-8 sm:px-8 sm:py-10">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900">{title}</h1>
+            <h1 className="text-3xl font-semibold text-content-primary">{title}</h1>
             {subtitle && (
-              <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+              <p className="text-sm text-content-secondary mt-1">{subtitle}</p>
             )}
           </div>
           {actions && (

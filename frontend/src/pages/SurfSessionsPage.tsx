@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { surfSessionsAPI } from '../services/api';
 import { SurfSessionResponse } from '../types/api';
 import { Plus, Waves } from 'lucide-react';
-import { Card, EmptyState, Button } from '../components/ui';
+import { Card, Button, Loading, Alert, AlertDescription } from '../components/ui';
 import { SessionsTable } from '../components/SessionsTable';
 import { PageHero } from '../components/PageHero';
 
@@ -43,7 +43,7 @@ const SurfSessionsPage = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent" />
+        <Loading />
       </div>
     );
   }
@@ -64,9 +64,9 @@ const SurfSessionsPage = () => {
       />
 
       {error && (
-        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-          <p className="text-body text-destructive">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <Card className="p-0 overflow-hidden">

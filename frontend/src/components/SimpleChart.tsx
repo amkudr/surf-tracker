@@ -49,7 +49,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   }
 
   const getQualityColor = (quality?: number) => {
-    if (quality === undefined || quality === 0) return 'rgb(229 231 235)'; // gray-200
+    if (quality === undefined || quality === 0) return '#e5e5ea'; // border secondary
     const level = QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
     return level.color;
   };
@@ -100,13 +100,13 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
       };
 
       return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[220px]">
-          <p className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-200">
+        <div className="bg-background border border-border rounded-lg shadow-lg p-3 min-w-[220px]">
+          <p className="text-sm font-bold text-content-primary mb-3 pb-2 border-b border-border">
             {getTitle()}
           </p>
           
           {sessions.length === 0 ? (
-            <div className="text-xs text-gray-500">No sessions</div>
+            <div className="text-xs text-content-tertiary">No sessions</div>
           ) : (
             <div className="space-y-3">
               {sessions.map((session: any, index: number) => {
@@ -114,23 +114,23 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
                 return (
                   <div key={index} className="space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-sm font-semibold text-gray-900">{session.spot.name}</span>
-                      <span className="text-xs text-gray-500 whitespace-nowrap">{formatTime(session.datetime)}</span>
+                      <span className="text-sm font-semibold text-content-primary">{session.spot.name}</span>
+                      <span className="text-xs text-content-tertiary whitespace-nowrap">{formatTime(session.datetime)}</span>
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-content-secondary">
                       Duration: {session.duration_minutes} min
                     </div>
                     <div className="flex items-center gap-1.5 text-xs">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: sessionLevel.color }}></div>
-                      <span className="font-semibold text-gray-900">{session.wave_quality.toFixed(1)}</span>
-                      <span className="text-gray-500">({sessionLevel.label})</span>
+                      <span className="font-semibold text-content-primary">{session.wave_quality.toFixed(1)}</span>
+                      <span className="text-content-tertiary">({sessionLevel.label})</span>
                     </div>
                   </div>
                 );
               })}
               
               {sessions.length > 1 && (
-                <div className="pt-2 mt-2 border-t border-gray-200 flex justify-between text-xs text-gray-600">
+                <div className="pt-2 mt-2 border-t border-border flex justify-between text-xs text-content-secondary">
                   <span>Total: {payload[0].value} min</span>
                   <span>Avg: {quality?.toFixed(1)}</span>
                 </div>
@@ -181,7 +181,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
           y={0}
           dy={16}
           textAnchor="middle"
-          fill={isToday ? '#ef4444' : '#9ca3af'}
+          fill={isToday ? '#0071e3' : '#8e8e93'}
           fontSize={11}
           fontWeight={500}
         >
@@ -200,7 +200,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
             margin={{ top: 10, right: 20, left: -10, bottom: showLabels ? 20 : 5 }}
             barGap={2}
           >
-            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#e5e7eb" opacity={0.5} />
+            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#e5e5ea" opacity={0.5} />
             <XAxis
               dataKey="displayLabel"
               axisLine={false}
@@ -212,7 +212,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
               axisLine={false}
               tickLine={false}
               width={50}
-              tick={{ fontSize: 12, fill: '#9ca3af', fontWeight: 400 }}
+              tick={{ fontSize: 12, fill: '#8e8e93', fontWeight: 400 }}
               tickFormatter={(value) => value.toLocaleString()}
             />
             <Tooltip 

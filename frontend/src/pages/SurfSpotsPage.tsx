@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { spotsAPI } from '../services/api';
 import { SpotResponse, SpotCreate } from '../types/api';
 import { Plus, MapPin, Navigation, Hash, X, Save, LayoutGrid, Map as MapIcon, ExternalLink, Waves } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent, EmptyState, Button, FormField, DifficultyBadges, CoordinatesBadge, SegmentedControl, SurfForecastWidget } from '../components/ui';
+import { Card, CardHeader, CardTitle, CardContent, EmptyState, Button, FormField, DifficultyBadges, CoordinatesBadge, SegmentedControl, SurfForecastWidget, Input, Alert, AlertDescription, Loading } from '../components/ui';
 import { PageHero } from '../components/PageHero';
 import { MapProvider } from '../components/MapProvider';
 import { SpotMap } from '../components/SpotMap';
@@ -90,7 +90,7 @@ const SurfSpotsPage = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent"></div>
+        <Loading />
       </div>
     );
   }
@@ -111,35 +111,32 @@ const SurfSpotsPage = () => {
               value={viewMode}
               onChange={(value) => setViewMode(value as 'grid' | 'map')}
             />
-            <button
+            <Button
+              variant={showForm ? 'secondary' : 'primary'}
               onClick={() => setShowForm(!showForm)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                showForm
-                  ? 'bg-content-secondary hover:bg-content-tertiary text-background'
-                  : 'bg-accent hover:bg-accent-hover text-background'
-              }`}
+              className="gap-2"
             >
               {showForm ? (
                 <>
                   <X className="h-4 w-4" />
-                  <span>Cancel</span>
+                  Cancel
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  <span>Add New Spot</span>
+                  Add New Spot
                 </>
               )}
-            </button>
+            </Button>
           </div>
         }
       />
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-body text-destructive">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Add Spot Form */}
@@ -154,7 +151,7 @@ const SurfSpotsPage = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Spot Name */}
               <FormField label="Spot Name" required icon={<MapPin className="h-4 w-4" />}>
-                <input
+                <Input
                   type="text"
                   id="name"
                   name="name"
@@ -162,14 +159,13 @@ const SurfSpotsPage = () => {
                   onChange={handleChange}
                   required
                   placeholder="Enter spot name"
-                  className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-content-primary"
                 />
               </FormField>
 
               {/* Coordinates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Latitude (optional)" icon={<Navigation className="h-4 w-4" />}>
-                  <input
+                  <Input
                     type="number"
                     id="latitude"
                     name="latitude"
@@ -177,12 +173,11 @@ const SurfSpotsPage = () => {
                     onChange={handleChange}
                     step="0.0001"
                     placeholder="-37.8136"
-                    className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-content-primary"
                   />
                 </FormField>
 
                 <FormField label="Longitude (optional)" icon={<Navigation className="h-4 w-4" />}>
-                  <input
+                  <Input
                     type="number"
                     id="longitude"
                     name="longitude"
@@ -190,7 +185,6 @@ const SurfSpotsPage = () => {
                     onChange={handleChange}
                     step="0.0001"
                     placeholder="144.9631"
-                    className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-content-primary"
                   />
                 </FormField>
               </div>
@@ -222,14 +216,13 @@ const SurfSpotsPage = () => {
 
               {/* Surf Forecast Name */}
               <FormField label="Surf Forecast Name (optional)" icon={<Waves className="h-4 w-4" />}>
-                <input
+                <Input
                   type="text"
                   id="surf_forecast_name"
                   name="surf_forecast_name"
                   value={formData.surf_forecast_name}
                   onChange={handleChange}
                   placeholder="e.g., Bells Beach"
-                  className="w-full px-3 py-2 border border-border rounded-md focus:ring-2 focus:ring-accent focus:border-accent transition-colors bg-background text-content-primary"
                 />
                 <p className="text-caption text-content-secondary mt-2">
                   Enter the name used by the surf forecast provider (e.g., Stormrdr, Magicseaweed)

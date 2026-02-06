@@ -8,9 +8,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: 'bg-accent text-white hover:bg-accent-hover active:bg-accent-active focus-visible:ring-accent focus-visible:ring-offset-white disabled:bg-accent-disabled shadow-sm hover:shadow-md active:shadow-sm',
-        secondary: 'bg-white text-content-primary border border-border hover:bg-gray-50 active:bg-gray-100 focus-visible:ring-accent focus-visible:ring-offset-white shadow-sm hover:shadow-md active:shadow-sm',
-        ghost: 'text-content-secondary hover:text-content-primary hover:bg-gray-50 active:bg-gray-100 focus-visible:ring-accent focus-visible:ring-offset-white',
-        destructive: 'text-destructive hover:text-destructive-hover active:text-destructive-active focus-visible:ring-destructive focus-visible:ring-offset-white',
+        secondary: 'bg-background text-content-primary border border-border hover:bg-background-secondary active:bg-background-tertiary focus-visible:ring-accent focus-visible:ring-offset-white shadow-sm hover:shadow-md active:shadow-sm',
+        ghost: 'text-content-secondary hover:text-content-primary hover:bg-background-secondary active:bg-background-tertiary focus-visible:ring-accent focus-visible:ring-offset-white',
+        destructive: 'text-destructive hover:text-destructive-hover active:text-destructive-active hover:bg-destructive/5 active:bg-destructive/10 focus-visible:ring-destructive focus-visible:ring-offset-white',
       },
       size: {
         sm: 'h-8 px-3 text-xs gap-1.5', // Small buttons

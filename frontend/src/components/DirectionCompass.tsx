@@ -52,7 +52,7 @@ export const DirectionCompass: React.FC<DirectionCompassProps> = ({
   if (deg == null) {
     return (
       <div
-        className="flex items-center justify-center text-gray-400"
+        className="flex items-center justify-center text-content-quaternary"
         style={{ width: size, height: size }}
       >
         <span className="text-xs">—</span>
@@ -79,7 +79,7 @@ export const DirectionCompass: React.FC<DirectionCompassProps> = ({
       case 'SW': return '#cd853f'; // brown for SW
       case 'W': return '#228b22'; // green for West
       case 'NW': return '#6a5acd'; // purple for NW
-      default: return '#374151'; // gray-700
+      default: return '#3c3c43'; // content.secondary
     }
   };
 

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { UserLogin } from '../types/api';
-import { Waves, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Waves, Mail, Lock } from 'lucide-react';
+import { Card, Button, Input, FormField, Alert, AlertDescription } from '../components/ui';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState<UserLogin>({
@@ -50,93 +51,82 @@ const LoginPage = () => {
         </div>
 
         {/* Form */}
-        <div className="bg-background rounded-lg shadow-default p-6 border border-border">
+        <Card className="p-6 shadow-subtle">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
+            <FormField label="Email Address" required>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-content-quaternary" />
                 </div>
-                <input
+                <Input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500 transition-colors"
+                  className="pl-10"
                   placeholder="Enter your email"
                 />
               </div>
-            </div>
+            </FormField>
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+            <FormField label="Password" required>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-content-quaternary" />
                 </div>
-                <input
+                <Input
                   type="password"
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ocean-500 focus:border-ocean-500 transition-colors"
+                  className="pl-10"
                   placeholder="Enter your password"
                 />
               </div>
-            </div>
+            </FormField>
 
             {/* Error Message */}
             {error && (
-              <div className="flex items-center space-x-2 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center items-center space-x-2 bg-ocean-500 hover:bg-ocean-600 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors focus:ring-2 focus:ring-ocean-500 focus:ring-offset-2 disabled:cursor-not-allowed"
-            >
+            <Button type="submit" size="lg" fullWidth disabled={isLoading} className="gap-2">
               {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent"></div>
-                  <span>Signing in...</span>
+                  Signing in...
                 </>
               ) : (
-                <span>Sign In</span>
+                'Sign In'
               )}
-            </button>
+            </Button>
           </form>
 
           {/* Register Link */}
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-content-secondary">
               Don't have an account?{' '}
               <Link
                 to="/register"
-                className="font-medium text-ocean-600 hover:text-ocean-700 transition-colors"
+                className="font-medium text-accent hover:text-accent-hover transition-colors"
               >
                 Sign up here
               </Link>
             </p>
           </div>
-        </div>
+        </Card>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-content-tertiary">
           Track your surf sessions and discover new spots
         </div>
       </div>

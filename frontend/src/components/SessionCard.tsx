@@ -28,7 +28,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
         <div className="flex items-center gap-1 shrink-0">
           <Link
             to={`/sessions/${session.id}/edit`}
-            className="p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-background-secondary transition-colors"
             title="Edit session"
           >
             <Edit className="h-5 w-5" />
@@ -36,7 +36,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
           <button
             type="button"
             onClick={() => onDelete(session.id)}
-            className="p-2 rounded-lg text-content-secondary hover:text-destructive hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg text-content-secondary hover:text-destructive hover:bg-background-secondary transition-colors"
             title="Delete session"
           >
             <Trash2 className="h-5 w-5" />
@@ -76,7 +76,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
       </div>
 
       {/* Wave and Wind metrics with compasses */}
-      <div className="space-y-4 pt-4 border-t border-gray-200">
+      <div className="space-y-4 pt-4 border-t border-border">
         {/* Wave row */}
         <div className="flex items-center text-base">
           <div className="flex items-center gap-3">
@@ -113,7 +113,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
       </div>
 
       {/* Rating */}
-      <div className="flex items-center gap-3 pt-4 border-t border-gray-200 text-base">
+      <div className="flex items-center gap-3 pt-4 border-t border-border text-base">
         <span className="font-medium text-content-secondary">Rating</span>
         <span className="font-medium">{session.rating != null ? session.rating : '—'}</span>
         
@@ -134,7 +134,7 @@ export function SessionCard({ session, onDelete }: SessionCardProps) {
 
       {/* Notes section */}
       {session.notes && (
-        <p className="text-sm text-content-secondary line-clamp-2 pt-4 border-t border-gray-200">
+        <p className="text-sm text-content-secondary line-clamp-2 pt-4 border-t border-border">
           {session.notes}
         </p>
       )}

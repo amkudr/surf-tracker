@@ -8,6 +8,7 @@ import SurfSessionFormPage from './pages/SurfSessionFormPage';
 import SurfSpotsPage from './pages/SurfSpotsPage';
 import SurfboardsPage from './pages/SurfboardsPage';
 import Layout from './components/Layout';
+import { Loading } from './components/ui';
 import './App.css';
 
 // Protected Route component
@@ -15,7 +16,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loading text="Loading..." />
+      </div>
+    );
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;

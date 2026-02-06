@@ -4,7 +4,7 @@ import { useSwipeable } from 'react-swipeable';
 import { surfSessionsAPI } from '../services/api';
 import { SurfSessionResponse } from '../types/api';
 import { Plus, Waves, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, CardHeader, CardContent, EmptyState, Button, SectionTitle } from '../components/ui';
+import { Card, CardHeader, CardContent, EmptyState, Button, SectionTitle, SegmentedControl, Loading, Alert, AlertDescription } from '../components/ui';
 import { SimpleChart } from '../components/SimpleChart';
 import { PageHero } from '../components/PageHero';
 import { 
@@ -122,7 +122,7 @@ const DashboardPage = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent"></div>
+        <Loading />
       </div>
     );
   }
@@ -150,29 +150,20 @@ const DashboardPage = () => {
           <div className="space-y-6 mb-8">
             {/* Time Range Selector */}
             <div className="flex items-center justify-center gap-3">
-              {[
-                { value: 'week' as TimeRange, label: 'W' },
-                { value: 'month' as TimeRange, label: 'M' },
-                { value: '3month' as TimeRange, label: '3M' },
-                { value: 'all' as TimeRange, label: 'All' },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    setTimeRange(option.value);
-                    setCurrentDate(new Date());
-                  }}
-                  className={`
-                    min-w-[64px] px-6 py-2.5 rounded-full text-sm font-semibold transition-all duration-200
-                    ${timeRange === option.value
-                      ? 'bg-blue-500 text-white shadow-md hover:bg-blue-600'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
-                    }
-                  `}
-                >
-                  {option.label}
-                </button>
-              ))}
+              <SegmentedControl
+                value={timeRange}
+                onChange={(value) => {
+                  setTimeRange(value as TimeRange);
+                  setCurrentDate(new Date());
+                }}
+                options={[
+                  { value: 'week', label: 'W' },
+                  { value: 'month', label: 'M' },
+                  { value: '3month', label: '3M' },
+                  { value: 'all', label: 'All' },
+                ]}
+                size="md"
+              />
             </div>
 
             {/* Stats and Date Row - Desktop */}
@@ -180,68 +171,72 @@ const DashboardPage = () => {
               {/* Left Arrow - Fixed width */}
               <div className="flex items-center justify-center">
                 {timeRange !== 'all' && (
-                  <button
+                  <Button
                     onClick={handlePrevious}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
                     aria-label="Previous period"
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full p-0"
                   >
-                    <ChevronLeft className="h-6 w-6" />
-                  </button>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
                 )}
               </div>
 
               {/* Stats - Fixed grid */}
               <div className="grid grid-cols-3 gap-16">
                 <div className="flex items-baseline gap-3 justify-center">
-                  <span className="text-5xl font-bold text-gray-900 tabular-nums">{timeRangeStats.sessionsCount}</span>
-                  <span className="text-sm text-gray-500">sessions</span>
+                  <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.sessionsCount}</span>
+                  <span className="text-sm text-content-tertiary">sessions</span>
                 </div>
                 <div className="flex items-baseline gap-3 justify-center">
-                  <span className="text-5xl font-bold text-gray-900 tabular-nums">{timeRangeStats.totalSurfTime}</span>
-                  <span className="text-sm text-gray-500">minutes</span>
+                  <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.totalSurfTime}</span>
+                  <span className="text-sm text-content-tertiary">minutes</span>
                 </div>
                 <div className="flex items-baseline gap-3 justify-center">
-                  <span className="text-5xl font-bold text-gray-900 tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
-                  <span className="text-sm text-gray-500">quality</span>
+                  <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
+                  <span className="text-sm text-content-tertiary">quality</span>
                 </div>
               </div>
 
               {/* Date Range - Fixed position */}
-              <div className="text-sm text-gray-500 text-right min-w-[200px]">
+              <div className="text-sm text-content-tertiary text-right min-w-[200px]">
                 {getTimeRangeLabel(timeRange, currentDate)}
               </div>
 
               {/* Right Arrow - Fixed width */}
               <div className="flex items-center justify-center">
                 {timeRange !== 'all' && (
-                  <button
+                  <Button
                     onClick={handleNext}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
                     aria-label="Next period"
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full p-0"
                   >
-                    <ChevronRight className="h-6 w-6" />
-                  </button>
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
                 )}
               </div>
             </div>
 
             {/* Stats and Date - Mobile (Stacked) */}
             <div className="lg:hidden space-y-4">
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-content-tertiary">
                 {getTimeRangeLabel(timeRange, currentDate)}
               </div>
               <div className="flex items-center justify-center gap-12">
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-gray-900 mb-1">{timeRangeStats.sessionsCount}</p>
-                  <p className="text-xs text-gray-500">sessions</p>
+                  <p className="text-4xl font-bold text-content-primary mb-1">{timeRangeStats.sessionsCount}</p>
+                  <p className="text-xs text-content-tertiary">sessions</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-gray-900 mb-1">{timeRangeStats.totalSurfTime}</p>
-                  <p className="text-xs text-gray-500">minutes</p>
+                  <p className="text-4xl font-bold text-content-primary mb-1">{timeRangeStats.totalSurfTime}</p>
+                  <p className="text-xs text-content-tertiary">minutes</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-gray-900 mb-1">{timeRangeStats.avgWaveQuality.toFixed(1)}</p>
-                  <p className="text-xs text-gray-500">quality</p>
+                  <p className="text-4xl font-bold text-content-primary mb-1">{timeRangeStats.avgWaveQuality.toFixed(1)}</p>
+                  <p className="text-xs text-content-tertiary">quality</p>
                 </div>
               </div>
             </div>
@@ -305,9 +300,9 @@ const DashboardPage = () => {
 
         <div className="p-6 space-y-4">
           {error && (
-            <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-              <p className="text-body text-destructive">{error}</p>
-            </div>
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
 
           {sessions.length === 0 ? (
@@ -323,21 +318,21 @@ const DashboardPage = () => {
           ) : (
             <div>
               {/* Desktop table header */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 border-b border-border bg-background-secondary">
                 <div className="col-span-4">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date</span>
+                  <span className="text-xs font-medium text-content-tertiary uppercase tracking-wide">Date</span>
                 </div>
                 <div className="col-span-4">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Spot</span>
+                  <span className="text-xs font-medium text-content-tertiary uppercase tracking-wide">Spot</span>
                 </div>
                 <div className="col-span-2 text-center">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</span>
+                  <span className="text-xs font-medium text-content-tertiary uppercase tracking-wide">Duration</span>
                 </div>
                 <div className="col-span-1 text-center">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Quality</span>
+                  <span className="text-xs font-medium text-content-tertiary uppercase tracking-wide">Quality</span>
                 </div>
                 <div className="col-span-1 text-center">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</span>
+                  <span className="text-xs font-medium text-content-tertiary uppercase tracking-wide">Actions</span>
                 </div>
               </div>
 

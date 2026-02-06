@@ -104,14 +104,13 @@ const SpotDistributionChart: React.FC<SpotDistributionChartProps> = ({
       {/* Custom Legend Section */}
       <div className="flex flex-col gap-2.5 min-w-[140px] max-h-full overflow-y-auto py-2 pr-4 custom-scrollbar">
         {data.map((point, index) => (
-          <motion.div 
-            key={index} 
+          <motion.div
+            key={index}
             initial={false}
-            animate={{ 
-              backgroundColor: activeIndex === index ? 'var(--color-bg-secondary, rgba(0,0,0,0.05))' : 'transparent',
-              x: activeIndex === index ? 4 : 0
-            }}
-            className="flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer"
+            animate={{ x: activeIndex === index ? 4 : 0 }}
+            className={`flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-colors ${
+              activeIndex === index ? 'bg-background-secondary' : 'bg-transparent'
+            }`}
             onMouseEnter={() => setActiveIndex(index)}
             onMouseLeave={() => setActiveIndex(null)}
           >

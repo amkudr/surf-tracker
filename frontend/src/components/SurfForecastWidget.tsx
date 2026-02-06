@@ -39,7 +39,7 @@ export const SurfForecastWidget = ({ spotName, className = '' }: SurfForecastWid
         className="w-full flex items-center justify-center py-1.5 rounded-md hover:bg-content-tertiary/10 transition-colors group opacity-60 hover:opacity-100"
         title="Show Forecast Pop-up"
       >
-        <Waves className="h-4 w-4 text-blue-500" />
+        <Waves className="h-4 w-4 text-accent" />
       </button>
 
       {/* Modal Overlay */}
@@ -56,7 +56,7 @@ export const SurfForecastWidget = ({ spotName, className = '' }: SurfForecastWid
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <div className="flex items-center space-x-2">
-                <Waves className="h-5 w-5 text-blue-500" />
+                <Waves className="h-5 w-5 text-accent" />
                 <h3 className="text-xl font-semibold text-content-primary">
                   {spotName.replace(/-/g, ' ')} Forecast
                 </h3>
@@ -70,7 +70,7 @@ export const SurfForecastWidget = ({ spotName, className = '' }: SurfForecastWid
             </div>
             
             {/* Modal Body - Iframe */}
-            <div className="flex-1 overflow-auto bg-white p-2 sm:p-4">
+            <div className="flex-1 overflow-auto bg-background p-2 sm:p-4">
               <div className="relative w-full" style={{ minHeight: '410px' }}>
                 <iframe
                   className="w-full"

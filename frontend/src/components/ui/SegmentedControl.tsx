@@ -24,7 +24,7 @@ const segmentVariants = cva(
     variants: {
       active: {
         true: 'bg-accent text-white shadow-sm',
-        false: 'text-content-secondary hover:text-content-primary hover:bg-gray-50 active:bg-gray-100',
+        false: 'text-content-secondary hover:text-content-primary hover:bg-background-secondary active:bg-background-tertiary',
       },
       size: {
         sm: 'px-2 py-1 text-xs',

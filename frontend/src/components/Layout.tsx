@@ -24,7 +24,7 @@ const AppShell = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Header - Quiet chrome, focus on content */}
       <header className="border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

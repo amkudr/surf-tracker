@@ -17,12 +17,12 @@ interface SessionTableRowProps {
   onDelete: (id: number) => void;
 }
 
-const cellBase = 'px-2 py-3 text-sm text-content-primary border-b border-gray-200 text-center last:pr-2';
+const cellBase = 'px-2 py-3 text-sm text-content-primary border-b border-border text-center last:pr-2 tabular-nums';
 
 export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
   const { dateLine, yearLine } = formatSessionDateTable(session.datetime);
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
+    <tr className="even:bg-background-secondary hover:bg-background-tertiary transition-colors">
       <td className={cellBase}>
         <span className="block">{dateLine}</span>
         <span className="block text-content-secondary">{yearLine}</span>
@@ -75,7 +75,7 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
       <td className={cellBase}>
         <Link
           to={`/sessions/${session.id}/edit`}
-          className="inline-flex p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="inline-flex p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-background-secondary transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
           title="Edit session"
         >
           <Edit className="h-4 w-4" />

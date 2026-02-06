@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { surfboardsAPI } from '../services/api';
 import { SurfboardResponse, SurfboardCreate } from '../types/api';
 import { Plus, Trash2, Ruler, Weight, Edit2 } from 'lucide-react';
-import { Card, Button, Input, FormField, EmptyState, SectionTitle, Alert, AlertDescription, PageHero } from '../components/ui';
+import { Card, Button, Input, FormField, EmptyState, SectionTitle, Alert, AlertDescription, PageHero, Loading } from '../components/ui';
 
 const SurfboardsPage = () => {
   const [surfboards, setSurfboards] = useState<SurfboardResponse[]>([]);
@@ -92,7 +92,7 @@ const SurfboardsPage = () => {
   if (isLoading && surfboards.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent"></div>
+        <Loading />
       </div>
     );
   }

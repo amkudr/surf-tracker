@@ -7,8 +7,8 @@ const labelVariants = cva(
   {
     variants: {
       variant: {
-        default: 'text-gray-700',
-        error: 'text-error-600',
+        default: 'text-content-primary',
+        error: 'text-destructive',
       },
     },
     defaultVariants: {
