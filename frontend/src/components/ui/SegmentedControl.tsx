@@ -19,7 +19,7 @@ const segmentedControlVariants = cva(
 );
 
 const segmentVariants = cva(
-  'inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white',
+  'inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white min-w-[64px]',
   {
     variants: {
       active: {
@@ -27,9 +27,9 @@ const segmentVariants = cva(
         false: 'text-content-secondary hover:text-content-primary hover:bg-background-secondary active:bg-background-tertiary',
       },
       size: {
-        sm: 'px-2 py-1 text-xs',
-        md: 'px-3 py-2',
-        lg: 'px-4 py-2.5',
+        sm: 'px-2.5 py-1 text-xs',
+        md: 'px-4 py-2',
+        lg: 'px-5 py-2.5',
       },
     },
     defaultVariants: {

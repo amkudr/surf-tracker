@@ -128,7 +128,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Hero Header */}
       <PageHero
         title="Dashboard"
@@ -143,12 +143,26 @@ const DashboardPage = () => {
       />
 
       {/* Main Statistics Card */}
-      <Card>
-        <CardContent className="p-6">
+      <Card className="overflow-hidden">
+        <CardContent className="p-4 sm:p-6">
           {/* Header Section */}
-          <div className="space-y-6 mb-8">
-            {/* Time Range Selector */}
-            <div className="flex items-center justify-center gap-3">
+          <div className="space-y-4 sm:space-y-6 mb-4 sm:mb-6">
+            {/* Controls + Stats in one row on medium+ screens */}
+            <div className="hidden md:grid grid-cols-[44px_auto_1fr_auto_44px] items-center gap-4">
+              <div className="flex justify-center">
+                {timeRange !== 'all' && (
+                  <Button
+                    onClick={handlePrevious}
+                    aria-label="Previous period"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 w-10 rounded-full p-0"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
+
               <SegmentedControl
                 value={timeRange}
                 onChange={(value) => {
@@ -163,55 +177,34 @@ const DashboardPage = () => {
                 ]}
                 size="md"
               />
-            </div>
 
-            {/* Stats and Date Row - Desktop */}
-            <div className="hidden lg:grid grid-cols-[40px_1fr_auto_40px] items-center gap-6 px-8">
-              {/* Left Arrow - Fixed width */}
-              <div className="flex items-center justify-center">
-                {timeRange !== 'all' && (
-                  <Button
-                    onClick={handlePrevious}
-                    aria-label="Previous period"
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 w-9 rounded-full p-0"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Stats - Fixed grid */}
-              <div className="grid grid-cols-3 gap-16">
-                <div className="flex items-baseline gap-3 justify-center">
+              <div className="flex items-center justify-center gap-10">
+                <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.sessionsCount}</span>
                   <span className="text-sm text-content-tertiary">sessions</span>
                 </div>
-                <div className="flex items-baseline gap-3 justify-center">
+                <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.totalSurfTime}</span>
                   <span className="text-sm text-content-tertiary">minutes</span>
                 </div>
-                <div className="flex items-baseline gap-3 justify-center">
+                <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
                   <span className="text-sm text-content-tertiary">quality</span>
                 </div>
               </div>
 
-              {/* Date Range - Fixed position */}
-              <div className="text-sm text-content-tertiary text-right min-w-[200px]">
+              <div className="text-sm text-content-secondary text-right font-medium">
                 {getTimeRangeLabel(timeRange, currentDate)}
               </div>
 
-              {/* Right Arrow - Fixed width */}
-              <div className="flex items-center justify-center">
+              <div className="flex justify-center">
                 {timeRange !== 'all' && (
                   <Button
                     onClick={handleNext}
                     aria-label="Next period"
                     variant="ghost"
                     size="sm"
-                    className="h-9 w-9 rounded-full p-0"
+                    className="h-10 w-10 rounded-full p-0"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </Button>
@@ -219,12 +212,51 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Stats and Date - Mobile (Stacked) */}
+            {/* Mobile/Tablet stacked layout */}
             <div className="lg:hidden space-y-4">
-              <div className="text-center text-sm text-content-tertiary">
-                {getTimeRangeLabel(timeRange, currentDate)}
+              <SegmentedControl
+                value={timeRange}
+                onChange={(value) => {
+                  setTimeRange(value as TimeRange);
+                  setCurrentDate(new Date());
+                }}
+                options={[
+                  { value: 'week', label: 'W' },
+                  { value: 'month', label: 'M' },
+                  { value: '3month', label: '3M' },
+                  { value: 'all', label: 'All' },
+                ]}
+                size="md"
+                className="w-full justify-between rounded-full bg-white border-border/70 shadow-sm"
+              />
+              <div className="flex items-center justify-center gap-3">
+                {timeRange !== 'all' && (
+                  <Button
+                    onClick={handlePrevious}
+                    aria-label="Previous period"
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full p-0 text-content-secondary hover:text-content-primary"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <div className="flex-1 max-w-[260px] text-center text-sm text-content-primary font-medium bg-white px-4 py-2.5 rounded-full">
+                  {getTimeRangeLabel(timeRange, currentDate)}
+                </div>
+                {timeRange !== 'all' && (
+                  <Button
+                    onClick={handleNext}
+                    aria-label="Next period"
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-full p-0 text-content-secondary hover:text-content-primary"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="text-center">
                   <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.sessionsCount}</p>
                   <p className="text-xs text-content-tertiary">sessions</p>
@@ -242,28 +274,30 @@ const DashboardPage = () => {
           </div>
 
           {/* Swipeable Chart Area */}
-          <div 
-            {...swipeHandlers}
-            className={`px-2 select-none ${timeRange !== 'all' ? 'cursor-grab active:cursor-grabbing' : ''}`}
-            style={{ touchAction: 'pan-y' }}
-          >
-            <SimpleChart
-              data={chartData}
-              height={280}
-              showLabels={true}
-              timeRange={timeRange}
-            />
+          <div className="-mx-6 sm:-mx-8 lg:-mx-10">
+            <div 
+              {...swipeHandlers}
+              className={`select-none rounded-2xl p-0 sm:p-1 ${timeRange !== 'all' ? 'cursor-grab active:cursor-grabbing' : ''}`}
+              style={{ touchAction: 'pan-y' }}
+            >
+              <SimpleChart
+                data={chartData}
+                height={280}
+                showLabels={true}
+                timeRange={timeRange}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Secondary Statistics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <SectionTitle>Popular Spot</SectionTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0 pb-4 sm:pb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-accent/10 rounded-xl">
                 <Waves className="h-6 w-6 text-accent" />
@@ -279,10 +313,10 @@ const DashboardPage = () => {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <SectionTitle>Spot Distribution</SectionTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0 pb-4 sm:pb-6">
             <SpotDistributionChart
               data={spotDistributionData}
               height={180}
@@ -293,11 +327,11 @@ const DashboardPage = () => {
 
       {/* Recent Sessions - Clean list */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-2">
           <SectionTitle>Recent Sessions</SectionTitle>
         </CardHeader>
 
-        <div className="p-6 space-y-4">
+        <div className="p-5 sm:p-6 space-y-3">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertDescription>{error}</AlertDescription>
@@ -336,9 +370,9 @@ const DashboardPage = () => {
               </div>
 
               {/* Recent sessions list - show last 5 */}
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border rounded-xl overflow-hidden border border-border/70">
                 {sessions.slice(0, 5).map((session) => (
-                  <div key={session.id} className="p-4 hover:bg-background-secondary transition-colors">
+                  <div key={session.id} className="p-3 sm:p-4 hover:bg-background-secondary transition-colors">
                     {/* Mobile layout */}
                     <div className="md:hidden space-y-3">
                       <div className="flex items-center justify-between">

@@ -165,10 +165,16 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
     const pointDateStr = `${point.date.getFullYear()}-${String(point.date.getMonth() + 1).padStart(2, '0')}-${String(point.date.getDate()).padStart(2, '0')}`;
     return {
       ...point,
-      displayLabel: getDateLabel(point.label, point.date, timeRange),
+      displayLabel: getDateLabel(point.label, point.date, timeRange) || point.label,
       isToday: pointDateStr === todayStr
     };
   });
+
+  // Keep ticks readable: show all for week, throttle others to ~12
+  const tickStep = timeRange === 'week' ? 1 : Math.max(1, Math.ceil(chartDataWithLabels.length / 12));
+  const allDayTicks = chartDataWithLabels
+    .map((p, i) => (i % tickStep === 0 || i === chartDataWithLabels.length - 1 ? p.displayLabel : null))
+    .filter(Boolean);
 
   const CustomXAxisTick = (props: any) => {
     const { x, y, payload, index } = props;
@@ -179,10 +185,10 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
         <text
           x={0}
           y={0}
-          dy={16}
+          dy={14}
           textAnchor="middle"
           fill={isToday ? '#0071e3' : '#8e8e93'}
-          fontSize={11}
+          fontSize={10}
           fontWeight={500}
         >
           {payload.value}
@@ -197,16 +203,22 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
         <ResponsiveContainer width="100%" height={height}>
           <BarChart
             data={chartDataWithLabels}
-            margin={{ top: 10, right: 20, left: 0, bottom: showLabels ? 20 : 5 }}
-            barGap={2}
+            margin={{ top: 10, right: 12, left: 0, bottom: showLabels ? 20 : 5 }}
+            barGap={1}
           >
-            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#e5e5ea" opacity={0.5} />
+            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#e5e5ea" opacity={0.25} />
             <XAxis
               dataKey="displayLabel"
               axisLine={false}
               tickLine={false}
               tick={showLabels ? <CustomXAxisTick /> : false}
-              height={showLabels ? 20 : 0}
+              ticks={showLabels ? allDayTicks : undefined}
+              interval={0}
+              minTickGap={0}
+              tickMargin={10}
+              type="category"
+              allowDuplicatedCategory={false}
+              height={showLabels ? 26 : 0}
             />
             <YAxis
               axisLine={false}
