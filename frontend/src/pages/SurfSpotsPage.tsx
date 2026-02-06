@@ -332,7 +332,7 @@ const SurfSpotsPage = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
                       <CoordinatesBadge
                         latitude={spot.latitude}
                         longitude={spot.longitude}
@@ -340,7 +340,12 @@ const SurfSpotsPage = () => {
                       />
 
                       {spot.difficulty && spot.difficulty.length > 0 && (
-                        <DifficultyBadges values={spot.difficulty} size="sm" />
+                        <DifficultyBadges
+                          values={spot.difficulty}
+                          size="sm"
+                          variant="bar"
+                          interactive
+                        />
                       )}
                     </div>
 
