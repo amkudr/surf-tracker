@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { surfSessionsAPI } from '../services/api';
 import { SurfSessionResponse } from '../types/api';
-import { Plus, Waves } from 'lucide-react';
+import { Waves } from 'lucide-react';
 import { Card, Button, Loading, Alert, AlertDescription } from '../components/ui';
 import { SessionsTable } from '../components/SessionsTable';
 import { PageHero } from '../components/PageHero';
@@ -55,8 +55,7 @@ const SurfSessionsPage = () => {
         subtitle="Manage and track all your surf sessions"
         actions={
           <Link to="/sessions/new">
-            <Button variant="primary" size="lg">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button variant="primary" size="md">
               Add Session
             </Button>
           </Link>

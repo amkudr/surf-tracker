@@ -28,11 +28,13 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
         <span className="block text-content-secondary">{yearLine}</span>
       </td>
       <td className={cellBase}>{formatSessionTime(session.datetime)}</td>
-      <td className={`${cellBase} font-medium`}>{session.spot.name}</td>
+      <td className={`${cellBase} font-medium overflow-hidden`}>
+        <span className="block truncate">{session.spot.name}</span>
+      </td>
       <td className={cellBase}>
-        <span className="block font-medium">{session.surfboard?.name || '—'}</span>
+        <span className="block font-medium truncate">{session.surfboard?.name || '—'}</span>
         {session.surfboard && (
-          <span className="block text-xs text-content-secondary mt-0.5">
+          <span className="block text-xs text-content-secondary mt-0.5 truncate">
             {session.surfboard.length_ft}'
           </span>
         )}

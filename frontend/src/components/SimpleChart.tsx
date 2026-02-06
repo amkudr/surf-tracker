@@ -197,7 +197,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
         <ResponsiveContainer width="100%" height={height}>
           <BarChart
             data={chartDataWithLabels}
-            margin={{ top: 10, right: 20, left: -10, bottom: showLabels ? 20 : 5 }}
+            margin={{ top: 10, right: 20, left: 0, bottom: showLabels ? 20 : 5 }}
             barGap={2}
           >
             <CartesianGrid strokeDasharray="0" vertical={false} stroke="#e5e5ea" opacity={0.5} />

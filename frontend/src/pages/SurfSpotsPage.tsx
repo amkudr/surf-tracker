@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { spotsAPI } from '../services/api';
 import { SpotResponse, SpotCreate } from '../types/api';
-import { Plus, MapPin, Navigation, Hash, X, Save, LayoutGrid, Map as MapIcon, ExternalLink, Waves } from 'lucide-react';
+import { MapPin, Navigation, Hash, Save, LayoutGrid, Map as MapIcon, ExternalLink, Waves } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, EmptyState, Button, FormField, DifficultyBadges, CoordinatesBadge, SegmentedControl, SurfForecastWidget, Input, Alert, AlertDescription, Loading } from '../components/ui';
 import { PageHero } from '../components/PageHero';
 import { MapProvider } from '../components/MapProvider';
@@ -102,7 +102,23 @@ const SurfSpotsPage = () => {
         title="Surf Spots"
         subtitle="Discover and manage surf locations"
         actions={
-          <div className="flex items-center space-x-4">
+          <div className="inline-flex items-center gap-2">
+            <Button
+              variant={showForm ? 'secondary' : 'primary'}
+              size="md"
+              onClick={() => setShowForm(!showForm)}
+              className="whitespace-nowrap"
+            >
+              {showForm ? (
+                <>
+                  <span>Cancel</span>
+                </>
+              ) : (
+                <>
+                  <span>Add Spot</span>
+                </>
+              )}
+            </Button>
             <SegmentedControl
               options={[
                 { value: 'grid', label: <LayoutGrid className="h-4 w-4" /> },
@@ -110,24 +126,8 @@ const SurfSpotsPage = () => {
               ]}
               value={viewMode}
               onChange={(value) => setViewMode(value as 'grid' | 'map')}
+              size="md"
             />
-            <Button
-              variant={showForm ? 'secondary' : 'primary'}
-              onClick={() => setShowForm(!showForm)}
-              className="gap-2"
-            >
-              {showForm ? (
-                <>
-                  <X className="h-4 w-4" />
-                  Cancel
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" />
-                  Add New Spot
-                </>
-              )}
-            </Button>
           </div>
         }
       />
@@ -302,25 +302,34 @@ const SurfSpotsPage = () => {
                   </div>
 
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3 min-h-[32px]">
+                    <div className="flex items-center justify-between mb-3 min-h-[32px] gap-3">
                       <h3 className="text-h3 font-semibold text-content-primary truncate mr-2" title={spot.name}>
                         {spot.name}
                       </h3>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (spot.latitude && spot.longitude) {
-                            window.open(`https://www.google.com/maps/search/?api=1&query=${spot.latitude},${spot.longitude}`, '_blank');
-                          }
-                        }}
-                        disabled={!spot.latitude || !spot.longitude}
-                        className="text-[10px] h-7 px-2 flex-shrink-0"
-                      >
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Maps
-                      </Button>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {spot.surf_forecast_name && (
+                          <SurfForecastWidget
+                            spotName={spot.surf_forecast_name}
+                            buttonLabel="Forecast"
+                            buttonClassName="text-[10px] h-7 px-2"
+                          />
+                        )}
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (spot.latitude && spot.longitude) {
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${spot.latitude},${spot.longitude}`, '_blank');
+                            }
+                          }}
+                          disabled={!spot.latitude || !spot.longitude}
+                          className="text-[10px] h-7 px-2"
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Maps
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
@@ -335,12 +344,6 @@ const SurfSpotsPage = () => {
                       )}
                     </div>
 
-                    {/* Surf Forecast Widget */}
-                    {spot.surf_forecast_name && (
-                      <div className="mt-3">
-                        <SurfForecastWidget spotName={spot.surf_forecast_name} />
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))

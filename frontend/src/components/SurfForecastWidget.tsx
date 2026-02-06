@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Waves, X } from 'lucide-react';
+import { Button } from './ui/Button';
 
 interface SurfForecastWidgetProps {
   spotName?: string;
   className?: string;
+  buttonLabel?: string;
+  buttonClassName?: string;
 }
 
-export const SurfForecastWidget = ({ spotName, className = '' }: SurfForecastWidgetProps) => {
+export const SurfForecastWidget = ({ 
+  spotName, 
+  className = '', 
+  buttonLabel = 'Forecast',
+  buttonClassName = '',
+}: SurfForecastWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Close modal on ESC key
@@ -33,14 +41,16 @@ export const SurfForecastWidget = ({ spotName, className = '' }: SurfForecastWid
 
   return (
     <div className={`surf-forecast-widget ${className}`}>
-      {/* Trigger Button - Minimalist icon */}
-      <button
+      <Button
+        variant="secondary"
+        size="sm"
         onClick={() => setIsOpen(true)}
-        className="w-full flex items-center justify-center py-1.5 rounded-md hover:bg-content-tertiary/10 transition-colors group opacity-60 hover:opacity-100"
+        className={buttonClassName}
         title="Show Forecast Pop-up"
       >
-        <Waves className="h-4 w-4 text-accent" />
-      </button>
+        <Waves className="h-3 w-3 mr-1 text-accent" />
+        <span>{buttonLabel}</span>
+      </Button>
 
       {/* Modal Overlay */}
       {isOpen && (

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useSwipeable } from 'react-swipeable';
 import { surfSessionsAPI } from '../services/api';
 import { SurfSessionResponse } from '../types/api';
-import { Plus, Waves, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Waves, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardHeader, CardContent, EmptyState, Button, SectionTitle, SegmentedControl, Loading, Alert, AlertDescription } from '../components/ui';
 import { SimpleChart } from '../components/SimpleChart';
 import { PageHero } from '../components/PageHero';
@@ -135,8 +135,7 @@ const DashboardPage = () => {
         subtitle="Welcome back. Here's your surf session overview."
         actions={
           <Link to="/sessions/new">
-            <Button variant="primary" size="lg">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button variant="primary" size="md">
               Add Session
             </Button>
           </Link>
@@ -225,17 +224,17 @@ const DashboardPage = () => {
               <div className="text-center text-sm text-content-tertiary">
                 {getTimeRangeLabel(timeRange, currentDate)}
               </div>
-              <div className="flex items-center justify-center gap-12">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-content-primary mb-1">{timeRangeStats.sessionsCount}</p>
+                  <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.sessionsCount}</p>
                   <p className="text-xs text-content-tertiary">sessions</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-content-primary mb-1">{timeRangeStats.totalSurfTime}</p>
+                  <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.totalSurfTime}</p>
                   <p className="text-xs text-content-tertiary">minutes</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-content-primary mb-1">{timeRangeStats.avgWaveQuality.toFixed(1)}</p>
+                  <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.avgWaveQuality.toFixed(1)}</p>
                   <p className="text-xs text-content-tertiary">quality</p>
                 </div>
               </div>

@@ -16,16 +16,22 @@ const PageHero: React.FC<PageHeroProps> = ({
   backgroundImage = getHeroImage(),
   className = ''
 }) => {
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const showImage = !!backgroundImage && !imageFailed;
+
   return (
     <div className={`relative overflow-hidden rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 ${className}`}>
       <div className="absolute inset-0">
-        <img
-          src={backgroundImage}
-          alt="Surf waves"
-          className="w-full h-48 sm:h-56 md:h-64 object-cover"
-          loading="lazy"
-          style={{ aspectRatio: '3 / 1' }}
-        />
+        {showImage && (
+          <img
+            src={backgroundImage}
+            alt="Surf waves"
+            className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
+            onError={() => setImageFailed(true)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-transparent" />
       </div>
       <div className="relative px-6 py-8 sm:px-8 sm:py-10">

@@ -103,8 +103,11 @@ const SurfboardsPage = () => {
         title="Surfboards"
         subtitle="Manage your collection of surfboards and track their performance."
         actions={
-          <Button variant="primary" onClick={() => (showAddForm ? handleCancel() : setShowAddForm(true))}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => (showAddForm ? handleCancel() : setShowAddForm(true))}
+          >
             {showAddForm ? 'Cancel' : 'Add Surfboard'}
           </Button>
         }
@@ -145,7 +148,7 @@ const SurfboardsPage = () => {
                 placeholder="e.g. Driver 2.0"
               />
             </FormField>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Length (ft)" required>
                 <Input
                   type="number"
