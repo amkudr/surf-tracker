@@ -11,6 +11,8 @@ from app.models import SurfSession
 from app.schemas.surf_session import SurfSessionCreate
 from app.services.session_forecast_service import get_weather_for_session
 from app.services.spot_service import get_spot_by_name
+from app.schemas.surfboard import SurfboardCreate
+from app.services.surfboard_service import create_surfboard
 
 
 async def _resolve_spot_name_to_id(db: AsyncSession, session_data: dict) -> None:
@@ -25,6 +27,39 @@ async def _resolve_spot_name_to_id(db: AsyncSession, session_data: dict) -> None
     session_data['spot_id'] = spot.id
 
 
+async def _maybe_create_quiver_surfboard(
+    db: AsyncSession, session_data: dict, user_id: int
+) -> None:
+    """Create a surfboard owned by the user when requested and attach its id."""
+    should_save = bool(session_data.pop("save_surfboard_to_quiver", False))
+    # If user selected an existing board, nothing to do.
+    if session_data.get("surfboard_id") is not None or not should_save:
+        return
+
+    length_ft = session_data.get("surfboard_length_ft")
+    if length_ft is None:
+        raise BusinessLogicError(
+            "Length (ft) is required to save this surfboard to your quiver",
+            code="SURFBOARD_LENGTH_REQUIRED",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    surfboard = await create_surfboard(
+        db,
+        SurfboardCreate(
+            name=session_data.get("surfboard_name"),
+            brand=session_data.get("surfboard_brand"),
+            model=session_data.get("surfboard_model"),
+            length_ft=length_ft,
+            width_in=session_data.get("surfboard_width_in"),
+            thickness_in=session_data.get("surfboard_thickness_in"),
+            volume_liters=session_data.get("surfboard_volume_liters"),
+        ),
+        owner_id=user_id,
+    )
+    session_data["surfboard_id"] = surfboard.id
+
+
 async def create_surf_session(
     db: AsyncSession,
     surf_session_data: dict,
@@ -32,6 +67,7 @@ async def create_surf_session(
 ) -> SurfSession:
 
     await _resolve_spot_name_to_id(db, surf_session_data)
+    await _maybe_create_quiver_surfboard(db, surf_session_data, user_id)
 
     weather_data: dict = {}
     spot_id = surf_session_data.get("spot_id")
@@ -108,6 +144,7 @@ async def update_surf_session(
     weather_relevant_changed = bool(weather_keys & set(update_dict.keys()))
 
     await _resolve_spot_name_to_id(db, update_dict)
+    await _maybe_create_quiver_surfboard(db, update_dict, user_id)
 
     for field, value in update_dict.items():
         setattr(surf_session_model, field, value)

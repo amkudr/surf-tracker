@@ -76,6 +76,14 @@ export interface SurfSessionCreate {
   spot_id?: number;
   spot_name?: string;
   surfboard_id?: number;
+  surfboard_name?: string | null;
+  surfboard_brand?: string | null;
+  surfboard_model?: string | null;
+  surfboard_length_ft?: number | null;
+  surfboard_width_in?: number | null;
+  surfboard_thickness_in?: number | null;
+  surfboard_volume_liters?: number | null;
+  save_surfboard_to_quiver?: boolean;
 }
 
 export interface SurfSessionResponse {
@@ -86,6 +94,13 @@ export interface SurfSessionResponse {
   notes?: string;
   spot_id: number;
   surfboard_id?: number;
+  surfboard_name?: string | null;
+  surfboard_brand?: string | null;
+  surfboard_model?: string | null;
+  surfboard_length_ft?: number | null;
+  surfboard_width_in?: number | null;
+  surfboard_thickness_in?: number | null;
+  surfboard_volume_liters?: number | null;
   user_id: number;
   created_at: string;
   spot: SpotResponse;

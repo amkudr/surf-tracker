@@ -46,6 +46,11 @@ function SessionCardComponent({ session, onDelete }: SessionCardProps) {
   const hasWindDir = session.wind_dir != null && `${session.wind_dir}`.trim() !== '';
   const hasWindData = hasWindSpeed || hasWindDir;
   const hasForecastData = hasWaveData || hasWindData;
+  const surfboardLabel = session.surfboard
+    ? `${session.surfboard.name || 'Board'} · ${session.surfboard.length_ft}'`
+    : session.surfboard_name
+      ? `${session.surfboard_name}${session.surfboard_length_ft ? ` · ${session.surfboard_length_ft}'` : ''}`
+      : null;
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
@@ -62,9 +67,9 @@ function SessionCardComponent({ session, onDelete }: SessionCardProps) {
               <Clock className="h-3.5 w-3.5" />
               {formattedTime}
             </span>
-            {session.surfboard && (
+            {surfboardLabel && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-1 font-medium text-accent">
-                {session.surfboard.name} · {session.surfboard.length_ft}'
+                {surfboardLabel}
               </span>
             )}
           </div>

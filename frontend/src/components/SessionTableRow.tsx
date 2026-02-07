@@ -40,8 +40,23 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
       volume_liters ? `${volume_liters} L` : null,
     ].filter(Boolean);
     boardTooltip = details.length ? details.join(' • ') : 'Surfboard details';
+  } else if (session.surfboard_name || session.surfboard_length_ft) {
+    const details = [
+      session.surfboard_name,
+      session.surfboard_brand,
+      session.surfboard_model,
+      session.surfboard_length_ft ? `${session.surfboard_length_ft}'` : null,
+      session.surfboard_width_in ? `${session.surfboard_width_in} in wide` : null,
+      session.surfboard_thickness_in ? `${session.surfboard_thickness_in} in thick` : null,
+      session.surfboard_volume_liters ? `${session.surfboard_volume_liters} L` : null,
+    ].filter(Boolean);
+    boardTooltip = details.length ? details.join(' • ') : undefined;
   }
-  const boardLength = session.surfboard ? `${session.surfboard.length_ft}'` : '—';
+  const boardLength = session.surfboard
+    ? `${session.surfboard.length_ft}'`
+    : session.surfboard_length_ft
+      ? `${session.surfboard_length_ft}'`
+      : '—';
 
   return (
     <tr className="even:bg-background-secondary hover:bg-background-tertiary transition-colors">

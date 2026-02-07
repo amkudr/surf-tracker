@@ -13,6 +13,8 @@ async def test_create_session(authenticated_client, test_spots):
     }
     response = await authenticated_client.post("/surf_session/", json=surf_session)
     assert response.status_code == 201
+    data = response.json()
+    assert data["surfboard_id"] is None
 
 
 @pytest.mark.asyncio
@@ -146,6 +148,59 @@ async def test_create_session_with_spot_name(authenticated_client, test_surf_ses
     assert data["spot"]["name"] == "Fisherman"
     assert data["datetime"] == "2026-01-14T08:00:00"
     assert data["duration_minutes"] == 90
+
+
+@pytest.mark.asyncio
+async def test_create_session_with_inline_surfboard_one_time(authenticated_client, test_spots):
+    surf_session = {
+        "spot_id": 1,
+        "datetime": "2026-01-15T08:00:00",
+        "duration_minutes": 60,
+        "wave_quality": 6,
+        "surfboard_name": "Borrowed Gun",
+        "surfboard_length_ft": 7.0,
+        "surfboard_brand": "Rusty",
+    }
+    response = await authenticated_client.post("/surf_session/", json=surf_session)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["surfboard_id"] is None
+    assert data["surfboard_name"] == "Borrowed Gun"
+    assert data["surfboard_length_ft"] == 7.0
+
+
+@pytest.mark.asyncio
+async def test_create_session_with_inline_surfboard_saved_to_quiver(authenticated_client, test_spots):
+    surf_session = {
+        "spot_id": 1,
+        "datetime": "2026-01-16T08:00:00",
+        "duration_minutes": 75,
+        "wave_quality": 7,
+        "surfboard_name": "Demo Twin",
+        "surfboard_length_ft": 5.8,
+        "save_surfboard_to_quiver": True,
+    }
+    response = await authenticated_client.post("/surf_session/", json=surf_session)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["surfboard_id"] is not None
+    assert data["surfboard_name"] == "Demo Twin"
+    assert data["surfboard_length_ft"] == pytest.approx(5.8)
+
+
+@pytest.mark.asyncio
+async def test_create_session_save_to_quiver_requires_length(authenticated_client, test_spots):
+    surf_session = {
+        "spot_id": 1,
+        "datetime": "2026-01-17T08:00:00",
+        "duration_minutes": 50,
+        "wave_quality": 5,
+        "save_surfboard_to_quiver": True,
+        # Missing surfboard_length_ft
+    }
+    response = await authenticated_client.post("/surf_session/", json=surf_session)
+    assert response.status_code == 400
+    assert "length" in response.json()["detail"].lower()
 
 
 @pytest.mark.asyncio

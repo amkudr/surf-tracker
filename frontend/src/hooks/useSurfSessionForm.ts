@@ -45,8 +45,10 @@ interface UseSurfSessionFormReturn {
   isLoadingData: boolean;
   error: string;
   isEditing: boolean;
+  useTemporaryBoard: boolean;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleSpotChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  handleSaveBoardToggle: (checked: boolean) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handleDelete: () => Promise<void>;
 }
@@ -68,6 +70,14 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     spot_id: undefined,
     spot_name: '',
     surfboard_id: undefined,
+    surfboard_name: '',
+    surfboard_brand: '',
+    surfboard_model: '',
+    surfboard_length_ft: undefined,
+    surfboard_width_in: undefined,
+    surfboard_thickness_in: undefined,
+    surfboard_volume_liters: undefined,
+    save_surfboard_to_quiver: false,
   });
 
   const [spots, setSpots] = useState<SpotResponse[]>([]);
@@ -75,6 +85,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(isEditing);
   const [error, setError] = useState('');
+  const [useTemporaryBoard, setUseTemporaryBoard] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -102,7 +113,16 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
               spot_id: sessionData.spot_id,
               spot_name: '',
               surfboard_id: sessionData.surfboard_id,
+              surfboard_name: sessionData.surfboard_name || '',
+              surfboard_brand: sessionData.surfboard_brand || '',
+              surfboard_model: sessionData.surfboard_model || '',
+              surfboard_length_ft: sessionData.surfboard_length_ft ?? undefined,
+              surfboard_width_in: sessionData.surfboard_width_in ?? undefined,
+              surfboard_thickness_in: sessionData.surfboard_thickness_in ?? undefined,
+              surfboard_volume_liters: sessionData.surfboard_volume_liters ?? undefined,
+              save_surfboard_to_quiver: false,
             });
+            setUseTemporaryBoard(!sessionData.surfboard_id && !!sessionData.surfboard_name);
           }
         }
       } catch (err: any) {
@@ -133,12 +153,54 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
       setFormData(prev => ({ ...prev, datetime: getDatePart(prev.datetime) + 'T' + value + ':00' }));
       return;
     }
+    if (name === 'surfboard_id') {
+      if (value === '__other__') {
+        setUseTemporaryBoard(true);
+        setFormData(prev => ({
+          ...prev,
+          surfboard_id: undefined,
+        }));
+        return;
+      }
+      if (value === '') {
+        setUseTemporaryBoard(false);
+      }
+    }
+    const numberFields = [
+      'duration_minutes',
+      'wave_quality',
+      'spot_id',
+      'surfboard_id',
+    ];
+    const floatFields = [
+      'surfboard_length_ft',
+      'surfboard_width_in',
+      'surfboard_thickness_in',
+      'surfboard_volume_liters',
+    ];
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'duration_minutes' || name === 'wave_quality' || name === 'spot_id' || name === 'surfboard_id'
-        ? (value === '' ? undefined : parseInt(value))
-        : value,
+      [name]:
+        numberFields.includes(name)
+          ? value === '' ? undefined : parseInt(value)
+          : floatFields.includes(name)
+            ? value === '' ? undefined : parseFloat(value)
+            : value,
     }));
+    if (name === 'surfboard_id' && value !== '' && value !== '__other__') {
+      setUseTemporaryBoard(false);
+      setFormData(prev => ({
+        ...prev,
+        surfboard_name: '',
+        surfboard_brand: '',
+        surfboard_model: '',
+        surfboard_length_ft: undefined,
+        surfboard_width_in: undefined,
+        surfboard_thickness_in: undefined,
+        surfboard_volume_liters: undefined,
+        save_surfboard_to_quiver: false,
+      }));
+    }
   }, []);
 
   const handleSpotChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -150,6 +212,10 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
       }));
   }, []);
 
+  const handleSaveBoardToggle = useCallback((checked: boolean) => {
+    setFormData(prev => ({ ...prev, save_surfboard_to_quiver: checked }));
+  }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,6 +223,13 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     setIsLoading(true);
 
     const payload: SurfSessionCreate = { ...formData };
+    // Normalize blank strings to undefined for optional fields.
+    ['notes', 'spot_name', 'surfboard_name', 'surfboard_brand', 'surfboard_model'].forEach((key) => {
+      const k = key as keyof SurfSessionCreate;
+      if (typeof payload[k] === 'string' && payload[k]?.trim() === '') {
+        payload[k] = undefined as any;
+      }
+    });
     if (payload.spot_id != null) {
       payload.spot_name = undefined;
     }
@@ -201,8 +274,10 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     isLoadingData,
     error,
     isEditing,
+    useTemporaryBoard,
     handleChange,
     handleSpotChange,
+    handleSaveBoardToggle,
     handleSubmit,
     handleDelete,
   };

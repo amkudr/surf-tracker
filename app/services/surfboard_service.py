@@ -64,8 +64,8 @@ async def update_surfboard(
     for field, value in update_data.items():
         setattr(surfboard_model, field, value)
 
-    # If volume not provided but dimensions are present/updated, auto-fill.
-    if "volume_liters" not in update_data:
+    # If volume not provided and still unknown, backfill from dimensions.
+    if "volume_liters" not in update_data and surfboard_model.volume_liters is None:
         maybe_volume = _maybe_compute_volume_liters(
             surfboard_model.length_ft,
             surfboard_model.width_in,

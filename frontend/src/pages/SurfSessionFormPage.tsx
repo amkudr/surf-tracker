@@ -14,8 +14,10 @@ const SurfSessionFormPage = () => {
     isLoadingData,
     error,
     isEditing,
+    useTemporaryBoard,
     handleChange,
     handleSpotChange,
+    handleSaveBoardToggle,
     handleSubmit,
     handleDelete,
   } = useSurfSessionForm();
@@ -90,20 +92,126 @@ const SurfSessionFormPage = () => {
             </Select>
           </FormField>
           
-          {/* Surfboard selection */}
+          {/* Surfboard selection / one-time entry */}
           <FormField label="Surfboard">
-            <Select
-              name="surfboard_id"
-              value={formData.surfboard_id || ''}
-              onChange={handleChange}
-            >
-              <option value="">Select a surfboard...</option>
-              {surfboards.map((board) => (
-                <option key={board.id} value={board.id}>
-                  {board.name} {board.brand ? `(${board.brand})` : ''} - {board.length_ft}'
-                </option>
-              ))}
-            </Select>
+            <div className="space-y-3">
+              <Select
+                name="surfboard_id"
+                value={useTemporaryBoard ? '__other__' : formData.surfboard_id || ''}
+                onChange={handleChange}
+              >
+                <option value="">Select a surfboard...</option>
+                <option value="__other__">Other surfboard</option>
+                {surfboards.map((board) => (
+                  <option key={board.id} value={board.id}>
+                    {board.name || 'Board'} {board.brand ? `(${board.brand})` : ''} - {board.length_ft}'
+                  </option>
+                ))}
+              </Select>
+
+              <label className="flex items-center gap-2 text-sm text-content-secondary">
+                {/* The \"Other surfboard\" select option controls temporary mode now */}
+              </label>
+
+              {useTemporaryBoard && (
+                <div className="space-y-4 rounded-2xl border border-border bg-background-secondary/60 p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">
+                        Length (ft) <span className="text-destructive">*</span>
+                      </span>
+                      <Input
+                        type="number"
+                        name="surfboard_length_ft"
+                        value={formData.surfboard_length_ft ?? ''}
+                        onChange={handleChange}
+                        placeholder="6.4"
+                        step="0.1"
+                        min="0"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">Board name</span>
+                      <Input
+                        name="surfboard_name"
+                        value={formData.surfboard_name || ''}
+                        onChange={handleChange}
+                        placeholder="Foamy, Fish, etc."
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">Brand</span>
+                      <Input
+                        name="surfboard_brand"
+                        value={formData.surfboard_brand || ''}
+                        onChange={handleChange}
+                        placeholder="Firewire"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">Model</span>
+                      <Input
+                        name="surfboard_model"
+                        value={formData.surfboard_model || ''}
+                        onChange={handleChange}
+                        placeholder="Seaside"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">Width (in)</span>
+                      <Input
+                        type="number"
+                        name="surfboard_width_in"
+                        value={formData.surfboard_width_in ?? ''}
+                        onChange={handleChange}
+                        placeholder="20.25"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">Thickness (in)</span>
+                      <Input
+                        type="number"
+                        name="surfboard_thickness_in"
+                        value={formData.surfboard_thickness_in ?? ''}
+                        onChange={handleChange}
+                        placeholder="2.5"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <span className="text-[14px] font-medium text-content-primary">Volume (L)</span>
+                      <Input
+                        type="number"
+                        name="surfboard_volume_liters"
+                        value={formData.surfboard_volume_liters ?? ''}
+                        onChange={handleChange}
+                        placeholder="35.0"
+                        step="0.1"
+                        min="0"
+                      />
+                    </div>
+                    <div className="h-full flex items-center justify-center">
+                      <label className="inline-flex items-center gap-2 text-sm text-content-secondary">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-accent"
+                          checked={!!formData.save_surfboard_to_quiver}
+                          onChange={(e) => handleSaveBoardToggle(e.target.checked)}
+                        />
+                        <span>Add to my surfboards</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </FormField>
 
           {/* Duration and Wave Quality */}
