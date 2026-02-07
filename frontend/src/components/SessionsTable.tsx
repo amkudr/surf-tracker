@@ -28,7 +28,7 @@ const TABLE_HEADERS: { label: string; unit?: string; key: string; width?: string
   { label: 'Energy', unit: 'kJ', key: 'energy' },
   { label: 'Rating', key: 'rating' },
   { label: 'Tide', unit: 'm', key: 'tide' },
-  { label: '', key: 'actions' },
+  { label: '', key: 'actions', width: '48px' },
 ];
 
 export function SessionsTable({
@@ -66,20 +66,22 @@ export function SessionsTable({
         )}
       </div>
 
-      {/* Desktop: semantic table — fixed layout, equal columns, units under topic */}
+      {/* Desktop: semantic table — auto layout with balanced spacing */}
       <div className="hidden md:block overflow-x-auto w-full">
-        <table className="w-full min-w-[900px] border-collapse table-fixed" style={{ tableLayout: 'fixed' }}>
+        <table className="w-full min-w-[980px] border-collapse table-auto">
           <colgroup>
-            {TABLE_HEADERS.map(({ key, width }) => (
-              <col key={key} style={{ width }} />
-            ))}
+            {TABLE_HEADERS.map(({ key }) => {
+              if (key === 'spot') return <col key={key} style={{ width: '14%' }} />;
+              if (key === 'actions') return <col key={key} style={{ width: '48px' }} />;
+              return <col key={key} />;
+            })}
           </colgroup>
           <thead>
             <tr className="border-b border-border bg-background-secondary">
               {TABLE_HEADERS.map(({ label, unit, key, className }) => (
                 <th
                   key={key}
-                  className={`px-2 py-3 text-xs font-semibold text-content-secondary uppercase tracking-wider align-top ${
+                  className={`px-1.5 py-3 text-xs font-semibold text-content-secondary uppercase tracking-wider align-top ${
                     className || 'text-center'
                   }`}
                 >

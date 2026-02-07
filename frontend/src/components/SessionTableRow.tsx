@@ -5,39 +5,61 @@ import {
   formatDurationClean,
   formatWaveQuality,
   formatSessionDateTable,
-  formatSessionTime,
   formatWaveHeightClean,
   formatWindSpeedClean,
 } from '../utils/stats';
 import { compassLetterToDegrees } from '../utils/compass';
 import { DirectionCompass } from './DirectionCompass';
+import { addMinutes, format, parseISO } from 'date-fns';
 
 interface SessionTableRowProps {
   session: SurfSessionResponse;
   onDelete: (id: number) => void;
 }
 
-const cellBase = 'px-2 py-3 text-sm text-content-primary border-b border-border text-center last:pr-2 tabular-nums';
+const cellBase = 'px-1.5 py-3 text-sm text-content-primary border-b border-border text-center last:pr-2 tabular-nums';
 
 export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
   const { dateLine, yearLine } = formatSessionDateTable(session.datetime);
+  const startDate = parseISO(session.datetime);
+  const startTime = format(startDate, 'HH:mm');
+  const endTime = Number.isFinite(session.duration_minutes)
+    ? format(addMinutes(startDate, session.duration_minutes), 'HH:mm')
+    : null;
+
+  let boardTooltip: string | undefined;
+  if (session.surfboard) {
+    const { name, brand, model, width_in, thickness_in, volume_liters, length_ft } = session.surfboard;
+    const details = [
+      name || `${length_ft}' board`,
+      brand,
+      model,
+      `${length_ft}'`,
+      width_in ? `${width_in} in wide` : null,
+      thickness_in ? `${thickness_in} in thick` : null,
+      volume_liters ? `${volume_liters} L` : null,
+    ].filter(Boolean);
+    boardTooltip = details.length ? details.join(' • ') : 'Surfboard details';
+  }
+  const boardLength = session.surfboard ? `${session.surfboard.length_ft}'` : '—';
+
   return (
     <tr className="even:bg-background-secondary hover:bg-background-tertiary transition-colors">
       <td className={cellBase}>
         <span className="block">{dateLine}</span>
         <span className="block text-content-secondary">{yearLine}</span>
       </td>
-      <td className={cellBase}>{formatSessionTime(session.datetime, session.duration_minutes)}</td>
-      <td className={`${cellBase} font-medium overflow-hidden`}>
-        <span className="block truncate">{session.spot.name}</span>
+      <td className={`${cellBase} leading-tight`}>
+        <span className="block">{startTime}</span>
+        {endTime && <span className="block text-content-secondary">{endTime}</span>}
       </td>
-      <td className={cellBase}>
-        <span className="block font-medium truncate">{session.surfboard?.name || '—'}</span>
-        {session.surfboard && (
-          <span className="block text-xs text-content-secondary mt-0.5 truncate">
-            {session.surfboard.length_ft}'
-          </span>
-        )}
+      <td className={`${cellBase} font-medium overflow-hidden text-center align-middle`}>
+        <span className="block truncate whitespace-nowrap" title={session.spot.name}>
+          {session.spot.name}
+        </span>
+      </td>
+      <td className={cellBase} title={boardTooltip} aria-label={boardTooltip}>
+        <span className="block font-medium">{boardLength}</span>
       </td>
       <td className={cellBase}>{formatDurationClean(session.duration_minutes)}</td>
       <td className={cellBase}>{formatWaveQuality(session.wave_quality)}</td>
