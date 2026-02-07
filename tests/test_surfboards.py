@@ -24,6 +24,8 @@ async def test_create_surfboard_service_persists_and_links_owner(
         brand="Channel Islands",
         model="Happy Everyday",
         length_ft=6,
+        width_in=19.25,
+        thickness_in=2.5,
         volume_liters=32,
         owner_id=test_user.id,
     )
@@ -35,7 +37,28 @@ async def test_create_surfboard_service_persists_and_links_owner(
     assert created.owner_id == test_user.id
     assert created.name == "Shortboard"
     assert created.length_ft == 6
+    assert created.width_in == 19.25
+    assert created.thickness_in == 2.5
     assert created.volume_liters == 32
+
+
+@pytest.mark.asyncio
+async def test_create_surfboard_auto_computes_volume_when_missing(
+    test_db: AsyncSession, test_user: User
+) -> None:
+    payload = SurfboardCreate(
+        length_ft=6.0,
+        width_in=19.5,
+        thickness_in=2.5,
+        owner_id=test_user.id,
+    )
+
+    created = await create_surfboard(test_db, payload, owner_id=test_user.id)
+
+    assert created.volume_liters is not None
+    # Rough expected volume with shape factor; allow a small tolerance.
+    expected = (6 * 12) * 19.5 * 2.5 * 0.54 * 0.0163871
+    assert pytest.approx(created.volume_liters, rel=0.05) == expected
 
 
 @pytest.mark.asyncio
@@ -55,6 +78,8 @@ async def test_get_surfboards_by_owner_id_filters_properly(
         brand="JS",
         model="Monsta",
         length_ft=6,
+        width_in=19.5,
+        thickness_in=2.45,
         volume_liters=30,
         owner_id=test_user.id,
     )
@@ -63,6 +88,8 @@ async def test_get_surfboards_by_owner_id_filters_properly(
         brand="DHD",
         model="DNA",
         length_ft=6,
+        width_in=19.3,
+        thickness_in=2.4,
         volume_liters=31,
         owner_id=other_user.id,
     )
@@ -91,6 +118,8 @@ async def test_update_surfboard_service_updates_only_provided_fields(
         brand="Pyzel",
         model="Phantom",
         length_ft=6,
+        width_in=19.25,
+        thickness_in=2.6,
         volume_liters=33,
         owner_id=test_user.id,
     )
@@ -110,6 +139,8 @@ async def test_update_surfboard_service_updates_only_provided_fields(
     # Unchanged fields
     assert updated.brand == "Pyzel"
     assert updated.model == "Phantom"
+    assert updated.width_in == 19.25
+    assert updated.thickness_in == 2.6
     assert updated.volume_liters == 33
 
 
@@ -130,6 +161,8 @@ async def test_delete_surfboard_respects_owner_id(
         brand="Rusty",
         model="Yes Thanks",
         length_ft=6,
+        width_in=19.0,
+        thickness_in=2.55,
         volume_liters=34,
         owner_id=test_user.id,
     )
@@ -153,6 +186,8 @@ async def test_create_and_fetch_surfboard_via_api(authenticated_client, test_use
         "brand": "Lost",
         "model": "Puddle Jumper",
         "length_ft": 5,
+        "width_in": 20.25,
+        "thickness_in": 2.38,
         "volume_liters": 28,
         "owner_id": test_user.id,
     }
@@ -184,6 +219,8 @@ async def test_update_and_delete_surfboard_via_api(authenticated_client, test_us
         "brand": "Firewire",
         "model": "Seaside",
         "length_ft": 5,
+        "width_in": 20,
+        "thickness_in": 2.5,
         "volume_liters": 29,
         "owner_id": test_user.id,
     }
@@ -194,6 +231,7 @@ async def test_update_and_delete_surfboard_via_api(authenticated_client, test_us
     update_payload = {
         "name": "Updated Board",
         "length_ft": 6,
+        "width_in": 20.5,
     }
     update_response = await authenticated_client.put(
         f"/surfboard/{created['id']}", json=update_payload
@@ -206,10 +244,10 @@ async def test_update_and_delete_surfboard_via_api(authenticated_client, test_us
     assert updated["brand"] == "Firewire"
     assert updated["model"] == "Seaside"
     assert updated["volume_liters"] == 29
+    assert updated["width_in"] == 20.5
 
     delete_response = await authenticated_client.delete(f"/surfboard/{created['id']}")
     assert delete_response.status_code == 204
 
     get_after_delete = await authenticated_client.get(f"/surfboard/{created['id']}")
     assert get_after_delete.status_code == 404
-

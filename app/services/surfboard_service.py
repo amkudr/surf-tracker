@@ -5,13 +5,36 @@ from app.models.surfboard import Surfboard
 from app.schemas.surfboard import SurfboardCreate, SurfboardUpdate
 
 
+def _maybe_compute_volume_liters(length_ft: float | None, width_in: float | None, thickness_in: float | None) -> float | None:
+    """Approximate volume in liters if dimensions are provided.
+
+    Uses a shape coefficient to roughly model the curved outline of a surfboard.
+    The coefficient (0.54) is a common rule of thumb for shortboards.
+    """
+    if length_ft is None or width_in is None or thickness_in is None:
+        return None
+    cubic_inches = (length_ft * 12) * width_in * thickness_in * 0.54
+    return cubic_inches * 0.0163871  # in^3 to liters
+
+
 async def create_surfboard(db: AsyncSession, surfboard_create: SurfboardCreate, owner_id: int) -> Surfboard:
+    volume = (
+        surfboard_create.volume_liters
+        if surfboard_create.volume_liters is not None
+        else _maybe_compute_volume_liters(
+            surfboard_create.length_ft,
+            surfboard_create.width_in,
+            surfboard_create.thickness_in,
+        )
+    )
     surfboard_model = Surfboard(
         name=surfboard_create.name,
         brand=surfboard_create.brand,
         model=surfboard_create.model,
         length_ft=surfboard_create.length_ft,
-        volume_liters=surfboard_create.volume_liters,
+        width_in=surfboard_create.width_in,
+        thickness_in=surfboard_create.thickness_in,
+        volume_liters=volume,
         owner_id=owner_id,
     )
     db.add(surfboard_model)
@@ -40,6 +63,16 @@ async def update_surfboard(
     update_data = surfboard_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(surfboard_model, field, value)
+
+    # If volume not provided but dimensions are present/updated, auto-fill.
+    if "volume_liters" not in update_data:
+        maybe_volume = _maybe_compute_volume_liters(
+            surfboard_model.length_ft,
+            surfboard_model.width_in,
+            surfboard_model.thickness_in,
+        )
+        if maybe_volume is not None:
+            surfboard_model.volume_liters = maybe_volume
 
     await db.commit()
     await db.refresh(surfboard_model)

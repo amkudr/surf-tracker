@@ -3,6 +3,17 @@ import { surfboardsAPI } from '../services/api';
 import { SurfboardResponse, SurfboardCreate } from '../types/api';
 import { Plus, Trash2, Ruler, Weight, Edit2 } from 'lucide-react';
 import { Card, Button, Input, FormField, EmptyState, SectionTitle, Alert, AlertDescription, PageHero, Loading } from '../components/ui';
+import { ReactNode } from 'react';
+
+const SpecCard = ({ icon, label, value }: { icon: ReactNode; label: string; value: string }) => (
+  <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2">
+    {icon}
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-content-secondary">{label}</p>
+      <p className="text-sm font-medium text-content-primary">{value}</p>
+    </div>
+  </div>
+);
 
 const SurfboardsPage = () => {
   const [surfboards, setSurfboards] = useState<SurfboardResponse[]>([]);
@@ -10,12 +21,15 @@ const SurfboardsPage = () => {
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingBoardId, setEditingBoardId] = useState<number | null>(null);
+  const [volumeTouched, setVolumeTouched] = useState(false);
   const [formData, setFormData] = useState<SurfboardCreate>({
     name: '',
     brand: '',
     model: '',
     length_ft: 6,
-    volume_liters: 30,
+    width_in: undefined,
+    thickness_in: undefined,
+    volume_liters: undefined,
   });
 
   const fetchSurfboards = async () => {
@@ -33,11 +47,50 @@ const SurfboardsPage = () => {
     fetchSurfboards();
   }, []);
 
+  const computeVolume = (length_ft?: number | null, width_in?: number | null, thickness_in?: number | null) => {
+    if (length_ft == null || width_in == null || thickness_in == null) return null;
+    const cubicInches = length_ft * 12 * width_in * thickness_in * 0.54;
+    return parseFloat((cubicInches * 0.0163871).toFixed(1));
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const numericFields = ['length_ft', 'volume_liters', 'width_in', 'thickness_in'];
+
+    if (numericFields.includes(name)) {
+      const normalized = value.replace(',', '.');
+      const parsed = normalized === '' ? null : parseFloat(normalized);
+
+      // If user edits volume directly, mark it manual and skip auto-calc
+      if (name === 'volume_liters') {
+        setVolumeTouched(true);
+        setFormData((prev) => ({
+          ...prev,
+          volume_liters: parsed,
+        }));
+        return;
+      }
+
+      setFormData((prev) => {
+        const next = { ...prev, [name]: parsed } as SurfboardCreate;
+
+        if (!volumeTouched) {
+          const autoVolume = computeVolume(
+            name === 'length_ft' ? parsed : prev.length_ft,
+            name === 'width_in' ? parsed : prev.width_in,
+            name === 'thickness_in' ? parsed : prev.thickness_in,
+          );
+          next.volume_liters = autoVolume;
+        }
+
+        return next;
+      });
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'length_ft' || name === 'volume_liters' ? parseFloat(value) || 0 : value,
+      [name]: value === '' ? null : value,
     }));
   };
 
@@ -52,8 +105,9 @@ const SurfboardsPage = () => {
       }
       setShowAddForm(false);
       setEditingBoardId(null);
-      setFormData({ name: '', brand: '', model: '', length_ft: 6, volume_liters: 30 });
+      resetForm();
       fetchSurfboards();
+      setVolumeTouched(false);
     } catch (err: any) {
       setError(`Failed to ${editingBoardId ? 'update' : 'create'} surfboard`);
       setIsLoading(false);
@@ -62,21 +116,29 @@ const SurfboardsPage = () => {
 
   const handleEdit = (board: SurfboardResponse) => {
     setFormData({
-      name: board.name,
-      brand: board.brand || '',
-      model: board.model || '',
+      name: board.name ?? '',
+      brand: board.brand ?? '',
+      model: board.model ?? '',
       length_ft: board.length_ft,
-      volume_liters: board.volume_liters,
+      width_in: board.width_in ?? undefined,
+      thickness_in: board.thickness_in ?? undefined,
+      volume_liters: board.volume_liters ?? undefined,
     });
+    setVolumeTouched(board.volume_liters != null);
     setEditingBoardId(board.id);
     setShowAddForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const resetForm = () => {
+    setFormData({ name: '', brand: '', model: '', length_ft: 6, width_in: undefined, thickness_in: undefined, volume_liters: undefined });
+    setVolumeTouched(false);
+  };
+
   const handleCancel = () => {
     setShowAddForm(false);
     setEditingBoardId(null);
-    setFormData({ name: '', brand: '', model: '', length_ft: 6, volume_liters: 30 });
+    resetForm();
   };
 
   const handleDelete = async (id: number) => {
@@ -123,19 +185,18 @@ const SurfboardsPage = () => {
         <Card className="p-6">
           <SectionTitle className="mb-6">{editingBoardId ? 'Edit' : 'Add New'} Surfboard</SectionTitle>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Board Name" required>
+            <FormField label="Board Name">
               <Input
                 name="name"
-                value={formData.name}
+                value={formData.name ?? ''}
                 onChange={handleInputChange}
                 placeholder="e.g. My Daily Driver"
-                required
               />
             </FormField>
             <FormField label="Brand">
               <Input
                 name="brand"
-                value={formData.brand}
+                value={formData.brand ?? ''}
                 onChange={handleInputChange}
                 placeholder="e.g. Lost Surfboards"
               />
@@ -143,7 +204,7 @@ const SurfboardsPage = () => {
             <FormField label="Model">
               <Input
                 name="model"
-                value={formData.model}
+                value={formData.model ?? ''}
                 onChange={handleInputChange}
                 placeholder="e.g. Driver 2.0"
               />
@@ -160,15 +221,36 @@ const SurfboardsPage = () => {
                   required
                 />
               </FormField>
-              <FormField label="Volume (L)" required>
+              <FormField label="Volume (L)">
                 <Input
                   type="number"
                   name="volume_liters"
-                  value={formData.volume_liters}
+                  value={formData.volume_liters ?? ''}
                   onChange={handleInputChange}
                   min="1"
                   step="0.1"
-                  required
+                />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField label="Width (in)">
+                <Input
+                  type="number"
+                  name="width_in"
+                  value={formData.width_in ?? ''}
+                  onChange={handleInputChange}
+                  min="1"
+                  step="0.01"
+                />
+              </FormField>
+              <FormField label="Thickness (in)">
+                <Input
+                  type="number"
+                  name="thickness_in"
+                  value={formData.thickness_in ?? ''}
+                  onChange={handleInputChange}
+                  min="1"
+                  step="0.01"
                 />
               </FormField>
             </div>
@@ -190,10 +272,16 @@ const SurfboardsPage = () => {
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-content-primary">{board.name}</h3>
-                  <p className="text-content-secondary">
-                    {board.brand} {board.model}
-                  </p>
+                  <h3 className="text-xl font-bold text-content-primary">
+                    {board.name?.trim()
+                      ? `${board.name.trim()} • ${board.length_ft}'`
+                      : `${board.length_ft}'`}
+                  </h3>
+                  {(board.brand || board.model) && (
+                    <p className="text-content-secondary">
+                      {[board.brand, board.model].filter(Boolean).join(' ')}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-1">
                   <Button
@@ -215,20 +303,18 @@ const SurfboardsPage = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-                <div className="flex items-center gap-2">
-                  <Ruler className="h-4 w-4 text-accent" />
-                  <div>
-                    <p className="text-xs text-content-secondary uppercase tracking-wider">Length</p>
-                    <p className="font-medium">{board.length_ft}'</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Weight className="h-4 w-4 text-accent" />
-                  <div>
-                    <p className="text-xs text-content-secondary uppercase tracking-wider">Volume</p>
-                    <p className="font-medium">{board.volume_liters}L</p>
-                  </div>
+              <div className="pt-4 border-t border-border">
+                <div className="flex flex-wrap items-stretch gap-3">
+                  <SpecCard icon={<Ruler className="h-4 w-4 text-accent" />} label="Length" value={`${board.length_ft}'`} />
+                  {board.volume_liters != null && (
+                    <SpecCard icon={<Weight className="h-4 w-4 text-accent" />} label="Volume" value={`${board.volume_liters}L`} />
+                  )}
+                  {board.width_in != null && (
+                    <SpecCard icon={<Ruler className="h-4 w-4 text-accent rotate-90" />} label="Width" value={`${board.width_in}"`} />
+                  )}
+                  {board.thickness_in != null && (
+                    <SpecCard icon={<Ruler className="h-4 w-4 text-accent -rotate-45" />} label="Thickness" value={`${board.thickness_in}"`} />
+                  )}
                 </div>
               </div>
             </div>

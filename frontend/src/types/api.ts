@@ -37,28 +37,35 @@ export interface SpotResponse {
 }
 
 export interface SurfboardCreate {
-  name: string;
-  brand?: string;
-  model?: string;
+  name?: string | null;
+  brand?: string | null;
+  model?: string | null;
   length_ft: number;
-  volume_liters: number;
+  width_in?: number | null;
+  thickness_in?: number | null;
+  volume_liters?: number | null;
 }
 
 export interface SurfboardResponse {
   id: number;
-  name: string;
-  brand?: string;
-  model?: string;
+  name?: string | null;
+  brand?: string | null;
+  model?: string | null;
   length_ft: number;
-  volume_liters: number;
+  width_in?: number | null;
+  thickness_in?: number | null;
+  volume_liters?: number | null;
+  owner_id: number;
 }
 
 export interface SurfboardUpdate {
-  name?: string;
-  brand?: string;
-  model?: string;
+  name?: string | null;
+  brand?: string | null;
+  model?: string | null;
   length_ft?: number;
-  volume_liters?: number;
+  width_in?: number | null;
+  thickness_in?: number | null;
+  volume_liters?: number | null;
 }
 
 export interface SurfSessionCreate {
