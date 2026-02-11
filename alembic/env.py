@@ -8,15 +8,29 @@ from alembic import context
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from sqlalchemy.engine.url import make_url
+
+from app.core.config import settings
+
 from app.models.base import Base
 from app.models.users import User
 from app.models.surf_session import SurfSession 
 from app.models.spot import Spot
 from app.models.surfboard import Surfboard
 from app.models.surf_forecast import SurfForecast
+from app.models.forecast import Forecast
+from app.models.tide import Tide
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override URL from settings to work in containers; alembic.ini default points to localhost
+database_url = settings.database_url
+# Ensure Alembic uses sync driver and keeps the real password
+url = make_url(database_url)
+if url.drivername.startswith("postgresql+asyncpg"):
+    url = url.set(drivername="postgresql+psycopg")
+config.set_main_option("sqlalchemy.url", url.render_as_string(hide_password=False))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, Boolean, false
 from sqlalchemy.orm import relationship
 
 from .base import Base
@@ -12,6 +12,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    is_admin = Column(Boolean, server_default=false(), nullable=False)
 
     surf_sessions = relationship("SurfSession", back_populates="user")
     surfboards = relationship("Surfboard", back_populates="owner")

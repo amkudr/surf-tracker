@@ -1,12 +1,16 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
+
+from app.core.config import settings
 from app.core.exceptions import BusinessLogicError, ExternalAPIError, ValidationError
 from app.schemas.error import ErrorResponse
 from app import models
 from app.database import async_engine
 from app.api.v1 import auth, surf_sessions, spots, surfboards
 from app.routers import weather
+from app.admin import init_admin
 
 
 async def init_models():
@@ -23,6 +27,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+admin = init_admin(app)
 
 @app.exception_handler(BusinessLogicError)
 async def business_logic_error_handler(request: Request, exc: BusinessLogicError):

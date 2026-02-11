@@ -38,6 +38,8 @@ python-dotenv==1.2.1
 python-jose==3.3.0
 python-multipart==0.0.21
 rsa==4.9.1
+sqladmin==0.22.0
+itsdangerous==2.2.0
 six==1.17.0
 SQLAlchemy==2.0.45
 starlette==0.50.0
