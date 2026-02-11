@@ -24,7 +24,7 @@ class UserAdmin(ModelView, model=User):
 class SpotAdmin(ModelView, model=Spot):
     name = "Spot"
     name_plural = "Spots"
-    can_delete = False  # prevent FK violations when sessions reference a spot
+    can_delete = True
     column_list = [
         Spot.id,
         Spot.name,

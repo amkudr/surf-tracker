@@ -17,12 +17,12 @@ class Tide(Base):
     __tablename__ = "tides"
 
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
     height = Column(Float, nullable=False)
     tide_type = Column(String, nullable=False)  # HIGH or LOW
 
-    spot = relationship("Spot")
+    spot = relationship("Spot", back_populates="tides", passive_deletes=True)
 
     __table_args__ = (
         UniqueConstraint('spot_id', 'timestamp', 'tide_type', name='uq_tide_spot_timestamp_type'),

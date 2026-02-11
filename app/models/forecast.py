@@ -12,7 +12,7 @@ class Forecast(Base):
     __tablename__ = "forecasts"
 
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), nullable=False, index=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
     
     wave_height_min = Column(Float, nullable=True)
@@ -23,4 +23,4 @@ class Forecast(Base):
     wind_direction = Column(String, nullable=True)
     rating = Column(Integer, nullable=True)
 
-    spot = relationship("Spot")
+    spot = relationship("Spot", back_populates="forecasts", passive_deletes=True)

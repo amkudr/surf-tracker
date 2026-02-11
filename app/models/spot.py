@@ -4,6 +4,7 @@ from enum import IntEnum
 
 from sqlalchemy import Column, Float, Integer, JSON, String
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import relationship
 
 from .base import Base
 
@@ -26,5 +27,31 @@ class Spot(Base):
     longitude = Column(Float, nullable=True)
 
     difficulty = Column(ARRAY(Integer).with_variant(JSON, "sqlite"), nullable=True)
-    
+
     surf_forecast_name = Column(String, nullable=True)
+
+    # Relationships
+    surf_sessions = relationship(
+        "SurfSession",
+        back_populates="spot",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
+    forecasts = relationship(
+        "Forecast",
+        back_populates="spot",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
+    surf_forecasts = relationship(
+        "SurfForecast",
+        back_populates="spot",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
+    tides = relationship(
+        "Tide",
+        back_populates="spot",
+        cascade="all, delete",
+        passive_deletes=True,
+    )

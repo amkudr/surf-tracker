@@ -8,7 +8,7 @@ class SurfSession(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     id = Column(Integer, primary_key=True, index=True)
-    spot_id = Column(Integer, ForeignKey("spots.id"), nullable=True)
+    spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=True)
     surfboard_id = Column(Integer, ForeignKey("surfboards.id"), nullable=True)
     surfboard_name = Column(String, nullable=True)
     surfboard_brand = Column(String, nullable=True)
@@ -39,6 +39,6 @@ class SurfSession(Base):
     tide_high_m = Column(Float, nullable=True)
 
     # Relationships
-    spot = relationship("Spot")
+    spot = relationship("Spot", back_populates="surf_sessions", passive_deletes=True)
     surfboard = relationship("Surfboard", back_populates="surf_sessions")
     user = relationship("User", back_populates="surf_sessions")
