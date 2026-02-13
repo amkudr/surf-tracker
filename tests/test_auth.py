@@ -1,4 +1,7 @@
 import pytest
+from datetime import datetime, timezone
+
+from app.core.security import verify_token
 
 
 @pytest.mark.asyncio
@@ -62,3 +65,37 @@ async def test_get_current_user(authenticated_client, test_user):
     assert data["email"] == test_user.email
     assert "created_at" in data
     assert "password" not in data
+
+
+@pytest.mark.asyncio
+async def test_login_default_token_ttl_is_short(client, test_user):
+    login_data = {
+        "username": test_user.email,
+        "password": "testpassword123"
+    }
+    response = await client.post("/auth/login", data=login_data)
+    assert response.status_code == 200
+
+    payload = verify_token(response.json()["access_token"])
+    assert payload is not None
+
+    seconds_until_expiry = payload["exp"] - int(datetime.now(timezone.utc).timestamp())
+    assert 25 * 60 <= seconds_until_expiry <= 35 * 60
+
+
+@pytest.mark.asyncio
+async def test_login_remember_me_token_ttl_is_long(client, test_user):
+    login_data = {
+        "username": test_user.email,
+        "password": "testpassword123",
+        "remember_me": "true",
+    }
+    response = await client.post("/auth/login", data=login_data)
+    assert response.status_code == 200
+
+    payload = verify_token(response.json()["access_token"])
+    assert payload is not None
+
+    seconds_until_expiry = payload["exp"] - int(datetime.now(timezone.utc).timestamp())
+    expected_30_days = 30 * 24 * 60 * 60
+    assert expected_30_days - (24 * 60 * 60) <= seconds_until_expiry <= expected_30_days + (24 * 60 * 60)

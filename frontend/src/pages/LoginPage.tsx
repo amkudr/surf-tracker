@@ -10,6 +10,7 @@ const LoginPage = () => {
     email: '',
     password: '',
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +30,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
-      await login(formData);
+      await login(formData, rememberMe);
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed');
@@ -90,6 +91,18 @@ const LoginPage = () => {
                 />
               </div>
             </FormField>
+
+            <label htmlFor="rememberMe" className="flex items-center space-x-2 text-body text-content-secondary">
+              <input
+                id="rememberMe"
+                name="rememberMe"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
+              />
+              <span>Remember me</span>
+            </label>
 
             {/* Error Message */}
             {error && (

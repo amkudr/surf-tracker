@@ -12,6 +12,7 @@ import {
   SurfboardResponse,
   SurfboardUpdate
 } from '../types/api';
+import { getStoredToken } from './authStorage';
 
 const api = axios.create({
   baseURL: '/api',
@@ -22,7 +23,7 @@ const api = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -36,10 +37,11 @@ export const authAPI = {
     return response.data;
   },
 
-  login: async (credentials: UserLogin): Promise<TokenResponse> => {
+  login: async (credentials: UserLogin, rememberMe = false): Promise<TokenResponse> => {
     const formData = new FormData();
     formData.append('username', credentials.email);
     formData.append('password', credentials.password);
+    formData.append('remember_me', rememberMe ? 'true' : 'false');
 
     const response = await api.post('/auth/login', formData, {
       headers: {

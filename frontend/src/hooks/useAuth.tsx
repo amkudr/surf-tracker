@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserCreate, UserLogin } from '../types/api';
 import { authAPI } from '../services/api';
+import { clearToken, getStoredToken, storeToken } from '../services/authStorage';
 
 interface AuthContextType {
   user: User | null;
-  login: (credentials: UserLogin) => Promise<void>;
+  login: (credentials: UserLogin, rememberMe?: boolean) => Promise<void>;
   register: (user: UserCreate) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -30,13 +31,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (token) {
       // Verify token and get user info
       authAPI.getCurrentUser()
         .then(setUser)
         .catch(() => {
-          localStorage.removeItem('token');
+          clearToken();
         })
         .finally(() => setIsLoading(false));
     } else {
@@ -44,10 +45,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  const login = async (credentials: UserLogin) => {
+  const login = async (credentials: UserLogin, rememberMe = false) => {
     try {
-      const response = await authAPI.login(credentials);
-      localStorage.setItem('token', response.access_token);
+      const response = await authAPI.login(credentials, rememberMe);
+      storeToken(response.access_token, rememberMe);
       const userData = await authAPI.getCurrentUser();
       setUser(userData);
     } catch (error) {
@@ -59,14 +60,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       await authAPI.register(userData);
       // After registration, automatically log in
-      await login({ email: userData.email, password: userData.password });
+      await login({ email: userData.email, password: userData.password }, false);
     } catch (error) {
       throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    clearToken();
     setUser(null);
   };
 
