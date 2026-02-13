@@ -60,6 +60,23 @@ API will be available at: http://localhost:8000
 
 API documentation: http://localhost:8000/docs
 
+## Running with Docker Compose
+
+```bash
+docker compose up --build
+```
+
+- Frontend (Vite): http://localhost:5173
+- Backend API: http://localhost:8000
+- API docs: http://localhost:8000/docs
+- PgAdmin: http://localhost:5050
+
+### Run Worker + Postgres Only
+
+```bash
+docker compose up --build postgres worker
+```
+
 ## Testing
 
 ```bash

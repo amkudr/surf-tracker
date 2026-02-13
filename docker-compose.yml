@@ -1,5 +1,5 @@
 services:
-  web:
+  backend:
     build: .
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
@@ -8,8 +8,20 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/surf_tracker
     volumes:
       - .:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
-      - postgres
+      - backend
 
   worker:
     build: .
@@ -46,8 +58,6 @@ services:
     volumes:
       - pgadmin_:/var/lib/pgadmin
       - ./pgadmin-servers.json:/pgadmin4/servers.json
-    depends_on:
-      - postgres
 
 volumes:
   postgres_:
