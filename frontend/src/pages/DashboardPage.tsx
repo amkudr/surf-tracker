@@ -153,8 +153,8 @@ const DashboardPage = () => {
         <CardContent className="p-4 sm:p-6">
           {/* Header Section */}
           <div className="space-y-4 sm:space-y-6 mb-4 sm:mb-6">
-            {/* Controls + Stats in one row on medium+ screens */}
-            <div className="hidden md:grid grid-cols-[44px_auto_1fr_auto_44px] items-center gap-4">
+            {/* Controls + Stats in one row on large+ screens */}
+            <div className="hidden lg:grid grid-cols-[44px_272px_1fr_200px_44px] items-center gap-4">
               <div className="flex justify-center">
                 {timeRange !== 'all' && (
                   <Button
@@ -182,24 +182,25 @@ const DashboardPage = () => {
                   { value: 'all', label: 'All' },
                 ]}
                 size="md"
+                className="w-[272px] justify-between"
               />
 
-              <div className="flex items-center justify-center gap-10">
-                <div className="flex items-baseline gap-2">
+              <div className="grid grid-cols-3 items-center gap-12 justify-items-center">
+                <div className="flex flex-col items-center gap-1 min-w-[120px]">
                   <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.sessionsCount}</span>
                   <span className="text-sm text-content-tertiary">sessions</span>
                 </div>
-                <div className="flex items-baseline gap-2">
+                <div className="flex flex-col items-center gap-1 min-w-[120px]">
                   <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.totalSurfTime}</span>
                   <span className="text-sm text-content-tertiary">minutes</span>
                 </div>
-                <div className="flex items-baseline gap-2">
+                <div className="flex flex-col items-center gap-1 min-w-[120px]">
                   <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
                   <span className="text-sm text-content-tertiary">quality</span>
                 </div>
               </div>
 
-              <div className="text-sm text-content-secondary text-right font-medium">
+              <div className="text-sm text-content-secondary text-right font-medium whitespace-nowrap">
                 {getTimeRangeLabel(timeRange, currentDate)}
               </div>
 
@@ -236,44 +237,48 @@ const DashboardPage = () => {
                 className="w-full justify-between rounded-full bg-white border-border/70 shadow-sm"
               />
               <div className="flex items-center justify-center gap-3">
-                {timeRange !== 'all' && (
-                  <Button
-                    onClick={handlePrevious}
-                    aria-label="Previous period"
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 w-9 rounded-full p-0 text-content-secondary hover:text-content-primary"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                )}
-                <div className="flex-1 max-w-[260px] text-center text-sm text-content-primary font-medium bg-white px-4 py-2.5 rounded-full">
+                <div className="h-9 w-9 flex items-center justify-center">
+                  {timeRange !== 'all' && (
+                    <Button
+                      onClick={handlePrevious}
+                      aria-label="Previous period"
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 rounded-full p-0 text-content-secondary hover:text-content-primary"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex-1 max-w-[260px] text-center text-sm text-content-primary font-medium bg-white px-4 py-2.5 rounded-full whitespace-nowrap">
                   {getTimeRangeLabel(timeRange, currentDate)}
                 </div>
-                {timeRange !== 'all' && (
-                  <Button
-                    onClick={handleNext}
-                    aria-label="Next period"
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 w-9 rounded-full p-0 text-content-secondary hover:text-content-primary"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                )}
+                <div className="h-9 w-9 flex items-center justify-center">
+                  {timeRange !== 'all' && (
+                    <Button
+                      onClick={handleNext}
+                      aria-label="Next period"
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 rounded-full p-0 text-content-secondary hover:text-content-primary"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.sessionsCount}</p>
-                  <p className="text-xs text-content-tertiary">sessions</p>
+              <div className="grid grid-cols-3 gap-6 justify-items-center">
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-3xl font-bold text-content-primary tabular-nums">{timeRangeStats.sessionsCount}</span>
+                  <span className="text-xs text-content-tertiary">sessions</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.totalSurfTime}</p>
-                  <p className="text-xs text-content-tertiary">minutes</p>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-3xl font-bold text-content-primary tabular-nums">{timeRangeStats.totalSurfTime}</span>
+                  <span className="text-xs text-content-tertiary">minutes</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-content-primary mb-1">{timeRangeStats.avgWaveQuality.toFixed(1)}</p>
-                  <p className="text-xs text-content-tertiary">quality</p>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-3xl font-bold text-content-primary tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
+                  <span className="text-xs text-content-tertiary">quality</span>
                 </div>
               </div>
             </div>

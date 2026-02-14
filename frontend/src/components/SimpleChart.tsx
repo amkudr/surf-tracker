@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -125,6 +125,8 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   showLabels = false,
   timeRange = 'week'
 }) => {
+  const [chartWidth, setChartWidth] = useState(0);
+
   if (data.length === 0) {
     return (
       <div className={`flex items-center justify-center ${className}`} style={{ height }}>
@@ -168,8 +170,16 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
 
   const tooltipContent = useMemo(() => <CustomTooltip timeRange={timeRange} />, [timeRange]);
 
-  // Keep ticks readable: show all for week, throttle others to ~12
-  const tickStep = timeRange === 'week' ? 1 : Math.max(1, Math.ceil(chartDataWithLabels.length / 12));
+  const estimatedTickLabelWidth = (() => {
+    if (timeRange === 'month') return 16;
+    if (timeRange === 'week') return 28;
+    return 40;
+  })();
+  const maxVisibleTicks = chartWidth > 0
+    ? Math.max(2, Math.floor(chartWidth / (estimatedTickLabelWidth + 10)))
+    : 12;
+  // Show every column label when there is enough room; otherwise reduce density.
+  const tickStep = Math.max(1, Math.ceil(chartDataWithLabels.length / maxVisibleTicks));
   const allDayTicks = chartDataWithLabels
     .map((p, i) => (i % tickStep === 0 || i === chartDataWithLabels.length - 1 ? p.displayLabel : null))
     .filter(Boolean);
@@ -198,7 +208,11 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   return (
     <div className={`w-full ${className}`}>
       <div style={{ width: '100%', height: `${height}px`, minHeight: `${height}px` }}>
-        <ResponsiveContainer width="100%" height={height}>
+        <ResponsiveContainer
+          width="100%"
+          height={height}
+          onResize={(newWidth) => setChartWidth(newWidth)}
+        >
           <BarChart
             data={chartDataWithLabels}
             margin={{ top: 10, right: 12, left: 0, bottom: showLabels ? 20 : 5 }}
