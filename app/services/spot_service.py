@@ -5,6 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import BusinessLogicError
 
 from app.models.spot import Spot
+from app.services.surf_session_review_service import (
+    get_recent_spot_reviews,
+    get_spot_review_summary,
+)
 
 
 async def create_spot(
@@ -53,12 +57,21 @@ async def get_spot_by_id(
     spot_id: int,
 ) -> Optional[Spot]:
     result = await db.execute(select(Spot).where(Spot.id == spot_id))
-    return result.scalars().first()
+    spot = result.scalars().first()
+    if spot is None:
+        return None
+    spot.review_summary = await get_spot_review_summary(db, spot.id)
+    spot.recent_reviews = await get_recent_spot_reviews(db, spot.id, limit=3)
+    return spot
 
 
 async def list_spots(db: AsyncSession) -> list[Spot]:
     result = await db.execute(select(Spot))
-    return result.scalars().all()
+    spots = result.scalars().all()
+    for spot in spots:
+        spot.review_summary = await get_spot_review_summary(db, spot.id)
+        spot.recent_reviews = await get_recent_spot_reviews(db, spot.id, limit=3)
+    return spots
 
 
 async def get_spot_by_name(
@@ -67,3 +80,11 @@ async def get_spot_by_name(
 ) -> Optional[Spot]:
     result = await db.execute(select(Spot).where(Spot.name == name))
     return result.scalars().first()
+
+
+async def spot_exists(
+    db: AsyncSession,
+    spot_id: int,
+) -> bool:
+    result = await db.execute(select(Spot.id).where(Spot.id == spot_id))
+    return result.scalars().first() is not None

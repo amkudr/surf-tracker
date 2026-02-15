@@ -17,6 +17,7 @@ interface SimpleChartProps {
   className?: string;
   showLabels?: boolean;
   timeRange?: 'week' | 'month' | '3month' | 'all';
+  showLegend?: boolean;
 }
 
 const addDays = (date: Date, days: number): Date => {
@@ -38,9 +39,7 @@ const CustomTooltip = React.memo(({ active, payload, timeRange }: any) => {
     const dataPoint = payload[0].payload;
     const sessions = dataPoint.sessions || [];
     const quality = dataPoint.avgWaveQuality;
-    const level = quality !== undefined && quality !== 0 
-      ? (QUALITY_LEVELS.find((l) => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1])
-      : null;
+    const avgQualityLabel = quality != null ? quality.toFixed(1) : '—';
 
     const formatTime = (datetime: string) => {
       return new Date(datetime).toLocaleTimeString('en-US', { 
@@ -85,7 +84,8 @@ const CustomTooltip = React.memo(({ active, payload, timeRange }: any) => {
         ) : (
           <div className="space-y-3">
             {sessions.map((session: any, index: number) => {
-              const sessionLevel = getQualityLevel(session.wave_quality);
+              const reviewQuality = session.review?.quality;
+              const sessionLevel = reviewQuality != null ? getQualityLevel(reviewQuality) : null;
               return (
                 <div key={index} className="space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
@@ -96,9 +96,14 @@ const CustomTooltip = React.memo(({ active, payload, timeRange }: any) => {
                     Duration: {session.duration_minutes} min
                   </div>
                   <div className="flex items-center gap-1.5 text-xs">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: sessionLevel.color }}></div>
-                    <span className="font-semibold text-content-primary">{session.wave_quality.toFixed(1)}</span>
-                    <span className="text-content-tertiary">({sessionLevel.label})</span>
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: sessionLevel?.color ?? '#e5e5ea' }}
+                    ></div>
+                    <span className="font-semibold text-content-primary">
+                      {reviewQuality != null ? reviewQuality.toFixed(1) : '—'}
+                    </span>
+                    <span className="text-content-tertiary">({sessionLevel?.label ?? 'No review'})</span>
                   </div>
                 </div>
               );
@@ -107,7 +112,7 @@ const CustomTooltip = React.memo(({ active, payload, timeRange }: any) => {
             {sessions.length > 1 && (
               <div className="pt-2 mt-2 border-t border-border flex justify-between text-xs text-content-secondary">
                 <span>Total: {payload[0].value} min</span>
-                <span>Avg: {quality?.toFixed(1)}</span>
+                <span>Avg: {avgQualityLabel}</span>
               </div>
             )}
           </div>
@@ -123,7 +128,8 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   height = 200,
   className = '',
   showLabels = false,
-  timeRange = 'week'
+  timeRange = 'week',
+  showLegend = true,
 }) => {
   const [chartWidth, setChartWidth] = useState(0);
 
@@ -136,12 +142,28 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   }
 
   const getQualityColor = (quality?: number) => {
-    if (quality === undefined || quality === 0) return '#e5e5ea'; // border secondary
+    if (quality === undefined) return '#e5e5ea'; // border secondary
     const level = QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
     return level.color;
   };
 
-  const getDateLabel = (label: string, date: Date, range: string) => {
+  const getDurationFallbackColor = (value: number, maxValue: number) => {
+    if (value <= 0 || maxValue <= 0) return '#e5e5ea';
+    const ratio = Math.max(0, Math.min(1, value / maxValue));
+    if (ratio < 0.25) return '#bae6fd';
+    if (ratio < 0.5) return '#7dd3fc';
+    if (ratio < 0.75) return '#38bdf8';
+    return '#0284c7';
+  };
+
+  const getBarColor = (quality: number | undefined, value: number, maxValue: number) => {
+    if (quality != null) {
+      return getQualityColor(quality);
+    }
+    return getDurationFallbackColor(value, maxValue);
+  };
+
+  const getDateLabel = (_label: string, date: Date, range: string) => {
     if (!showLabels) return '';
     
     if (range === 'week') {
@@ -168,6 +190,8 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
     };
   });
 
+  const maxDuration = chartDataWithLabels.reduce((max, point) => Math.max(max, point.value), 0);
+
   const tooltipContent = useMemo(() => <CustomTooltip timeRange={timeRange} />, [timeRange]);
 
   const estimatedTickLabelWidth = (() => {
@@ -182,7 +206,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   const tickStep = Math.max(1, Math.ceil(chartDataWithLabels.length / maxVisibleTicks));
   const allDayTicks = chartDataWithLabels
     .map((p, i) => (i % tickStep === 0 || i === chartDataWithLabels.length - 1 ? p.displayLabel : null))
-    .filter(Boolean);
+    .filter((value): value is string => Boolean(value));
 
   const CustomXAxisTick = (props: any) => {
     const { x, y, payload, index } = props;
@@ -246,12 +270,16 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
             />
             <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={60}>
               {chartDataWithLabels.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getQualityColor(entry.avgWaveQuality)} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={getBarColor(entry.avgWaveQuality, entry.value, maxDuration)}
+                />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
+      {showLegend && null}
     </div>
   );
 };

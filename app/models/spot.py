@@ -37,6 +37,12 @@ class Spot(Base):
         cascade="all, delete",
         passive_deletes=True,
     )
+    surf_session_reviews = relationship(
+        "SurfSessionReview",
+        back_populates="spot",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
     forecasts = relationship(
         "Forecast",
         back_populates="spot",

@@ -14,6 +14,7 @@ export { SegmentedControl } from './SegmentedControl';
 export { DifficultyBadge } from './DifficultyBadge';
 export { DifficultyBadges } from './DifficultyBadges';
 export { CoordinatesBadge } from './CoordinatesBadge';
+export { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from './Tooltip';
 export { SimpleChart } from '../SimpleChart';
 export { SurfForecastWidget } from '../SurfForecastWidget';
 export { PageHero } from '../PageHero';

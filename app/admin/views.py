@@ -5,6 +5,7 @@ from app.models import (
     Spot,
     SurfForecast,
     SurfSession,
+    SurfSessionReview,
     Surfboard,
     Tide,
     User,
@@ -64,7 +65,6 @@ class SurfSessionAdmin(ModelView, model=SurfSession):
         SurfSession.spot_id,
         SurfSession.datetime,
         SurfSession.duration_minutes,
-        SurfSession.wave_quality,
         SurfSession.wave_height_m,
         SurfSession.wave_period,
         SurfSession.wind_speed_kmh,
@@ -77,6 +77,31 @@ class SurfSessionAdmin(ModelView, model=SurfSession):
         filters.OperationColumnFilter(SurfSession.spot_id),
         filters.OperationColumnFilter(SurfSession.user_id),
         filters.OperationColumnFilter(SurfSession.datetime),
+    ]
+    form_excluded_columns = ["created_at"]
+
+
+class SurfSessionReviewAdmin(ModelView, model=SurfSessionReview):
+    name = "Surf Session Review"
+    name_plural = "Surf Session Reviews"
+    column_list = [
+        SurfSessionReview.id,
+        SurfSessionReview.surf_session_id,
+        SurfSessionReview.spot_id,
+        SurfSessionReview.user_id,
+        SurfSessionReview.observed_at,
+        SurfSessionReview.quality,
+        SurfSessionReview.crowded_level,
+        SurfSessionReview.wave_height_index,
+        SurfSessionReview.short_long_index,
+        SurfSessionReview.wind_index,
+        SurfSessionReview.created_at,
+    ]
+    column_sortable_list = [SurfSessionReview.observed_at, SurfSessionReview.created_at]
+    column_filters = [
+        filters.OperationColumnFilter(SurfSessionReview.spot_id),
+        filters.OperationColumnFilter(SurfSessionReview.user_id),
+        filters.OperationColumnFilter(SurfSessionReview.observed_at),
     ]
     form_excluded_columns = ["created_at"]
 

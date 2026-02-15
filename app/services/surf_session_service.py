@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import BusinessLogicError
 
-from app.models import SurfSession
+from app.models import SurfSession, SurfSessionReview
 from app.schemas.surf_session import SurfSessionCreate
 from app.services.session_forecast_service import get_weather_for_session
 from app.services.spot_service import get_spot_by_name
@@ -64,6 +64,7 @@ async def create_surf_session(
     db: AsyncSession,
     surf_session_data: dict,
     user_id: int,
+    review_data: dict | None = None,
 ) -> SurfSession:
 
     await _resolve_spot_name_to_id(db, surf_session_data)
@@ -87,12 +88,30 @@ async def create_surf_session(
         user_id=user_id,
     )
     db.add(surf_session_model)
+    await db.flush()
+
+    if review_data is not None:
+        observed_at = review_data.pop("observed_at", None) or surf_session_model.datetime
+        db.add(
+            SurfSessionReview(
+                surf_session_id=surf_session_model.id,
+                spot_id=surf_session_model.spot_id,
+                user_id=user_id,
+                observed_at=observed_at,
+                **review_data,
+            )
+        )
+
     await db.commit()
     await db.refresh(surf_session_model)
     
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
+        .options(
+            selectinload(SurfSession.spot),
+            selectinload(SurfSession.surfboard),
+            selectinload(SurfSession.review),
+        )
         .where(SurfSession.id == surf_session_model.id)
     )
     return result.scalars().first()
@@ -106,7 +125,11 @@ async def get_surf_session(
 
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
+        .options(
+            selectinload(SurfSession.spot),
+            selectinload(SurfSession.surfboard),
+            selectinload(SurfSession.review),
+        )
         .where(
             SurfSession.id == surf_session_id,
             SurfSession.user_id == user_id,
@@ -122,7 +145,11 @@ async def list_surf_sessions(
 
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
+        .options(
+            selectinload(SurfSession.spot),
+            selectinload(SurfSession.surfboard),
+            selectinload(SurfSession.review),
+        )
         .where(SurfSession.user_id == user_id)
     )
     return result.scalars().all()
@@ -139,7 +166,12 @@ async def update_surf_session(
     if surf_session_model is None:
         return None
 
-    update_dict = update_data.model_dump(exclude_unset=True)
+    review_payload = (
+        update_data.review.model_dump()
+        if update_data.review is not None
+        else None
+    )
+    update_dict = update_data.model_dump(exclude_unset=True, exclude={"review"})
     weather_keys = {"spot_id", "datetime", "duration_minutes"}
     weather_relevant_changed = bool(weather_keys & set(update_dict.keys()))
 
@@ -148,6 +180,29 @@ async def update_surf_session(
 
     for field, value in update_dict.items():
         setattr(surf_session_model, field, value)
+
+    if review_payload is None:
+        if surf_session_model.review is not None:
+            await db.delete(surf_session_model.review)
+    else:
+        observed_at = review_payload.pop("observed_at", None) or surf_session_model.datetime
+        if surf_session_model.review is None:
+            surf_session_model.review = SurfSessionReview(
+                surf_session_id=surf_session_model.id,
+                spot_id=surf_session_model.spot_id,
+                user_id=user_id,
+                observed_at=observed_at,
+                **review_payload,
+            )
+        else:
+            surf_session_model.review.spot_id = surf_session_model.spot_id
+            surf_session_model.review.user_id = user_id
+            surf_session_model.review.observed_at = observed_at
+            surf_session_model.review.quality = review_payload["quality"]
+            surf_session_model.review.crowded_level = review_payload["crowded_level"]
+            surf_session_model.review.wave_height_index = review_payload["wave_height_index"]
+            surf_session_model.review.short_long_index = review_payload["short_long_index"]
+            surf_session_model.review.wind_index = review_payload["wind_index"]
 
     if weather_relevant_changed and surf_session_model.spot_id is not None:
         session_weather = await get_weather_for_session(
@@ -164,7 +219,11 @@ async def update_surf_session(
     
     result = await db.execute(
         select(SurfSession)
-        .options(selectinload(SurfSession.spot), selectinload(SurfSession.surfboard))
+        .options(
+            selectinload(SurfSession.spot),
+            selectinload(SurfSession.surfboard),
+            selectinload(SurfSession.review),
+        )
         .where(SurfSession.id == surf_session_model.id)
     )
     return result.scalars().first()

@@ -4,12 +4,15 @@ from datetime import datetime
 
 from app.schemas.spot import SpotResponse
 from app.schemas.surfboard import SurfboardResponse
+from app.schemas.surf_session_review import (
+    SurfSessionReviewCreate,
+    SurfSessionReviewResponse,
+)
 
 
 class SurfSessionBase(BaseModel):
     datetime: datetime
     duration_minutes: int = Field(gt=0, lt=1000)
-    wave_quality: int = Field(gt=0, lt=11)
     notes: str | None = Field(default=None, max_length=500)
     surfboard_name: str | None = None
     surfboard_brand: str | None = None
@@ -23,6 +26,7 @@ class SurfSessionBase(BaseModel):
 class SurfSessionCreate(SurfSessionBase):
     spot_id: int | None = Field(None, gt=0)
     spot_name: str | None = Field(None)
+    review: SurfSessionReviewCreate | None = None
     surfboard_id: int | None = Field(None, gt=0)
     save_surfboard_to_quiver: bool = False
 
@@ -45,6 +49,7 @@ class SurfSessionResponse(SurfSessionBase):
     created_at: datetime
     spot: SpotResponse
     surfboard: Optional[SurfboardResponse] = None
+    review: SurfSessionReviewResponse | None = None
     wave_height_m: float | None = None
     wave_period: float | None = None
     wave_dir: str | None = None

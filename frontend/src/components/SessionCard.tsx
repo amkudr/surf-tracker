@@ -26,7 +26,7 @@ function SessionCardComponent({ session, onDelete }: SessionCardProps) {
   const formattedDate = formatSessionDate(session.datetime);
   const formattedTime = formatSessionTime(session.datetime, session.duration_minutes);
   const durationLabel = `${formatDurationClean(session.duration_minutes)} min`;
-  const qualityLabel = formatWaveQuality(session.wave_quality);
+  const qualityLabel = formatWaveQuality(session.review?.quality);
   const waveHeightLabel = session.wave_height_m != null ? `${formatWaveHeightClean(session.wave_height_m)} m` : '—';
   const wavePeriodLabel = session.wave_period != null ? session.wave_period.toFixed(1) : '—';
   const windSpeedLabel = session.wind_speed_kmh != null ? `${formatWindSpeedClean(session.wind_speed_kmh)} km/h` : '—';

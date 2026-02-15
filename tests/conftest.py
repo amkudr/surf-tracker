@@ -14,6 +14,7 @@ from app.models import Base
 from app.models.spot import Spot
 from app.models.surf_forecast import SurfForecast
 from app.models.surf_session import SurfSession
+from app.models.surf_session_review import SurfSessionReview
 from app.models.users import User
 
 
@@ -78,7 +79,6 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
             spot_id=test_spots[0].id,
             datetime=datetime(2026, 1, 13, 8, 0, 0),
             duration_minutes=120,
-            wave_quality=8,
             notes="It was really very good good",
             user_id=test_user.id,
         ),
@@ -86,7 +86,6 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
             spot_id=test_spots[1].id,
             datetime=datetime(2026, 1, 5, 8, 0, 0),
             duration_minutes=40,
-            wave_quality=3,
             notes="It was really not very good good",
             user_id=test_user.id,
         ),
@@ -94,6 +93,17 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
 
     for surf_session in surf_sessions:
         test_db.add(surf_session)
+    await test_db.commit()
+    for surf_session, quality in zip(surf_sessions, [8, 3]):
+        test_db.add(
+            SurfSessionReview(
+                surf_session_id=surf_session.id,
+                spot_id=surf_session.spot_id,
+                user_id=test_user.id,
+                observed_at=surf_session.datetime,
+                quality=quality,
+            )
+        )
     await test_db.commit()
 
 

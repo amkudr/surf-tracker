@@ -19,7 +19,6 @@ class SurfSession(Base):
     surfboard_volume_liters = Column(Float, nullable=True)
     datetime = Column(DateTime, nullable=False)
     duration_minutes = Column(Integer)
-    wave_quality = Column(Integer)
     user_id = Column(Integer, ForeignKey("users.id"))
     notes = Column(String)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
@@ -42,3 +41,10 @@ class SurfSession(Base):
     spot = relationship("Spot", back_populates="surf_sessions", passive_deletes=True)
     surfboard = relationship("Surfboard", back_populates="surf_sessions")
     user = relationship("User", back_populates="surf_sessions")
+    review = relationship(
+        "SurfSessionReview",
+        back_populates="surf_session",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )

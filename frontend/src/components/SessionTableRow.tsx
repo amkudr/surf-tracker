@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { SurfSessionResponse } from '../types/api';
-import { Edit } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import {
   formatDurationClean,
   formatWaveQuality,
@@ -77,7 +77,7 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
         <span className="block font-medium">{boardLength}</span>
       </td>
       <td className={cellBase}>{formatDurationClean(session.duration_minutes)}</td>
-      <td className={cellBase}>{formatWaveQuality(session.wave_quality)}</td>
+      <td className={cellBase}>{formatWaveQuality(session.review?.quality)}</td>
       <td className={cellBase}>{formatWaveHeightClean(session.wave_height_m)}</td>
       <td className={cellBase}>
         {session.wave_period != null ? session.wave_period.toFixed(1) : '—'}
@@ -112,13 +112,23 @@ export function SessionTableRow({ session, onDelete }: SessionTableRowProps) {
         )}
       </td>
       <td className={cellBase}>
-        <Link
-          to={`/sessions/${session.id}/edit`}
-          className="inline-flex p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-background-secondary transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-          title="Edit session"
-        >
-          <Edit className="h-4 w-4" />
-        </Link>
+        <div className="flex items-center justify-center gap-1">
+          <button
+            type="button"
+            onClick={() => onDelete(session.id)}
+            className="inline-flex p-2 rounded-lg text-content-secondary hover:text-destructive hover:bg-background-secondary transition-colors focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
+            title="Delete session"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <Link
+            to={`/sessions/${session.id}/edit`}
+            className="inline-flex p-2 rounded-lg text-content-secondary hover:text-accent hover:bg-background-secondary transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            title="Edit session"
+          >
+            <Edit className="h-4 w-4" />
+          </Link>
+        </div>
       </td>
     </tr>
   );

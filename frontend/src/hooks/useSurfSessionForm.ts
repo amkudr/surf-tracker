@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { surfSessionsAPI, spotsAPI, surfboardsAPI } from '../services/api';
-import { SurfSessionCreate, SpotResponse, SurfboardResponse } from '../types/api';
+import {
+  SurfSessionCreate,
+  SpotResponse,
+  SurfboardResponse,
+  SurfSessionReviewCreate,
+} from '../types/api';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
@@ -46,9 +51,11 @@ interface UseSurfSessionFormReturn {
   error: string;
   isEditing: boolean;
   useTemporaryBoard: boolean;
+  isReviewEnabled: boolean;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   handleSpotChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   handleSaveBoardToggle: (checked: boolean) => void;
+  handleReviewToggle: (enabled: boolean) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handleDelete: () => Promise<void>;
 }
@@ -58,6 +65,14 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
   const navigate = useNavigate();
   const isEditing = !!id;
 
+  const defaultReview = (): SurfSessionReviewCreate => ({
+    quality: 5,
+    crowded_level: 5,
+    wave_height_index: 5,
+    short_long_index: 5,
+    wind_index: 5,
+  });
+
   const [formData, setFormData] = useState<SurfSessionCreate>({
     datetime: (() => {
       const d = new Date();
@@ -65,10 +80,10 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
       return d.toISOString().slice(0, 19);
     })(),
     duration_minutes: 60,
-    wave_quality: 5,
     notes: '',
     spot_id: undefined,
     spot_name: '',
+    review: null,
     surfboard_id: undefined,
     surfboard_name: '',
     surfboard_brand: '',
@@ -86,6 +101,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
   const [isLoadingData, setIsLoadingData] = useState(isEditing);
   const [error, setError] = useState('');
   const [useTemporaryBoard, setUseTemporaryBoard] = useState(false);
+  const [isReviewEnabled, setIsReviewEnabled] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -108,10 +124,19 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
             setFormData({
               datetime: normalizeDatetime(sessionData.datetime),
               duration_minutes: sessionData.duration_minutes,
-              wave_quality: sessionData.wave_quality,
               notes: sessionData.notes || '',
               spot_id: sessionData.spot_id,
               spot_name: '',
+              review: sessionData.review
+                ? {
+                    observed_at: sessionData.review.observed_at,
+                    quality: sessionData.review.quality,
+                    crowded_level: sessionData.review.crowded_level ?? 5,
+                    wave_height_index: sessionData.review.wave_height_index ?? 5,
+                    short_long_index: sessionData.review.short_long_index ?? 5,
+                    wind_index: sessionData.review.wind_index ?? 5,
+                  }
+                : null,
               surfboard_id: sessionData.surfboard_id,
               surfboard_name: sessionData.surfboard_name || '',
               surfboard_brand: sessionData.surfboard_brand || '',
@@ -123,6 +148,7 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
               save_surfboard_to_quiver: false,
             });
             setUseTemporaryBoard(!sessionData.surfboard_id && !!sessionData.surfboard_name);
+            setIsReviewEnabled(!!sessionData.review);
           }
         }
       } catch (err: any) {
@@ -166,9 +192,28 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
         setUseTemporaryBoard(false);
       }
     }
+    const reviewFields: (keyof SurfSessionReviewCreate)[] = [
+      'quality',
+      'crowded_level',
+      'wave_height_index',
+      'short_long_index',
+      'wind_index',
+    ];
+    if (reviewFields.includes(name as keyof SurfSessionReviewCreate)) {
+      setFormData(prev => {
+        const currentReview = prev.review ?? defaultReview();
+        return {
+          ...prev,
+          review: {
+            ...currentReview,
+            [name]: value === '' ? undefined : parseInt(value),
+          } as SurfSessionReviewCreate,
+        };
+      });
+      return;
+    }
     const numberFields = [
       'duration_minutes',
-      'wave_quality',
       'spot_id',
       'surfboard_id',
     ];
@@ -216,6 +261,14 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     setFormData(prev => ({ ...prev, save_surfboard_to_quiver: checked }));
   }, []);
 
+  const handleReviewToggle = useCallback((enabled: boolean) => {
+    setIsReviewEnabled(enabled);
+    setFormData(prev => ({
+      ...prev,
+      review: enabled ? (prev.review ?? defaultReview()) : null,
+    }));
+  }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -224,14 +277,16 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
 
     const payload: SurfSessionCreate = { ...formData };
     // Normalize blank strings to undefined for optional fields.
-    ['notes', 'spot_name', 'surfboard_name', 'surfboard_brand', 'surfboard_model'].forEach((key) => {
-      const k = key as keyof SurfSessionCreate;
-      if (typeof payload[k] === 'string' && payload[k]?.trim() === '') {
-        payload[k] = undefined as any;
-      }
-    });
+    if (payload.notes?.trim() === '') payload.notes = undefined;
+    if (payload.spot_name?.trim() === '') payload.spot_name = undefined;
+    if (payload.surfboard_name?.trim() === '') payload.surfboard_name = undefined;
+    if (payload.surfboard_brand?.trim() === '') payload.surfboard_brand = undefined;
+    if (payload.surfboard_model?.trim() === '') payload.surfboard_model = undefined;
     if (payload.spot_id != null) {
       payload.spot_name = undefined;
+    }
+    if (!isReviewEnabled) {
+      payload.review = undefined;
     }
 
     try {
@@ -275,9 +330,11 @@ export const useSurfSessionForm = (): UseSurfSessionFormReturn => {
     error,
     isEditing,
     useTemporaryBoard,
+    isReviewEnabled,
     handleChange,
     handleSpotChange,
     handleSaveBoardToggle,
+    handleReviewToggle,
     handleSubmit,
     handleDelete,
   };

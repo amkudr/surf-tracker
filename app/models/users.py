@@ -16,3 +16,4 @@ class User(Base):
 
     surf_sessions = relationship("SurfSession", back_populates="user")
     surfboards = relationship("Surfboard", back_populates="owner")
+    surf_session_reviews = relationship("SurfSessionReview", back_populates="user")

@@ -34,6 +34,51 @@ export interface SpotResponse {
   longitude?: number;
   difficulty?: number[];
   surf_forecast_name?: string;
+  review_summary?: SpotReviewSummary | null;
+  recent_reviews?: SpotReviewResponse[];
+}
+
+export interface SpotReviewSummary {
+  weighted_quality?: number | null;
+  avg_crowded_level?: number | null;
+  avg_wave_height_index?: number | null;
+  avg_short_long_index?: number | null;
+  avg_wind_index?: number | null;
+  review_count: number;
+  latest_observed_at?: string | null;
+}
+
+export interface SpotReviewResponse {
+  id: number;
+  surf_session_id: number;
+  observed_at: string;
+  quality: number;
+  crowded_level?: number | null;
+  wave_height_index?: number | null;
+  short_long_index?: number | null;
+  wind_index?: number | null;
+}
+
+export interface SurfSessionReviewCreate {
+  observed_at?: string;
+  quality: number;
+  crowded_level: number;
+  wave_height_index: number;
+  short_long_index: number;
+  wind_index: number;
+}
+
+export interface SurfSessionReviewResponse {
+  id: number;
+  surf_session_id: number;
+  spot_id: number;
+  observed_at: string;
+  quality: number;
+  crowded_level?: number | null;
+  wave_height_index?: number | null;
+  short_long_index?: number | null;
+  wind_index?: number | null;
+  created_at: string;
 }
 
 export interface SurfboardCreate {
@@ -71,10 +116,10 @@ export interface SurfboardUpdate {
 export interface SurfSessionCreate {
   datetime: string;
   duration_minutes: number;
-  wave_quality: number;
   notes?: string;
   spot_id?: number;
   spot_name?: string;
+  review?: SurfSessionReviewCreate | null;
   surfboard_id?: number;
   surfboard_name?: string | null;
   surfboard_brand?: string | null;
@@ -90,7 +135,6 @@ export interface SurfSessionResponse {
   id: number;
   datetime: string;
   duration_minutes: number;
-  wave_quality: number;
   notes?: string;
   spot_id: number;
   surfboard_id?: number;
@@ -105,6 +149,7 @@ export interface SurfSessionResponse {
   created_at: string;
   spot: SpotResponse;
   surfboard?: SurfboardResponse;
+  review?: SurfSessionReviewResponse | null;
   wave_height_m?: number;
   wave_period?: number;
   wave_dir?: string;

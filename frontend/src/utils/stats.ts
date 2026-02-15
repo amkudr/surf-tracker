@@ -1,5 +1,5 @@
 import { SurfSessionResponse } from '../types/api';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths, subDays, isWithinInterval, format, parseISO, eachDayOfInterval, startOfDay, addMinutes } from 'date-fns';
+import { startOfMonth, endOfMonth, subMonths, subDays, isWithinInterval, format, parseISO, eachDayOfInterval, startOfDay, addMinutes } from 'date-fns';
 
 export type TimeRange = 'week' | 'month' | '3month' | 'all';
 
@@ -39,7 +39,11 @@ export function calculateStats(sessions: SurfSessionResponse[]): SessionStats {
 
   const sessionsCount = sessions.length;
   const totalSurfTime = sessions.reduce((sum, session) => sum + session.duration_minutes, 0);
-  const avgWaveQuality = sessions.reduce((sum, session) => sum + session.wave_quality, 0) / sessions.length;
+  const reviewedSessions = sessions.filter((session) => session.review?.quality != null);
+  const avgWaveQuality =
+    reviewedSessions.length > 0
+      ? reviewedSessions.reduce((sum, session) => sum + (session.review?.quality ?? 0), 0) / reviewedSessions.length
+      : 0;
 
   // Calculate most popular spot
   const spotCounts: Record<string, number> = {};
@@ -383,7 +387,10 @@ export function formatDuration(minutes: number): string {
 /**
  * Format wave quality with one decimal place
  */
-export function formatWaveQuality(quality: number): string {
+export function formatWaveQuality(quality?: number | null): string {
+  if (quality == null) {
+    return '—';
+  }
   return `${quality.toFixed(1)}/10`;
 }
 

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { surfSessionsAPI } from '../services/api';
 import { SurfSessionResponse } from '../types/api';
-import { Waves } from 'lucide-react';
 import { Card, Button, Loading, Alert, AlertDescription } from '../components/ui';
 import { SessionsTable } from '../components/SessionsTable';
 import { PageHero } from '../components/PageHero';

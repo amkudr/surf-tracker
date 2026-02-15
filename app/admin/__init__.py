@@ -6,6 +6,7 @@ from app.admin.views import (
     SpotAdmin,
     SurfForecastAdmin,
     SurfSessionAdmin,
+    SurfSessionReviewAdmin,
     SurfboardAdmin,
     TideAdmin,
     UserAdmin,
@@ -26,6 +27,7 @@ def init_admin(app):
     admin.add_view(SpotAdmin)
     admin.add_view(SurfboardAdmin)
     admin.add_view(SurfSessionAdmin)
+    admin.add_view(SurfSessionReviewAdmin)
     admin.add_view(ForecastAdmin)
     admin.add_view(SurfForecastAdmin)
     admin.add_view(TideAdmin)

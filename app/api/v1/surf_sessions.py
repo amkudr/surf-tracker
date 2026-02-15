@@ -20,7 +20,9 @@ router = APIRouter(prefix="/surf_session", tags=["surf_session"])
 async def create_surf_session_endpoint(
     current_user: CurrentUser, db: db_dependency,  surf_session_create: SurfSessionCreate
 ) -> SurfSessionResponse:
-    created = await create_surf_session(db, surf_session_create.model_dump(), current_user.id)
+    session_data = surf_session_create.model_dump()
+    review_data = session_data.pop("review", None)
+    created = await create_surf_session(db, session_data, current_user.id, review_data)
     if created is None:
         raise HTTPException(status_code=500, detail="Error creating session")
     return created

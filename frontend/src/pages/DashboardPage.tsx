@@ -407,7 +407,7 @@ const DashboardPage = () => {
                         </div>
                         <div className="text-center">
                           <p className="text-caption text-content-secondary">Quality</p>
-                          <p className="text-body font-medium text-content-primary">{formatWaveQuality(session.wave_quality)}</p>
+                          <p className="text-body font-medium text-content-primary">{formatWaveQuality(session.review?.quality)}</p>
                         </div>
                       </div>
                     </div>
@@ -424,7 +424,7 @@ const DashboardPage = () => {
                         <span className="text-sm text-content-primary">{formatDuration(session.duration_minutes)}</span>
                       </div>
                       <div className="col-span-1 text-center">
-                        <span className="text-sm text-content-primary">{formatWaveQuality(session.wave_quality)}</span>
+                        <span className="text-sm text-content-primary">{formatWaveQuality(session.review?.quality)}</span>
                       </div>
                       <div className="col-span-1 flex justify-center">
                         <Link to={`/sessions/${session.id}/edit`}>

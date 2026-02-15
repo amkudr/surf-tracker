@@ -6,3 +6,4 @@ from .forecast import Forecast
 from .surf_forecast import SurfForecast
 from .tide import Tide, TideType
 from .surfboard import Surfboard
+from .surf_session_review import SurfSessionReview

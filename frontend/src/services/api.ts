@@ -6,6 +6,7 @@ import {
   TokenResponse,
   SpotCreate,
   SpotResponse,
+  SpotReviewResponse,
   SurfSessionCreate,
   SurfSessionResponse,
   SurfboardCreate,
@@ -125,6 +126,13 @@ export const spotsAPI = {
 
   create: async (spot: SpotCreate): Promise<SpotResponse> => {
     const response = await api.post('/spot/', spot);
+    return response.data;
+  },
+
+  getReviews: async (spotId: number, limit = 50, offset = 0): Promise<SpotReviewResponse[]> => {
+    const response = await api.get(`/spot/${spotId}/reviews`, {
+      params: { limit, offset },
+    });
     return response.data;
   },
 };
