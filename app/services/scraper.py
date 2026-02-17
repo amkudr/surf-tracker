@@ -2,7 +2,7 @@ import asyncio
 import logging
 import re
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from playwright.async_api import async_playwright, Browser, Page
 from bs4 import BeautifulSoup
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class SurfScraper:
     def __init__(self):
-        self.browser: Optional[Browser] = None
+        self.browser: Browser | None = None
         self.playwright = None
 
     async def start(self):
@@ -249,11 +249,11 @@ class SurfScraper:
         except ValueError:
             return time_str
 
-    def _safe_float(self, text: str) -> Optional[float]:
+    def _safe_float(self, text: str) -> float | None:
         stripped = text.strip()
         return float(stripped) if re.fullmatch(r"-?\d+(?:\.\d+)?", stripped) else None
 
-    def _parse_datetime(self, time_str: str) -> Optional[datetime]:
+    def _parse_datetime(self, time_str: str) -> datetime | None:
         """Parse 'DayName DayNum HH:MM' (e.g. 'Sun 1 08:00') to datetime. Returns None on failure."""
         try:
             parts = time_str.split()

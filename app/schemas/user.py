@@ -13,7 +13,6 @@ class User(BaseModel):
 class UserCreate(BaseModel):
     email: str
     password: str
-    is_admin: bool = Field(default=False, description="Set to true to create an admin user")
 
 
 class UserLogin(BaseModel):

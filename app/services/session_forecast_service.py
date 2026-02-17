@@ -1,12 +1,10 @@
 """Session weather derived from SurfForecast rows (averaged over session window)."""
 
-from __future__ import annotations
-
 import math
 import os
 from collections import Counter
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,14 +25,14 @@ def _distance_to_window(ts: datetime, start: datetime, end: datetime) -> float:
     return min(_hours_between(ts, start), _hours_between(ts, end))
 
 
-def _normalize_direction(s: Optional[str]) -> Optional[str]:
+def _normalize_direction(s: str | None) -> str | None:
     if s is None:
         return None
     t = s.strip().upper()
     return t if t else None
 
 
-def _first_or_most_common_direction(values: list[Optional[str]]) -> Optional[str]:
+def _first_or_most_common_direction(values: list[str | None]) -> str | None:
     non_null = [v for v in values if _normalize_direction(v)]
     if not non_null:
         return None
@@ -48,8 +46,8 @@ async def get_weather_for_session(
     spot_id: int,
     session_datetime: datetime,
     duration_minutes: int,
-    max_offset_hours: Optional[int] = None,
-) -> Optional[dict[str, Any]]:
+    max_offset_hours: int | None = None,
+) -> dict[str, Any] | None:
     """
     Build session weather dict from SurfForecast rows for the given spot and time window.
     Uses forecasts whose timestamp falls in [session_datetime, session_datetime + duration].
@@ -126,7 +124,7 @@ async def get_tide_for_session(
     db: AsyncSession,
     spot_id: int,
     session_datetime: datetime,
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Find surrounding low/high tides and interpolate actual height at session_datetime.
     Uses cosine interpolation: h(t) = h_low + (h_high - h_low) * (1 - cos(pi * (t - t_low) / (t_high - t_low))) / 2

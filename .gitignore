@@ -2,3 +2,7 @@ __pycache__/
 .cursor
 .todo/
 demo*
+.env
+.env.*
+!.env.example
+output/

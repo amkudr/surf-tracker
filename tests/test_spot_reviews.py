@@ -1,5 +1,5 @@
 import pytest
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 
 def _review_payload(quality: int) -> dict:
@@ -44,7 +44,7 @@ async def test_spot_reviews_are_visible_across_users_and_anonymous(client, test_
     user_1_token = await _login_token(client, test_user.email, "testpassword123")
     user_2_token = await _login_token(client, "other@example.com", "testpassword123")
 
-    today_utc = datetime.now(UTC).date().isoformat()
+    today_utc = datetime.now(timezone.utc).date().isoformat()
 
     session_1_response = await client.post(
         "/surf_session/",

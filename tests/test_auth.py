@@ -8,7 +8,8 @@ from app.core.security import verify_token
 async def test_register(client):
     user = {
         "email": "newuser@example.com",
-        "password": "securepassword123"
+        "password": "securepassword123",
+        "is_admin": True,  # should be ignored
     }
     response = await client.post("/auth/register", json=user)
     assert response.status_code == 201
@@ -17,6 +18,7 @@ async def test_register(client):
     assert "id" in data
     assert "created_at" in data
     assert "password" not in data
+    assert data["is_admin"] is False
 
 
 @pytest.mark.asyncio

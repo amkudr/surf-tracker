@@ -1,11 +1,17 @@
 from datetime import datetime, timedelta
 from typing import AsyncGenerator
 
+import os
+
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 from httpx import AsyncClient, ASGITransport
+
+# Ensure required env vars exist before importing app settings
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 from app.main import app
 from app.database import get_db

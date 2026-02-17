@@ -1,4 +1,3 @@
-from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.surf_session_review import SpotReviewResponse, SpotReviewSummaryResponse
@@ -6,10 +5,10 @@ from app.schemas.surf_session_review import SpotReviewResponse, SpotReviewSummar
 class SpotCreate(BaseModel):
     """Schema for creating a new surf spot."""
     name: str
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    difficulty: Optional[list[int]] = None
-    surf_forecast_name: Optional[str] = None
+    latitude: float | None = None
+    longitude: float | None = None
+    difficulty: list[int] | None = None
+    surf_forecast_name: str | None = None
 
 
 class SpotResponse(BaseModel):
@@ -18,9 +17,9 @@ class SpotResponse(BaseModel):
     
     id: int
     name: str
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    difficulty: Optional[list[int]] = None
-    surf_forecast_name: Optional[str] = None
+    latitude: float | None = None
+    longitude: float | None = None
+    difficulty: list[int] | None = None
+    surf_forecast_name: str | None = None
     review_summary: SpotReviewSummaryResponse | None = None
     recent_reviews: list[SpotReviewResponse] = Field(default_factory=list)

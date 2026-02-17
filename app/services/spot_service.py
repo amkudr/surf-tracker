@@ -1,4 +1,3 @@
-from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,10 +13,10 @@ from app.services.surf_session_review_service import (
 async def create_spot(
     db: AsyncSession,
     name: str,
-    lat: Optional[float],
-    lon: Optional[float],
-    difficulty: Optional[list[int]],
-    surf_forecast_name: Optional[str] = None,
+    lat: float | None,
+    lon: float | None,
+    difficulty: list[int] | None,
+    surf_forecast_name: str | None = None,
 ) -> Spot:
     spot_model = Spot(
         name=name,
@@ -55,7 +54,7 @@ async def create_spot(
 async def get_spot_by_id(
     db: AsyncSession,
     spot_id: int,
-) -> Optional[Spot]:
+) -> Spot | None:
     result = await db.execute(select(Spot).where(Spot.id == spot_id))
     spot = result.scalars().first()
     if spot is None:
@@ -77,7 +76,7 @@ async def list_spots(db: AsyncSession) -> list[Spot]:
 async def get_spot_by_name(
     db: AsyncSession,
     name: str,
-) -> Optional[Spot]:
+) -> Spot | None:
     result = await db.execute(select(Spot).where(Spot.name == name))
     return result.scalars().first()
 

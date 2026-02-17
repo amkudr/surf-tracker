@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Iterable
 
 from sqlalchemy import desc, func, select
@@ -116,6 +116,6 @@ async def get_spot_review_summary(
     spot_id: int,
     now: datetime | None = None,
 ) -> SpotReviewSummaryResponse:
-    now_value = now or datetime.now(UTC).replace(tzinfo=None)
+    now_value = now or datetime.now(timezone.utc).replace(tzinfo=None)
     today_reviews = await _get_reviews_for_date(db, spot_id, now_value.date())
     return _compute_weighted_summary(today_reviews, now_value)

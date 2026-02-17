@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -121,7 +119,7 @@ async def get_surf_session(
     db: AsyncSession,
     surf_session_id: int,
     user_id: int,
-) -> Optional[SurfSession]:
+) -> SurfSession | None:
 
     result = await db.execute(
         select(SurfSession)
@@ -160,7 +158,7 @@ async def update_surf_session(
     surf_session_id: int,
     user_id: int,
     update_data: SurfSessionCreate,
-) -> Optional[SurfSession]:
+) -> SurfSession | None:
 
     surf_session_model = await get_surf_session(db, surf_session_id, user_id)
     if surf_session_model is None:

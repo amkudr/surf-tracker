@@ -35,10 +35,14 @@ A comprehensive surf session tracking application built with FastAPI that helps 
 pip install -r requirements.txt
 ```
 
-2. Create `.env` file (optional):
-```env
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/surf_tracker
+2. Create `.env` file (required) using `.env.example` as a template:
+```bash
+cp .env.example .env
 ```
+Then fill in at least:
+- `DATABASE_URL` – your Postgres connection string (async driver for app, sync driver for Alembic is derived automatically)
+- `SECRET_KEY` – strong random string used for JWTs and session cookies
+- `ADMIN_BOOTSTRAP_TOKEN` – strong token required by the admin creation CLI
 
 3. Start PostgreSQL with Docker Compose:
 ```bash
@@ -90,6 +94,17 @@ The API uses Bearer token authentication. Register a user, login to get a token,
 - `POST /auth/register` - Register a new user
 - `POST /auth/login` - Login and get Bearer token
 - `GET /auth/me` - Get current user (requires Bearer token)
+
+### Creating the first admin (privileged path)
+
+Admins cannot be created through public registration. Use the guarded CLI instead:
+
+```bash
+ADMIN_BOOTSTRAP_TOKEN=<value from .env> \
+python -m app.scripts.create_admin --email admin@example.com --password "StrongPass123" --token <same token>
+```
+
+If an admin with that email already exists, the script reports and exits without changes.
 
 ## API Endpoints
 

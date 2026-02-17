@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import asyncio
 from datetime import date, datetime
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 from app.external_apis import OpenMeteoClient
 
@@ -10,10 +8,10 @@ from app.external_apis import OpenMeteoClient
 async def get_surf_report(
     lat: float,
     lon: float,
-    target_date: Optional[Union[date, datetime]] = None,
+    target_date: Union[date, datetime] | None = None,
     timezone: str = "GMT",
-    client: Optional[OpenMeteoClient] = None,
-) -> Optional[Dict[str, Any]]:
+    client: OpenMeteoClient | None = None,
+) -> Dict[str, Any] | None:
     """
     Get a surf report combining marine (wave) and weather (wind) data for a single date.
     Returns the first hour's data as a normalized dictionary, or None on error.

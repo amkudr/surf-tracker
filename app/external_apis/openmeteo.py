@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import asyncio
 from datetime import date
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import httpx
 
@@ -14,7 +12,7 @@ class OpenMeteoClient:
     Minimal async client for Open-Meteo marine + weather endpoints.
     """
 
-    def __init__(self, http_client: Optional[httpx.AsyncClient] = None) -> None:
+    def __init__(self, http_client: httpx.AsyncClient | None = None) -> None:
         """
         Initialize the OpenMeteo client.
         
@@ -87,4 +85,3 @@ class OpenMeteoClient:
             return resp.json()
         except httpx.HTTPError as e:
             raise ExternalAPIError(f"OpenMeteo Weather API error: {str(e)}", original_error=e)
-

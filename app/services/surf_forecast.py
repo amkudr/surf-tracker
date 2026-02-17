@@ -2,7 +2,7 @@
 import logging
 from datetime import datetime, timedelta
 import re
-from typing import List, Optional
+from typing import List
 
 import httpx
 from bs4 import BeautifulSoup
@@ -114,7 +114,7 @@ class SurfForecastService:
             self.db.add(f)
         self.db.commit()
     
-    def _extract_float(self, text: str) -> Optional[float]:
+    def _extract_float(self, text: str) -> float | None:
         match = re.search(r"(\d+(\.\d+)?)", text)
         if match:
             return float(match.group(1))
