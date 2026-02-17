@@ -24,7 +24,7 @@ A comprehensive surf session tracking application built with FastAPI that helps 
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10
 - PostgreSQL 16+
 - Docker and Docker Compose (optional)
 
