@@ -46,24 +46,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const login = async (credentials: UserLogin, rememberMe = false) => {
-    try {
-      const response = await authAPI.login(credentials, rememberMe);
-      storeToken(response.access_token, rememberMe);
-      const userData = await authAPI.getCurrentUser();
-      setUser(userData);
-    } catch (error) {
-      throw error;
-    }
+    const response = await authAPI.login(credentials, rememberMe);
+    storeToken(response.access_token, rememberMe);
+    const userData = await authAPI.getCurrentUser();
+    setUser(userData);
   };
 
   const register = async (userData: UserCreate) => {
-    try {
-      await authAPI.register(userData);
-      // After registration, automatically log in
-      await login({ email: userData.email, password: userData.password }, false);
-    } catch (error) {
-      throw error;
-    }
+    await authAPI.register(userData);
+    // After registration, automatically log in
+    await login({ email: userData.email, password: userData.password }, false);
   };
 
   const logout = () => {

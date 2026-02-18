@@ -1,5 +1,7 @@
 # Surf Tracker
 
+[![CI](https://github.com/amkudr/surf-tracker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/amkudr/surf-tracker/actions/workflows/ci.yml)
+
 A comprehensive surf session tracking application built with FastAPI that helps surfers log their sessions, track conditions, and discover new surf spots.
 
 ## Features
@@ -83,8 +85,18 @@ docker compose up --build postgres worker
 
 ## Testing
 
+Backend:
+
 ```bash
 pytest
+```
+
+Frontend (lint + unit tests):
+
+```bash
+cd frontend
+npm run lint
+npm test
 ```
 
 ## Authentication

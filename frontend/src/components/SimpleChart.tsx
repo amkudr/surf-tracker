@@ -133,14 +133,6 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
 }) => {
   const [chartWidth, setChartWidth] = useState(0);
 
-  if (data.length === 0) {
-    return (
-      <div className={`flex items-center justify-center ${className}`} style={{ height }}>
-        <p className="text-body text-content-secondary">No data available</p>
-      </div>
-    );
-  }
-
   const getQualityColor = (quality?: number) => {
     if (quality === undefined) return '#e5e5ea'; // border secondary
     const level = QUALITY_LEVELS.find(l => quality < l.max) || QUALITY_LEVELS[QUALITY_LEVELS.length - 1];
@@ -193,6 +185,14 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   const maxDuration = chartDataWithLabels.reduce((max, point) => Math.max(max, point.value), 0);
 
   const tooltipContent = useMemo(() => <CustomTooltip timeRange={timeRange} />, [timeRange]);
+
+  if (data.length === 0) {
+    return (
+      <div className={`flex items-center justify-center ${className}`} style={{ height }}>
+        <p className="text-body text-content-secondary">No data available</p>
+      </div>
+    );
+  }
 
   const estimatedTickLabelWidth = (() => {
     if (timeRange === 'month') return 16;
