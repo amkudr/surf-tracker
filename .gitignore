@@ -5,4 +5,11 @@ demo*
 .env
 .env.*
 !.env.example
+.venv/
+
+node_modules/
+dist/
+
+htmlcov/
+test-results/
 output/
