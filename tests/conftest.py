@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import AsyncGenerator
 
+import asyncio
 import os
 
 import pytest
@@ -33,6 +34,21 @@ async_engine = create_async_engine(
 )
 
 async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Session-wide event loop so session fixtures can finish teardown safely."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def _dispose_async_engine():
+    """Dispose the shared async engine after the suite to stop aiosqlite worker threads."""
+    yield
+    await async_engine.dispose()
 
 
 @pytest_asyncio.fixture
