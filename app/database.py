@@ -18,8 +18,7 @@ if not url.drivername.startswith("sqlite"):
         "pool_size": settings.pool_size,
         "max_overflow": settings.max_overflow,
     })
-
-async_engine = create_async_engine(str(url), **engine_kwargs)
+async_engine = create_async_engine(settings.database_url, **engine_kwargs)
 async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
 
 

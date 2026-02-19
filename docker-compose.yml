@@ -4,10 +4,15 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/surf_tracker
+    env_file: 
+      - .env   
     volumes:
       - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - surf-network
 
   frontend:
     build:
@@ -22,18 +27,24 @@ services:
       - /app/node_modules
     depends_on:
       - backend
+    networks:
+      - surf-network
 
   worker:
     build: .
     command: python -m app.worker
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/surf_tracker
       SCHEDULE_HOUR_MORNING: 6
       SCHEDULE_HOUR_NIGHT: 23
     volumes:
       - .:/app
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - surf-network
 
   postgres:
     image: postgres:16-alpine
@@ -45,6 +56,14 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d surf_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - surf-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -58,6 +77,15 @@ services:
     volumes:
       - pgadmin_:/var/lib/pgadmin
       - ./pgadmin-servers.json:/pgadmin4/servers.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - surf-network
+
+networks:
+  surf-network:
+    driver: bridge
 
 volumes:
   postgres_:
