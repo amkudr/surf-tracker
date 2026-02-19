@@ -2,15 +2,14 @@ from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException, status
-from app.schemas.user import UserCreate, UserResponse, TokenResponse
-from app.services.user_service import create_user, get_user_by_email, get_user
-from app.core.config import settings
-from app.core.security import create_access_token, verify_password
-from app.models import User
-from app.core.security import verify_token
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.database import db_dependency
 
+from app.core.config import settings
+from app.core.security import create_access_token, verify_password, verify_token
+from app.database import db_dependency
+from app.models import User
+from app.schemas.user import TokenResponse, UserCreate, UserResponse
+from app.services.user_service import create_user, get_user, get_user_by_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -26,12 +25,16 @@ async def login_user_endpoint(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     remember_me: bool = Form(False),
 ) -> TokenResponse:
-    user = await get_user_by_email(db,form_data.username)
+    user = await get_user_by_email(db, form_data.username)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    expires_delta = timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS_REMEMBER_ME) if remember_me else timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expires_delta = (
+        timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS_REMEMBER_ME)
+        if remember_me
+        else timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     access_token = create_access_token({"sub": str(user.id)}, expires_delta=expires_delta)
     return TokenResponse(access_token=access_token, token_type="Bearer")
 
@@ -45,14 +48,14 @@ async def get_current_user(
             detail="Missing authentication token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    payload = verify_token(token)  
+    payload = verify_token(token)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Query, status
+
+from app.api.v1.auth import CurrentUser
 from app.database import db_dependency
 from app.schemas.spot import SpotCreate, SpotResponse
+from app.schemas.surf_session_review import SpotReviewResponse
 from app.services.spot_service import create_spot, get_spot_by_id, list_spots, spot_exists
 from app.services.surf_session_review_service import list_spot_reviews
-from app.schemas.surf_session_review import SpotReviewResponse
-from app.api.v1.auth import CurrentUser
 
 router = APIRouter(prefix="/spot", tags=["spot"])
 

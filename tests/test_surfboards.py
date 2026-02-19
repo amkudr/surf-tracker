@@ -1,18 +1,17 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
+from app.core.security import hash_password
 from app.models.surfboard import Surfboard
 from app.models.users import User
 from app.schemas.surfboard import SurfboardCreate, SurfboardUpdate
 from app.services.surfboard_service import (
     create_surfboard,
+    delete_surfboard,
     get_surfboard_by_id,
     get_surfboards_by_owner_id,
     update_surfboard,
-    delete_surfboard,
 )
-from app.core.security import hash_password
 
 
 @pytest.mark.asyncio

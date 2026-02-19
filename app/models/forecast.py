@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import datetime
-
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -14,7 +12,7 @@ class Forecast(Base):
     id = Column(Integer, primary_key=True, index=True)
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
-    
+
     wave_height_min = Column(Float, nullable=True)
     wave_height_max = Column(Float, nullable=True)
     period = Column(Float, nullable=True)

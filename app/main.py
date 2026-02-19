@@ -1,16 +1,17 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
+from app import models
+from app.admin import init_admin
+from app.api.v1 import auth, spots, surf_sessions, surfboards
 from app.core.config import settings
 from app.core.exceptions import BusinessLogicError, ExternalAPIError, ValidationError
-from app.schemas.error import ErrorResponse
-from app import models
 from app.database import async_engine
-from app.api.v1 import auth, surf_sessions, spots, surfboards
 from app.routers import weather
-from app.admin import init_admin
+from app.schemas.error import ErrorResponse
 
 
 async def init_models():
@@ -23,7 +24,7 @@ async def lifespan(app: FastAPI):
     # Startup
     await init_models()
     yield
-    # Shutdown 
+    # Shutdown
 
 
 app = FastAPI(lifespan=lifespan)

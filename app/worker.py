@@ -1,14 +1,15 @@
 import asyncio
 import os
 from datetime import datetime
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.database import async_session
 from app.models.spot import Spot
-from app.models.tide import Tide
 from app.models.surf_forecast import SurfForecast
+from app.models.tide import Tide
 from app.services.scraper import SurfScraper
 
 DEFAULT_START_HOUR = 5
@@ -56,7 +57,7 @@ def format_schedule_hours(hours: list[int]) -> str:
 
 async def scrape_all_spots():
     print(f"[{datetime.now()}] Starting scrape job...")
-    
+
     # 1. Initialize the scraper
     scraper = SurfScraper()
     await scraper.start()
@@ -65,7 +66,7 @@ async def scrape_all_spots():
         # 2. Fetch all spots from the database
         result = await session.execute(select(Spot))
         spots = result.scalars().all()
-        
+
         print(f"[{datetime.now()}] Found {len(spots)} spots to scrape.")
 
         # 3. Iterate over each spot
@@ -76,15 +77,15 @@ async def scrape_all_spots():
 
             # 4. Construct URL dynamically using the name
             spot_url = f"https://www.surf-forecast.com/breaks/{spot.surf_forecast_name}/forecasts/latest"
-            
+
             print(f"Scraping spot {spot.id}: {spot.name} - {spot_url}")
-            
+
             # 5. Perform the scraping
             # 5. Perform the scraping
             scrape_result = await scraper.scrape_spot(spot_url)
             forecasts = scrape_result.get("forecasts", [])
             tides = scrape_result.get("tides", [])
-            
+
             if not forecasts and not tides:
                 print(f"No data for spot {spot.id}")
                 continue
@@ -103,7 +104,7 @@ async def scrape_all_spots():
                     rating=data["rating"],
                     updated_at=datetime.utcnow()
                 )
-                
+
                 do_update_stmt = stmt.on_conflict_do_update(
                     constraint='uq_surf_forecast_spot_timestamp',
                     set_={
@@ -117,7 +118,7 @@ async def scrape_all_spots():
                         "updated_at": datetime.utcnow()
                     }
                 )
-                
+
                 await session.execute(do_update_stmt)
 
             # 7. Save or Update (Upsert) Tides
@@ -128,16 +129,16 @@ async def scrape_all_spots():
                     height=tide["height"],
                     tide_type=tide["tide_type"]
                 )
-                
+
                 do_update_stmt = stmt.on_conflict_do_update(
                     constraint='uq_tide_spot_timestamp_type',
                     set_={
                         "height": stmt.excluded.height
                     }
                 )
-                
+
                 await session.execute(do_update_stmt)
-            
+
             await session.commit()
             print(f"Saved {len(forecasts)} forecasts and {len(tides)} tides for spot {spot.id}")
 
@@ -148,14 +149,14 @@ async def scrape_all_spots():
 async def main():
     # 8. Setup Scheduler
     scheduler = AsyncIOScheduler()
-    
+
     # Schedule jobs using configured hours (defaults: every ~4h from 05:00 through 23:00)
     scheduler.add_job(scrape_all_spots, 'cron', hour=SCHEDULE_HOURS_FIELD, minute=0)
-    
+
     print(f"Scheduling scrapes at: {format_schedule_hours(SCHEDULE_HOURS)}")
     print("Starting Worker Scheduler...")
     scheduler.start()
-    
+
     # Keep the process alive indefinitely using a more robust method
     # than run_forever, which allows for graceful handling if needed.
     try:

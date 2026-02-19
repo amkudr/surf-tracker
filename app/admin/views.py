@@ -3,10 +3,10 @@ from sqladmin import ModelView, filters
 from app.models import (
     Forecast,
     Spot,
+    Surfboard,
     SurfForecast,
     SurfSession,
     SurfSessionReview,
-    Surfboard,
     Tide,
     User,
 )

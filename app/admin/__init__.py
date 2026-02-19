@@ -4,10 +4,10 @@ from app.admin.auth import AdminAuth
 from app.admin.views import (
     ForecastAdmin,
     SpotAdmin,
+    SurfboardAdmin,
     SurfForecastAdmin,
     SurfSessionAdmin,
     SurfSessionReviewAdmin,
-    SurfboardAdmin,
     TideAdmin,
     UserAdmin,
 )

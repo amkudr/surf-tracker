@@ -1,29 +1,26 @@
+import asyncio
+import os
 from datetime import datetime, timedelta
 from typing import AsyncGenerator
 
-import asyncio
-import os
-
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
-from httpx import AsyncClient, ASGITransport
 
 # Ensure required env vars exist before importing app settings
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
-from app.main import app
 from app.database import get_db
-
+from app.main import app
 from app.models import Base
 from app.models.spot import Spot
 from app.models.surf_forecast import SurfForecast
 from app.models.surf_session import SurfSession
 from app.models.surf_session_review import SurfSessionReview
 from app.models.users import User
-
 
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -116,7 +113,7 @@ async def test_surf_sessions(test_db: AsyncSession, test_user: User, test_spots)
     for surf_session in surf_sessions:
         test_db.add(surf_session)
     await test_db.commit()
-    for surf_session, quality in zip(surf_sessions, [8, 3]):
+    for surf_session, quality in zip(surf_sessions, [8, 3], strict=False):
         test_db.add(
             SurfSessionReview(
                 surf_session_id=surf_session.id,
@@ -151,12 +148,12 @@ async def test_surf_forecasts(test_db: AsyncSession, test_spots):
 @pytest_asyncio.fixture
 async def test_user(test_db: AsyncSession):
     from app.core.security import hash_password
-    
+
     user = User(
         email="test@example.com",
         hashed_password=hash_password("testpassword123")
     )
-    
+
     test_db.add(user)
     await test_db.commit()
     await test_db.refresh(user)

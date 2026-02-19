@@ -12,7 +12,7 @@ class SurfboardCreate(BaseModel):
     volume_liters: float | None = None
 
 
-class SurfboardResponse(BaseModel): 
+class SurfboardResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     name: str | None = None

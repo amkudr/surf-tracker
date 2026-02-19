@@ -4,12 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import BusinessLogicError
-
 from app.models import SurfSession, SurfSessionReview
 from app.schemas.surf_session import SurfSessionCreate
+from app.schemas.surfboard import SurfboardCreate
 from app.services.session_forecast_service import get_weather_for_session
 from app.services.spot_service import get_spot_by_name
-from app.schemas.surfboard import SurfboardCreate
 from app.services.surfboard_service import create_surfboard
 
 
@@ -21,8 +20,12 @@ async def _resolve_spot_name_to_id(db: AsyncSession, session_data: dict) -> None
 
     spot = await get_spot_by_name(db, spot_name)
     if spot is None:
-        raise BusinessLogicError(f"Spot '{spot_name}' not found", code="SPOT_NOT_FOUND", status_code=status.HTTP_404_NOT_FOUND)
-    session_data['spot_id'] = spot.id
+        raise BusinessLogicError(
+            f"Spot '{spot_name}' not found",
+            code="SPOT_NOT_FOUND",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+    session_data["spot_id"] = spot.id
 
 
 async def _maybe_create_quiver_surfboard(
@@ -102,7 +105,7 @@ async def create_surf_session(
 
     await db.commit()
     await db.refresh(surf_session_model)
-    
+
     result = await db.execute(
         select(SurfSession)
         .options(
@@ -209,12 +212,28 @@ async def update_surf_session(
             surf_session_model.datetime,
             surf_session_model.duration_minutes,
         )
-        for key in ("wave_height_m", "wave_period", "wave_dir", "wind_speed_kmh", "wind_dir", "energy", "rating", "tide_height_m", "tide_low_m", "tide_high_m"):
-            setattr(surf_session_model, key, session_weather.get(key) if session_weather else None)
+        weather_keys = (
+            "wave_height_m",
+            "wave_period",
+            "wave_dir",
+            "wind_speed_kmh",
+            "wind_dir",
+            "energy",
+            "rating",
+            "tide_height_m",
+            "tide_low_m",
+            "tide_high_m",
+        )
+        for key in weather_keys:
+            setattr(
+                surf_session_model,
+                key,
+                session_weather.get(key) if session_weather else None,
+            )
 
     await db.commit()
     await db.refresh(surf_session_model)
-    
+
     result = await db.execute(
         select(SurfSession)
         .options(

@@ -1,6 +1,7 @@
-from .base import Base
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
+
+from .base import Base
 
 
 class SurfSession(Base):
@@ -22,7 +23,7 @@ class SurfSession(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     notes = Column(String)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    
+
     # Weather from SurfForecast (averaged over session window)
     wave_height_m = Column(Float, nullable=True)
     wave_period = Column(Float, nullable=True)
@@ -31,7 +32,7 @@ class SurfSession(Base):
     wind_dir = Column(String, nullable=True)
     energy = Column(Float, nullable=True)
     rating = Column(Integer, nullable=True)
-    
+
     # Tide data
     tide_height_m = Column(Float, nullable=True)
     tide_low_m = Column(Float, nullable=True)

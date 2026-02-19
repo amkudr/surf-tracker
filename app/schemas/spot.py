@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.surf_session_review import SpotReviewResponse, SpotReviewSummaryResponse
 
+
 class SpotCreate(BaseModel):
     """Schema for creating a new surf spot."""
     name: str
@@ -14,7 +15,7 @@ class SpotCreate(BaseModel):
 class SpotResponse(BaseModel):
     """Schema for spot API responses."""
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     name: str
     latitude: float | None = None

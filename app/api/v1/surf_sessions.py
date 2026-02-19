@@ -1,15 +1,15 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
-from app.database import AsyncSession, db_dependency
+from fastapi import APIRouter, HTTPException, status
+
+from app.api.v1.auth import CurrentUser
+from app.database import db_dependency
 from app.schemas.surf_session import SurfSessionCreate, SurfSessionResponse
 from app.services.surf_session_service import (
     create_surf_session,
-    list_surf_sessions,
-    get_surf_session,
-    update_surf_session,
     delete_surf_session,
+    get_surf_session,
+    list_surf_sessions,
+    update_surf_session,
 )
-from app.api.v1.auth import CurrentUser
 
 router = APIRouter(prefix="/surf_session", tags=["surf_session"])
 

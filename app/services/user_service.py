@@ -1,11 +1,11 @@
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.exceptions import BusinessLogicError
 
-from app.models import User
-from app.schemas.user import UserCreate 
+from app.core.exceptions import BusinessLogicError
 from app.core.security import hash_password
+from app.models import User
+from app.schemas.user import UserCreate
 
 
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
@@ -16,14 +16,14 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
     )
 
     db.add(user_model)
-    
+
     try:
-        #Commit and catch duplicates (Atomic operation)
+        # Commit and catch duplicates (Atomic operation)
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
-        raise BusinessLogicError("Email already registered", code="EMAIL_EXISTS")
-        
+        raise BusinessLogicError("Email already registered", code="EMAIL_EXISTS") from e
+
     await db.refresh(user_model)
     return user_model
 
@@ -38,9 +38,9 @@ async def create_admin_user(db: AsyncSession, email: str, password: str) -> User
     db.add(user_model)
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         await db.rollback()
-        raise BusinessLogicError("Email already registered", code="EMAIL_EXISTS")
+        raise BusinessLogicError("Email already registered", code="EMAIL_EXISTS") from e
 
     await db.refresh(user_model)
     return user_model

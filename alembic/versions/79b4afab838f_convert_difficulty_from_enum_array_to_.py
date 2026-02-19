@@ -7,9 +7,10 @@ Create Date: 2026-01-21 14:57:54.522167
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '79b4afab838f'
@@ -22,10 +23,10 @@ def upgrade() -> None:
     """Convert difficulty column from enum array to integer array."""
     # Drop old CHECK constraint
     op.drop_constraint("ck_spots_difficulty_adjacent", "spots", type_="check")
-    
+
     # Add temporary integer array column
     op.add_column("spots", sa.Column("difficulty_temp", postgresql.ARRAY(sa.Integer()), nullable=True))
-    
+
     # Convert enum values to integers in temp column
     # Map: 'beginner'=0, 'intermediate'=1, 'advanced'=2, 'expert'=3
     op.execute("""
@@ -44,11 +45,11 @@ def upgrade() -> None:
         )
         WHERE difficulty IS NOT NULL
     """)
-    
+
     # Drop old column and rename temp column
     op.drop_column("spots", "difficulty")
     op.alter_column("spots", "difficulty_temp", new_column_name="difficulty")
-    
+
     # Create new CHECK constraint for integer arrays (0-3, adjacent only)
     # Validates: 1-3 values, all between 0-3, and values are adjacent (no gaps)
     op.create_check_constraint(
@@ -63,18 +64,17 @@ def upgrade() -> None:
           (array_length(difficulty, 1) = 3 AND difficulty[2] = difficulty[1] + 1 AND difficulty[3] = difficulty[2] + 1)))
         """,
     )
-    
+
     # Drop the enum type (only if no other tables use it)
     op.execute("DROP TYPE IF EXISTS spot_difficulty")
 
 
 def downgrade() -> None:
     """Revert difficulty column back to enum array."""
-    from sqlalchemy.dialects.postgresql import ENUM
-    
+
     # Drop integer CHECK constraint
     op.drop_constraint("ck_spots_difficulty_adjacent", "spots", type_="check")
-    
+
     # Recreate enum type
     spot_difficulty_enum = postgresql.ENUM(
         "beginner",
@@ -85,7 +85,7 @@ def downgrade() -> None:
         create_type=True,
     )
     spot_difficulty_enum.create(op.get_bind(), checkfirst=True)
-    
+
     # Convert integers back to enum values
     op.execute("""
         UPDATE spots
@@ -103,10 +103,10 @@ def downgrade() -> None:
         )
         WHERE difficulty IS NOT NULL
     """)
-    
+
     # Change column type back to enum array
     op.execute("ALTER TABLE spots ALTER COLUMN difficulty TYPE spot_difficulty[] USING difficulty::spot_difficulty[]")
-    
+
     # Restore original CHECK constraint
     op.create_check_constraint(
         "ck_spots_difficulty_adjacent",

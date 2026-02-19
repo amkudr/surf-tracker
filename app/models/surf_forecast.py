@@ -14,7 +14,7 @@ class SurfForecast(Base):
     id = Column(Integer, primary_key=True, index=True)
     spot_id = Column(Integer, ForeignKey("spots.id", ondelete="CASCADE"), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
-    
+
     wave_height = Column(Float, nullable=True)
     wave_direction = Column(String, nullable=True)
     period = Column(Float, nullable=True)

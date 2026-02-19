@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 from typing import Iterable
 
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import SurfSessionReview
@@ -64,7 +64,7 @@ async def _get_reviews_for_date(
     """Fetch reviews for a specific spot on a specific date, filtered in SQL."""
     start_of_day = datetime.combine(target_date, datetime.min.time())
     end_of_day = start_of_day + timedelta(days=1)
-    
+
     result = await db.execute(
         select(SurfSessionReview)
         .where(

@@ -1,12 +1,13 @@
-from pydantic import BaseModel, Field, model_validator, field_validator, ConfigDict
 from datetime import datetime
 
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from app.schemas.spot import SpotResponse
-from app.schemas.surfboard import SurfboardResponse
 from app.schemas.surf_session_review import (
     SurfSessionReviewCreate,
     SurfSessionReviewResponse,
 )
+from app.schemas.surfboard import SurfboardResponse
 
 
 class SurfSessionBase(BaseModel):
@@ -56,7 +57,7 @@ class SurfSessionResponse(SurfSessionBase):
     wind_dir: str | None = None
     energy: float | None = None
     rating: int | None = None
-    
+
     # Tide data
     tide_height_m: float | None = None
     tide_low_m: float | None = None

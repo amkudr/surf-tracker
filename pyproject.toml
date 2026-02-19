@@ -1,0 +1,45 @@
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+include = '(^(app|tests|alembic)/.*\.py$|^[^/]+\.py$)'
+exclude = '(\.venv|\.mypy_cache|\.ruff_cache|\.pytest_cache|htmlcov|output|tmp|frontend)'
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = [
+    "demo_*.py",
+    "poc_*.py",
+    "frontend",
+    "htmlcov",
+    "output",
+    "tmp",
+    ".venv",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+per-file-ignores = { "alembic/versions/*.py" = ["E501", "W291"], "app/models/__init__.py" = ["F401"] }
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["app/core", "app/schemas"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
+exclude = "(frontend|htmlcov|output|tmp|demo_.*|poc_.*|app/services|app/models|app/api|app/admin|app/scripts)"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = ["alembic.versions.*", "alembic.env"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["sqladmin.*", "apscheduler.*", "python_jose.*"]
+ignore_missing_imports = true

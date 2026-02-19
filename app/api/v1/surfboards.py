@@ -1,8 +1,15 @@
 from fastapi import APIRouter, HTTPException, status
+
+from app.api.v1.auth import CurrentUser
 from app.database import db_dependency
 from app.schemas.surfboard import SurfboardCreate, SurfboardResponse, SurfboardUpdate
-from app.services.surfboard_service import create_surfboard, get_surfboard_by_id, get_surfboards_by_owner_id, update_surfboard, delete_surfboard
-from app.api.v1.auth import CurrentUser
+from app.services.surfboard_service import (
+    create_surfboard,
+    delete_surfboard,
+    get_surfboard_by_id,
+    get_surfboards_by_owner_id,
+    update_surfboard,
+)
 
 router = APIRouter(prefix="/surfboard", tags=["surfboard"])
 

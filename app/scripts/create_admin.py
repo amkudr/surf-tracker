@@ -1,13 +1,11 @@
+import argparse
 import asyncio
 import os
 import sys
-import argparse
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.exceptions import BusinessLogicError
 from app.database import async_session
 from app.services.user_service import create_admin_user, get_user_by_email
-from app.core.exceptions import BusinessLogicError
 
 
 async def main() -> int:

@@ -1,13 +1,16 @@
 from datetime import datetime
+
 import pytest
-from app.services.session_forecast_service import get_tide_for_session
-from app.models.tide import Tide
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.tide import Tide
+from app.services.session_forecast_service import get_tide_for_session
+
 
 @pytest.mark.asyncio
 async def test_tide_interpolation(test_db: AsyncSession, test_spots):
     spot_id = test_spots[0].id
-    
+
     # Seed tides: Low at 06:00 (1.0m) and High at 12:00 (3.0m)
     tides = [
         Tide(spot_id=spot_id, timestamp=datetime(2026, 2, 4, 6, 0), height=1.0, tide_type="LOW"),

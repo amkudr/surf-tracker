@@ -1,5 +1,7 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, status
 from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, status
+
 from app.worker import scrape_all_spots
 
 router = APIRouter(prefix="/weather", tags=["weather"])

@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
+
 import bcrypt
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 
 from app.core.config import settings
-
 
 
 def hash_password(password: str) -> str:
@@ -14,7 +14,9 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 
-def create_access_token(data: dict[str, str], expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    data: dict[str, str | int], expires_delta: timedelta | None = None
+) -> str:
     to_encode = data.copy()
     expire_delta = expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expire = datetime.now(timezone.utc) + expire_delta

@@ -5,7 +5,9 @@ from app.models.surfboard import Surfboard
 from app.schemas.surfboard import SurfboardCreate, SurfboardUpdate
 
 
-def _maybe_compute_volume_liters(length_ft: float | None, width_in: float | None, thickness_in: float | None) -> float | None:
+def _maybe_compute_volume_liters(
+    length_ft: float | None, width_in: float | None, thickness_in: float | None
+) -> float | None:
     """Approximate volume in liters if dimensions are provided.
 
     Uses a shape coefficient to roughly model the curved outline of a surfboard.
@@ -17,7 +19,9 @@ def _maybe_compute_volume_liters(length_ft: float | None, width_in: float | None
     return cubic_inches * 0.0163871  # in^3 to liters
 
 
-async def create_surfboard(db: AsyncSession, surfboard_create: SurfboardCreate, owner_id: int) -> Surfboard:
+async def create_surfboard(
+    db: AsyncSession, surfboard_create: SurfboardCreate, owner_id: int
+) -> Surfboard:
     volume = (
         surfboard_create.volume_liters
         if surfboard_create.volume_liters is not None
@@ -82,5 +86,4 @@ async def delete_surfboard(db: AsyncSession, surfboard_id: int, owner_id: int) -
     result = await db.execute(delete(Surfboard).where(Surfboard.id == surfboard_id, Surfboard.owner_id == owner_id))
     await db.commit()
     return result.rowcount > 0
-    
-    
+

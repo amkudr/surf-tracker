@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
-from sqlalchemy import Column, Float, Integer, JSON, String
+from sqlalchemy import JSON, Column, Float, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 

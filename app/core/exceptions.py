@@ -8,7 +8,7 @@ class BusinessLogicError(Exception):
 
 class ExternalAPIError(Exception):
     """Exception raised for external API failures."""
-    def __init__(self, message: str, original_error: Exception = None):
+    def __init__(self, message: str, original_error: Exception | None = None):
         self.message = message
         self.original_error = original_error
         super().__init__(self.message)

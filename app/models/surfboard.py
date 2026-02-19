@@ -1,6 +1,7 @@
-from sqlalchemy import ForeignKey, Integer, String, Column, Float
-from .base import Base
+from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from .base import Base
 
 
 class Surfboard(Base):

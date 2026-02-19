@@ -1,9 +1,9 @@
 from collections.abc import AsyncGenerator
 from typing import Annotated
-from fastapi import Depends
 
+from fastapi import Depends
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import settings
 

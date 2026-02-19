@@ -1,10 +1,10 @@
-import asyncio
 import logging
 import re
 from datetime import datetime
-from typing import List, Dict, Any
-from playwright.async_api import async_playwright, Browser, Page
+from typing import Any, Dict, List
+
 from bs4 import BeautifulSoup
+from playwright.async_api import Browser, async_playwright
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +36,23 @@ class SurfScraper:
         if not self.browser:
             await self.start()
             is_own_browser = True
-        
+
         # 2. Create a new page context
         page = await self.browser.new_page(viewport={"width": 1920, "height": 1080})
-        await page.set_extra_http_headers({
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        })
+        await page.set_extra_http_headers(
+            {
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 "
+                    "Safari/537.36"
+                )
+            }
+        )
 
         try:
             # 3. Navigate to the forecast URL
             await page.goto(url, wait_until="domcontentloaded", timeout=45000)
-            
+
             try:
                 # 4. Interact with the page: click 'Days' button to expand/load full data if needed
                 await page.wait_for_timeout(2500)
@@ -72,7 +78,7 @@ class SurfScraper:
         # 1. Parse HTML with BeautifulSoup
         soup = BeautifulSoup(html_content, "html.parser")
         table = soup.find("table", class_="forecast-table__table")
-        
+
         if not table:
             return {"forecasts": [], "tides": []}
 
@@ -92,7 +98,7 @@ class SurfScraper:
         low_tide_row = get_row_by_data_name("low-tide")
 
         if not all([time_row, wh_row, wind_row]):
-             return {"forecasts": [], "tides": []}
+            return {"forecasts": [], "tides": []}
 
         # 3. Extract cells from rows
         time_cells = time_row.find_all("td")
@@ -115,25 +121,24 @@ class SurfScraper:
                 date_text = re.sub(r"([a-zA-Z]+)(\d+)", r"\1 \2", date_text)
                 colspan = int(cell.get("colspan", 1))
                 col_date_map.extend([date_text] * colspan)
-        
+
         if len(col_date_map) < num_cols:
             col_date_map.extend(["Unknown"] * (num_cols - len(col_date_map)))
 
         # 5. Extract Tides Logic
         def build_tide_list(tide_cells, tide_type: str) -> List[Dict[str, Any]]:
-            tides = []
             extracted_tides = []
             for i, cell in enumerate(tide_cells):
                 raw = cell.get_text(" ", strip=True)
                 if not raw:
                     continue
-                
+
                 date_text = col_date_map[i] if i < len(col_date_map) else "Unknown"
-                
+
                 time_match = re.search(r"(\d{1,2}:\d{2}\s*[AP]M)", raw)
                 height_text = ""
                 height_span = cell.select_one(".heighttide")
-                
+
                 if height_span:
                     height_text = height_span.get_text(strip=True)
                 else:
@@ -143,19 +148,22 @@ class SurfScraper:
 
                 if not time_match and not height_text:
                     continue
-                
+
                 raw_time = time_match.group(1).replace(" ", "") if time_match else ""
                 formatted_time = self._convert_to_24h(raw_time)
-                
+
                 height_val = self._safe_float(height_text)
-                
+
                 if formatted_time and height_val is not None:
                     full_time_str = f"{date_text} {formatted_time}"
                     timestamp = self._parse_datetime(full_time_str)
                     if timestamp is None:
                         logger.info(
-                            "Skipping tide row: unparseable timestamp (tide_type=%s, full_time_str=%r, column_index=%s)",
-                            tide_type, full_time_str, i,
+                            "Skipping tide row: unparseable timestamp "
+                            "(tide_type=%s, full_time_str=%r, column_index=%s)",
+                            tide_type,
+                            full_time_str,
+                            i,
                         )
                         continue
                     extracted_tides.append({
@@ -176,14 +184,16 @@ class SurfScraper:
                 # 6a. Construct the full timestamp
                 time_text = time_cells[i].get_text(strip=True) if i < len(time_cells) else ""
                 date_text = col_date_map[i]
-                
+
                 time_24h = self._convert_to_24h(time_text)
                 full_time_str = f"{date_text} {time_24h}"
                 timestamp = self._parse_datetime(full_time_str)
                 if timestamp is None:
                     logger.info(
-                        "Skipping forecast row: unparseable timestamp (column_index=%s, full_time_str=%r)",
-                        i, full_time_str,
+                        "Skipping forecast row: unparseable timestamp "
+                        "(column_index=%s, full_time_str=%r)",
+                        i,
+                        full_time_str,
                     )
                     continue
 

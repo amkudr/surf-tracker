@@ -1,4 +1,3 @@
-import asyncio
 from datetime import date
 from typing import Any, Dict
 
@@ -15,10 +14,10 @@ class OpenMeteoClient:
     def __init__(self, http_client: httpx.AsyncClient | None = None) -> None:
         """
         Initialize the OpenMeteo client.
-        
+
         Args:
             http_client: Optional httpx.AsyncClient for dependency injection (useful for testing).
-                        If not provided, a new client will be created.
+                If not provided, a new client will be created.
         """
         self._http = http_client if http_client is not None else httpx.AsyncClient(timeout=20)
         self._owns_client = http_client is None
@@ -55,7 +54,9 @@ class OpenMeteoClient:
             resp.raise_for_status()
             return resp.json()
         except httpx.HTTPError as e:
-            raise ExternalAPIError(f"OpenMeteo Marine API error: {str(e)}", original_error=e)
+            raise ExternalAPIError(
+                f"OpenMeteo Marine API error: {str(e)}", original_error=e
+            ) from e
 
     async def get_weather_hourly_forecast(
         self,
@@ -84,4 +85,6 @@ class OpenMeteoClient:
             resp.raise_for_status()
             return resp.json()
         except httpx.HTTPError as e:
-            raise ExternalAPIError(f"OpenMeteo Weather API error: {str(e)}", original_error=e)
+            raise ExternalAPIError(
+                f"OpenMeteo Weather API error: {str(e)}", original_error=e
+            ) from e

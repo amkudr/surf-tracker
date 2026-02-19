@@ -162,7 +162,7 @@ async def get_tide_for_session(
     # Identify which is High and which is Low (or just use their heights)
     h1, h2 = prev_tide.height, next_tide.height
     t1, t2 = prev_tide.timestamp, next_tide.timestamp
-    
+
     # Cosine interpolation
     dt_total = (t2 - t1).total_seconds()
     if dt_total == 0:
@@ -176,7 +176,7 @@ async def get_tide_for_session(
         interpolated_height = h1 + (h2 - h1) * formula_fraction
 
     # Determine tide_low and tide_high from the bounding pair
-    # Note: Sometimes we might have two Highs or two Lows if scraping is weird, 
+    # Note: Sometimes we might have two Highs or two Lows if scraping is weird,
     # but usually it's one of each.
     tide_low = min(h1, h2)
     tide_high = max(h1, h2)
