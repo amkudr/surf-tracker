@@ -1,4 +1,17 @@
 services:
+  migrations:
+    build: .
+    command: alembic upgrade head
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - surf-network
+
   backend:
     build: .
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -9,8 +22,29 @@ services:
     volumes:
       - .:/app
     depends_on:
+      migrations:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python - <<'PY'
+          import sys
+          import urllib.request
+
+          url = "http://localhost:8000/health"
+          try:
+              with urllib.request.urlopen(url, timeout=5) as resp:
+                  sys.exit(0 if resp.status == 200 else 1)
+          except Exception:
+              sys.exit(1)
+          PY
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - surf-network
 
@@ -41,6 +75,8 @@ services:
     volumes:
       - .:/app
     depends_on:
+      migrations:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     networks:

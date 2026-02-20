@@ -46,12 +46,12 @@ Then fill in at least:
 - `SECRET_KEY` – strong random string used for JWTs and session cookies
 - `ADMIN_BOOTSTRAP_TOKEN` – strong token required by the admin creation CLI
 
-3. Start PostgreSQL with Docker Compose:
+3. Start PostgreSQL with Docker Compose (optional):
 ```bash
-docker-compose up -d
+docker compose up -d postgres
 ```
 
-4. Run migrations:
+4. Apply database migrations (required):
 ```bash
 alembic upgrade head
 ```
@@ -77,6 +77,12 @@ docker compose up --build
 - API docs: http://localhost:8000/docs
 - PgAdmin: http://localhost:5050
 
+Migrations are applied automatically by the `migrations` service before backend/worker start. You can also run them manually with:
+
+```bash
+docker compose run --rm backend alembic upgrade head
+```
+
 ### Run Worker + Postgres Only
 
 ```bash
@@ -98,6 +104,28 @@ cd frontend
 npm run lint
 npm test
 ```
+
+Tests use an in-memory SQLite database and still call `Base.metadata.create_all` inside fixtures; no change needed.
+
+## Health
+
+- `GET /health` returns `{"status":"ok","db":"up"}` when the API can reach the database. The backend container healthcheck uses this endpoint.
+
+## Seeding (optional, dev)
+
+Seed a demo user and sample spots (idempotent):
+
+- Local:
+  ```bash
+  python -m app.scripts.seed_dev_data --email demo@surf.local --password surf1234
+  ```
+
+- Docker:
+  ```bash
+  docker compose run --rm backend python -m app.scripts.seed_dev_data
+  ```
+
+Spots created: Mavericks, Pipeline, Bondi Beach. Demo user defaults to `demo@surf.local` / `surf1234`; override via flags.
 
 ## Authentication
 

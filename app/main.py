@@ -1,10 +1,8 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
-from app import models
 from app.admin import init_admin
 from app.api.v1 import auth, spots, surf_sessions, surfboards
 from app.core.config import settings
@@ -14,22 +12,22 @@ from app.routers import weather
 from app.schemas.error import ErrorResponse
 
 
-async def init_models():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(models.Base.metadata.create_all)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    await init_models()
-    yield
-    # Shutdown
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 admin = init_admin(app)
+
+
+@app.get("/health", tags=["health"])
+async def healthcheck():
+    try:
+        async with async_engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "up"}
+    except Exception:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={"status": "error", "db": "down"},
+        )
 
 @app.exception_handler(BusinessLogicError)
 async def business_logic_error_handler(request: Request, exc: BusinessLogicError):
