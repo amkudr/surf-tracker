@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
 
     # Non-sensitive defaults
-    echo_sql: bool = True
+    echo_sql: bool = False
     pool_size: int = 10
     max_overflow: int = 20
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

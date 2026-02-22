@@ -54,19 +54,18 @@ class SurfScraper:
             await page.goto(url, wait_until="domcontentloaded", timeout=45000)
 
             try:
-                # 4. Interact with the page: click 'Days' button to expand/load full data if needed
                 await page.wait_for_timeout(2500)
                 if await page.locator('.forecast-table-days__button').count() > 0:
                     await page.click('.forecast-table-days__button')
                     await page.wait_for_timeout(2000)
             except Exception as e:
-                print(f"Warning: Interaction failed for {url}: {e}")
+                logger.warning("interaction_failed", extra={"url": url, "error": str(e)})
 
             # 5. Extract HTML content
             content = await page.content()
             return self._parse_html(content)
         except Exception as e:
-            print(f"Error scraping {url}: {e}")
+            logger.error("scrape_failed", extra={"url": url, "error": str(e)}, exc_info=e)
             return {"forecasts": [], "tides": []}
         finally:
             # 6. Close the page (keeping browser open for other spots if reused)
@@ -238,7 +237,7 @@ class SurfScraper:
                     "rating": rating
                 })
             except Exception as e:
-                print(f"Error parsing column {i}: {e}")
+                logger.error("parse_column_failed", extra={"column": i, "error": str(e)}, exc_info=e)
                 continue
 
         return {"forecasts": forecasts, "tides": all_tides}

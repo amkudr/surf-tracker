@@ -59,7 +59,7 @@ alembic upgrade head
 ## Running
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --log-config uvicorn_log_config.json
 ```
 
 API will be available at: http://localhost:8000

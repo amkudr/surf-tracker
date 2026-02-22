@@ -23,4 +23,4 @@ RUN playwright install chromium
 COPY . .
 
 # Default command (can be overridden in docker-compose)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--log-config", "/app/uvicorn_log_config.json"]

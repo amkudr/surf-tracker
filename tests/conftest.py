@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import logging.config
 import os
 from datetime import datetime, timedelta
 from typing import AsyncGenerator
@@ -178,3 +180,23 @@ async def authenticated_client(client: AsyncClient, auth_token):
     """Fixture that returns a client with authentication headers set"""
     client.headers.update({"Authorization": f"Bearer {auth_token}"})
     return client
+
+
+# Ensure pytest's caplog handler remains attached when dictConfig runs in lifespan
+def _retain_pytest_handlers(func):
+    def wrapper(*args, **kwargs):
+        pytest_handlers = [
+            h for h in logging.root.handlers
+            if h.__module__ == "_pytest.logging"
+        ]
+        result = func(*args, **kwargs)
+        for handler in pytest_handlers:
+            if handler not in logging.root.handlers:
+                logging.root.addHandler(handler)
+        return result
+    return wrapper
+
+
+@pytest.fixture(autouse=True)
+def keep_caplog_alive(monkeypatch):
+    monkeypatch.setattr(logging.config, "dictConfig", _retain_pytest_handlers(logging.config.dictConfig))

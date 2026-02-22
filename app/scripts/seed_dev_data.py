@@ -3,10 +3,9 @@ import asyncio
 from typing import Sequence
 
 from app.database import async_session
+from app.schemas.user import UserCreate
 from app.services.spot_service import create_spot, get_spot_by_name
 from app.services.user_service import create_user, get_user_by_email
-from app.schemas.user import UserCreate
-
 
 DEFAULT_EMAIL = "demo@surf.local"
 DEFAULT_PASSWORD = "surf1234"
