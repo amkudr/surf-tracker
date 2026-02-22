@@ -15,7 +15,8 @@ from sqlalchemy.pool import StaticPool
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
-from app.database import async_engine as app_async_engine, get_db
+from app.database import async_engine as app_async_engine
+from app.database import get_db
 from app.main import app
 from app.models import Base
 from app.models.spot import Spot
