@@ -27,12 +27,18 @@ const SpotDistributionChart: React.FC<SpotDistributionChartProps> = ({
   const total = data.reduce((sum, point) => sum + point.value, 0);
   const activeItem = activeIndex !== null ? data[activeIndex] : null;
 
-  const chartSize = height * 0.8;
+  const chartSize = Math.min(height * 0.8, 220);
   
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 ${className}`} style={{ minHeight: `${height}px` }}>
+    <div
+      className={`flex flex-col items-center sm:grid sm:grid-cols-[220px_1fr] sm:items-start sm:gap-4 gap-3 ${className}`}
+      style={{ minHeight: `${height}px` }}
+    >
       {/* Chart Section */}
-      <div className="relative flex-shrink-0" style={{ width: `${chartSize}px`, height: `${chartSize}px` }}>
+      <div
+        className="relative flex-shrink-0 self-center sm:self-start"
+        style={{ width: `${chartSize}px`, height: `${chartSize}px` }}
+      >
         <ResponsiveContainer width={chartSize} height={chartSize}>
           <PieChart>
             <Pie
@@ -102,14 +108,17 @@ const SpotDistributionChart: React.FC<SpotDistributionChartProps> = ({
       </div>
 
       {/* Custom Legend Section */}
-      <div className="flex flex-col gap-2.5 min-w-[140px] max-h-full overflow-y-auto py-2 pr-4 custom-scrollbar">
+      <div
+        className="grid gap-x-3 gap-y-2 w-full max-h-full overflow-y-auto py-1.5 pr-1 sm:pr-2 custom-scrollbar"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}
+      >
         {data.map((point, index) => (
           <motion.div
             key={index}
             initial={false}
-            animate={{ x: activeIndex === index ? 4 : 0 }}
-            className={`flex items-center gap-3 px-2 py-1.5 rounded-md cursor-pointer transition-colors ${
-              activeIndex === index ? 'bg-background-secondary' : 'bg-transparent'
+            animate={{ x: activeIndex === index ? 2 : 0 }}
+            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors ${
+              activeIndex === index ? 'bg-background-secondary ring-1 ring-border/60' : 'bg-transparent'
             }`}
             onMouseEnter={() => setActiveIndex(index)}
             onMouseLeave={() => setActiveIndex(null)}
@@ -118,11 +127,11 @@ const SpotDistributionChart: React.FC<SpotDistributionChartProps> = ({
               className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
               style={{ backgroundColor: point.color }}
             />
-            <span className="text-xs font-medium text-content-secondary truncate max-w-[120px]">
-              {point.name}
+            <span className="text-xs font-medium text-content-secondary truncate max-w-[160px]">
+              {point.legendLabel ?? point.name}
             </span>
-            <span className="text-xs font-bold text-content-primary ml-auto pl-2">
-              {Math.round((point.value / total) * 100)}%
+            <span className="text-xs font-bold text-content-primary ml-auto pl-2 tabular-nums text-right min-w-[4ch]">
+              {`${Math.round((point.value / total) * 100)}%`}
             </span>
           </motion.div>
         ))}

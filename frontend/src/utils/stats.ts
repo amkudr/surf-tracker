@@ -22,6 +22,7 @@ export interface PieChartDataPoint {
   name: string;
   value: number;
   color?: string;
+  legendLabel?: string;
 }
 
 /**
@@ -375,6 +376,71 @@ export function groupSessionsBySpot(sessions: SurfSessionResponse[]): PieChartDa
       value,
       color: colors[index % colors.length]
     }));
+}
+
+/**
+ * Group sessions by surfboard for the selected time range
+ */
+export function groupSessionsBySurfboard(sessions: SurfSessionResponse[]): PieChartDataPoint[] {
+  const boardCounts: Record<string, { count: number; name: string; legendLabel: string }> = {};
+
+  sessions.forEach(session => {
+    const boardName =
+      session.surfboard?.name ||
+      session.surfboard_name ||
+      [session.surfboard_brand, session.surfboard_model].filter(Boolean).join(' ').trim();
+
+    if (!boardName) return; // skip sessions without surfboard info
+
+    const lengthFt =
+      session.surfboard?.length_ft ??
+      session.surfboard_length_ft;
+
+    const lengthLabel = formatSurfboardLength(lengthFt);
+    const legendLabel = lengthLabel ? `${boardName} ${lengthLabel}` : boardName;
+    const boardKey = `${boardName}__${lengthLabel ?? 'nolength'}`;
+
+    if (!boardCounts[boardKey]) {
+      boardCounts[boardKey] = { count: 0, name: boardName, legendLabel };
+    }
+    boardCounts[boardKey].count += 1;
+  });
+
+  const colors = [
+    '#06b6d4', // cyan-500
+    '#22c55e', // green-500
+    '#eab308', // yellow-500
+    '#f97316', // orange-500
+    '#ef4444', // red-500
+    '#a855f7', // purple-500
+    '#ec4899', // pink-500
+    '#6366f1', // indigo-500
+  ];
+
+  return Object.entries(boardCounts)
+    .sort((a, b) => b[1].count - a[1].count)
+    .map(([_, info], index) => ({
+      name: info.name,
+      legendLabel: info.legendLabel,
+      value: info.count,
+      color: colors[index % colors.length]
+    }));
+}
+
+function formatSurfboardLength(lengthFt?: number | null): string | null {
+  if (lengthFt == null || Number.isNaN(lengthFt)) return null;
+
+  const feet = Math.floor(lengthFt);
+  let inches = Math.round((lengthFt - feet) * 12);
+
+  // handle rounding up to the next foot
+  if (inches === 12) {
+    inches = 0;
+    return `${feet + 1}'`;
+  }
+
+  if (inches === 0) return `${feet}'`;
+  return `${feet}'${inches}`;
 }
 
 /**

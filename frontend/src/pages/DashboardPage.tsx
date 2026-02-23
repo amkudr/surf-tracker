@@ -19,6 +19,7 @@ import {
   formatWaveQuality,
   formatSessionDate,
   groupSessionsBySpot,
+  groupSessionsBySurfboard,
   getTimeRangeLabel,
   type TimeRange
 } from '../utils/stats';
@@ -62,6 +63,10 @@ const DashboardPage = () => {
 
   const spotDistributionData = useMemo(() => {
     return groupSessionsBySpot(timeRangeSessions);
+  }, [timeRangeSessions]);
+
+  const surfboardDistributionData = useMemo(() => {
+    return groupSessionsBySurfboard(timeRangeSessions);
   }, [timeRangeSessions]);
 
   const recentSessions = useMemo(() => {
@@ -303,34 +308,27 @@ const DashboardPage = () => {
       </Card>
 
       {/* Secondary Statistics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-[1.6fr_1fr] gap-3 sm:gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <SectionTitle>Popular Spot</SectionTitle>
-          </CardHeader>
-          <CardContent className="pt-0 pb-4 sm:pb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-accent/10 rounded-xl">
-                <Waves className="h-6 w-6 text-accent" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-content-primary">
-                  {timeRangeStats.mostPopularSpot}
-                </p>
-                <p className="text-sm text-content-secondary">Most visited</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 text-center sm:text-left">
             <SectionTitle>Spot Distribution</SectionTitle>
           </CardHeader>
           <CardContent className="pt-0 pb-4 sm:pb-6">
             <SpotDistributionChart
               data={spotDistributionData}
-              height={180}
+              height={220}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2 text-center sm:text-left">
+            <SectionTitle>Surfboard Distribution</SectionTitle>
+          </CardHeader>
+          <CardContent className="pt-0 pb-4 sm:pb-6">
+            <SpotDistributionChart
+              data={surfboardDistributionData}
+              height={220}
             />
           </CardContent>
         </Card>
