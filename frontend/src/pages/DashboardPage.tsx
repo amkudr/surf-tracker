@@ -200,7 +200,7 @@ const DashboardPage = () => {
                   <span className="text-sm text-content-tertiary">minutes</span>
                 </div>
                 <div className="flex flex-col items-center gap-1 min-w-[120px]">
-                  <span className="text-5xl font-bold text-content-primary tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
+                  <span className="text-5xl font-bold text-content-primary tabular-nums">{(timeRangeStats.avgWaveQuality || 0).toFixed(1)}</span>
                   <span className="text-sm text-content-tertiary">quality</span>
                 </div>
               </div>
@@ -282,7 +282,7 @@ const DashboardPage = () => {
                   <span className="text-xs text-content-tertiary">minutes</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-3xl font-bold text-content-primary tabular-nums">{timeRangeStats.avgWaveQuality.toFixed(1)}</span>
+                  <span className="text-3xl font-bold text-content-primary tabular-nums">{(timeRangeStats.avgWaveQuality || 0).toFixed(1)}</span>
                   <span className="text-xs text-content-tertiary">quality</span>
                 </div>
               </div>

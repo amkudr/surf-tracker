@@ -37,10 +37,7 @@ const CoordinatesBadge = React.forwardRef<HTMLDivElement, CoordinatesBadgeProps>
     precision = 4,
     ...props
   }, ref) => {
-    if (latitude === undefined || longitude === undefined) {
-      return null;
-    }
-
+    const hasCoords = latitude != null && longitude != null;
     const formatCoordinate = (coord: number) => coord.toFixed(precision);
 
     return (
@@ -50,7 +47,11 @@ const CoordinatesBadge = React.forwardRef<HTMLDivElement, CoordinatesBadgeProps>
         {...props}
       >
         {showIcon && <Navigation className="h-3 w-3" />}
-        <span>{formatCoordinate(latitude)}, {formatCoordinate(longitude)}</span>
+        <span>
+          {hasCoords
+            ? `${formatCoordinate(latitude as number)}, ${formatCoordinate(longitude as number)}`
+            : 'No coords'}
+        </span>
       </div>
     );
   }

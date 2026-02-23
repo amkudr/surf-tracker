@@ -12,6 +12,7 @@ dist/
 
 htmlcov/
 test-results/
+playwright-report/
 output/
 .mypy_cache/
 .ruff_cache/

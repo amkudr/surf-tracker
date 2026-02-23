@@ -255,7 +255,7 @@ const SurfSpotsPage = () => {
     if (value == null) {
       return `${label} —`;
     }
-    return `${label} ${value.toFixed(1)}/10(${getBandLabel(value, bands)})`;
+    return `${label} ${(value || 0).toFixed(1)}/10(${getBandLabel(value, bands)})`;
   };
 
   const SymbolLegend = ({

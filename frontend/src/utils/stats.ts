@@ -457,7 +457,7 @@ export function formatWaveQuality(quality?: number | null): string {
   if (quality == null) {
     return '—';
   }
-  return `${quality.toFixed(1)}/10`;
+  return `${(quality || 0).toFixed(1)}/10`;
 }
 
 /**
