@@ -4,6 +4,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -51,9 +52,42 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             request_id_var.reset(token)
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, *, enable_hsts: bool = False):
+        super().__init__(app)
+        self.enable_hsts = enable_hsts
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        if self.enable_hsts and request.url.scheme == "https":
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            )
+        return response
+
+
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(RequestContextMiddleware)
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY,
+    same_site="lax",
+    https_only=settings.SESSION_COOKIE_SECURE,
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-Request-ID"],
+)
+app.add_middleware(SecurityHeadersMiddleware, enable_hsts=settings.SECURITY_ENABLE_HSTS)
 admin = init_admin(app)
 
 

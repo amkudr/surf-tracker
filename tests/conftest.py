@@ -14,6 +14,7 @@ from sqlalchemy.pool import StaticPool
 # Ensure required env vars exist before importing app settings
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ.setdefault("CORS_ALLOWED_ORIGINS", '["http://localhost:5173","http://127.0.0.1:5173"]')
 
 from app.database import async_engine as app_async_engine
 from app.database import get_db

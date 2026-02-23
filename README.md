@@ -89,6 +89,56 @@ docker compose run --rm backend alembic upgrade head
 docker compose up --build postgres worker
 ```
 
+## Web Security (CORS, CSRF, Headers)
+
+The backend now applies a minimal web security baseline:
+
+- **CORS allowlist** via `CORS_ALLOWED_ORIGINS` (JSON array).
+- **Session cookie hardening** for admin auth via `SameSite=Lax`; `Secure` is configurable.
+- **Security response headers** are added to all responses.
+
+### CORS policy
+
+- `CORS_ALLOWED_ORIGINS` must be set as a JSON array of allowed origins.
+- Allowed methods: `GET, POST, PUT, PATCH, DELETE, OPTIONS`
+- Allowed request headers: `Authorization, Content-Type, X-Request-ID`
+- Exposed response headers: `X-Request-ID`
+
+### CSRF posture
+
+- Public API authentication uses Bearer tokens (not cookie-based auth).
+- SQLAdmin/admin uses a session cookie with `SameSite=Lax`.
+- Set `SESSION_COOKIE_SECURE=true` in HTTPS deployments so the cookie is sent only over TLS.
+
+### Security headers
+
+Enabled by default:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: geolocation=(), microphone=(), camera=()`
+
+Optional:
+
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` when:
+  - `SECURITY_ENABLE_HSTS=true`
+  - request scheme is HTTPS
+
+### Environment variables
+
+```env
+CORS_ALLOWED_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
+SESSION_COOKIE_SECURE=false
+SECURITY_ENABLE_HSTS=false
+```
+
+### Production recommendations
+
+- Set `CORS_ALLOWED_ORIGINS` to explicit production frontend origin(s).
+- Set `SESSION_COOKIE_SECURE=true` when running behind TLS.
+- Enable `SECURITY_ENABLE_HSTS=true` only when HTTPS is enforced end-to-end.
+
 ## Testing
 
 Backend:
