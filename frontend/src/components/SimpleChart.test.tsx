@@ -4,7 +4,6 @@ import { SimpleChart } from './SimpleChart';
 import { ChartDataPoint } from '../utils/stats';
 
 vi.mock('recharts', () => {
-  const React = require('react');
   return {
     ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
     BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,

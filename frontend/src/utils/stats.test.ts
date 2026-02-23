@@ -2,7 +2,6 @@ import {
   calculateStats,
   getSessionsForTimeRange,
   groupSessionsBySpot,
-  type TimeRange,
 } from './stats';
 import { type SurfSessionResponse } from '../types/api';
 
@@ -56,7 +55,7 @@ describe('stats utils', () => {
     expect(stats.mostPopularSpot).toBe('Pipeline');
   });
 
-  it.each<TimeRange>([['week'], ['month'], ['3month']])(
+  it.each(['week', 'month', '3month'] as const)(
     'filters sessions for %s range relative to baseDate',
     (range) => {
       const filtered = getSessionsForTimeRange(sessions, range, baseDate);
