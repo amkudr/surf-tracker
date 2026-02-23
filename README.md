@@ -163,11 +163,11 @@ Tests use an in-memory SQLite database and still call `Base.metadata.create_all`
 
 ## Seeding (optional, dev)
 
-Seed a demo user and sample spots (idempotent):
+Seed a full sample dataset (Sri Lanka west coast spots + demo users with surfboards and sessions, idempotent):
 
 - Local:
   ```bash
-  python -m app.scripts.seed_dev_data --email demo@surf.local --password surf1234
+  python -m app.scripts.seed_dev_data
   ```
 
 - Docker:
@@ -175,7 +175,20 @@ Seed a demo user and sample spots (idempotent):
   docker compose run --rm backend python -m app.scripts.seed_dev_data
   ```
 
-Spots created: Mavericks, Pipeline, Bondi Beach. Demo user defaults to `demo@surf.local` / `surf1234`; override via flags.
+Included users: `demo@surf.local` / `surf1234` and `lena@surf.local` / `surf1234`.
+
+Flags:
+- `--no-sample-data` to skip the bundled fixtures
+- `--email EMAIL --password PASSWORD` to add an extra user
+- `--spots-json path/to/spots.json` to seed additional spots from a JSON array
+
+Add only the Sri Lanka west coast spot pack (idempotent, no users/sessions):
+
+```bash
+python -m app.scripts.seed_sri_lanka_west_spots
+```
+
+This seeds 14 common breaks around Weligama, Midigama, Madiha, Dewata, and Hikkaduwa with surf-forecast slugs so the scraper can pull conditions.
 
 ## Authentication
 
