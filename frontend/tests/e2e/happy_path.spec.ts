@@ -45,7 +45,7 @@ test('register → create spot → create session → session visible', async ({
   await expect(page).toHaveURL(/\/sessions$/);
   await page.getByRole('button', { name: 'Add Session' }).click();
 
-  const spotSelect = page.locator('select[name=\"spot_id\"]');
+  const spotSelect = page.locator('select[name="spot_id"]');
   await spotSelect.selectOption({ label: spotName });
   // Form defaults are pre-filled; just save.
   await page.getByRole('button', { name: 'Save Session' }).click();
