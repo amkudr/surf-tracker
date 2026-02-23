@@ -30,7 +30,7 @@ test('register → create spot → create session → session visible', async ({
 
   await page.waitForLoadState('networkidle');
   await expect(page).toHaveURL(/\/spots$/);
-  await expect(page.getByRole('heading', { name: /surf spots/i })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole('heading', { name: 'Surf Spots', exact: true })).toBeVisible({ timeout: 30000 });
   const addSpotButton = page.getByRole('button', { name: /Add Spot/i }).first();
   await expect(addSpotButton).toBeVisible({ timeout: 30000 });
   await addSpotButton.click();
