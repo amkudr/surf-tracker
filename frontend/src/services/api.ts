@@ -16,7 +16,7 @@ import {
 import { getStoredToken } from './authStorage';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: (window as any).__API_URL__ || import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },

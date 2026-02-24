@@ -6,18 +6,13 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-
-# VITE_API_URL is baked in at build time
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
 RUN npm run build
 
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Simple SPA config — no reverse proxy, just serve static files
+# Simple SPA nginx config
 RUN cat > /etc/nginx/nginx-template.conf <<'EOF'
 server {
     listen __LISTEN_PORT__;
@@ -35,14 +30,23 @@ EOF
 # Remove default nginx template dir
 RUN rm -rf /etc/nginx/templates
 
-# Custom entrypoint: substitute port via sed
+# Custom entrypoint: inject runtime config + start nginx
 RUN cat > /docker-entrypoint-custom.sh <<'SCRIPT'
 #!/bin/sh
 set -e
 LISTEN_PORT="${PORT:-80}"
 
+# Generate nginx config
 sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g" \
     /etc/nginx/nginx-template.conf > /etc/nginx/conf.d/default.conf
+
+# Inject runtime API URL into a JS file loaded before the app
+if [ -n "$VITE_API_URL" ]; then
+  echo "window.__API_URL__ = '${VITE_API_URL}';" > /usr/share/nginx/html/config.js
+  echo "Injected API URL: ${VITE_API_URL}"
+else
+  echo "// no runtime API URL configured" > /usr/share/nginx/html/config.js
+fi
 
 echo "nginx: listening on port ${LISTEN_PORT}"
 exec nginx -g 'daemon off;'
