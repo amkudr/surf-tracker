@@ -1,3 +1,5 @@
+import asyncio
+
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,7 +13,7 @@ from app.schemas.user import UserCreate
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
     user_model = User(
         email=user_in.email,
-        hashed_password=hash_password(user_in.password),
+        hashed_password=await asyncio.to_thread(hash_password, user_in.password),
         is_admin=False,
     )
 
@@ -31,7 +33,7 @@ async def create_admin_user(db: AsyncSession, email: str, password: str) -> User
     """Create an admin user; caller must ensure authorization for this action."""
     user_model = User(
         email=email,
-        hashed_password=hash_password(password),
+        hashed_password=await asyncio.to_thread(hash_password, password),
         is_admin=True,
     )
 

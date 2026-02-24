@@ -1,3 +1,4 @@
+import asyncio
 from datetime import timedelta
 from typing import Annotated
 
@@ -28,7 +29,7 @@ async def login_user_endpoint(
     user = await get_user_by_email(db, form_data.username)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not verify_password(form_data.password, user.hashed_password):
+    if not await asyncio.to_thread(verify_password, form_data.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     expires_delta = (
         timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS_REMEMBER_ME)
