@@ -11,16 +11,20 @@ RUN npm run build
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-RUN cat > /etc/nginx/conf.d/default.conf <<'EOF'
+
+# Nginx config template — BACKEND_URL is substituted at runtime
+# Locally (docker-compose): BACKEND_URL=http://backend:8000
+# Railway: BACKEND_URL=http://backend.railway.internal:<port>
+COPY <<'TEMPLATE' /etc/nginx/templates/default.conf.template
 server {
-    listen 80;
+    listen ${PORT};
     server_name _;
 
     root /usr/share/nginx/html;
     index index.html;
 
     location = /api {
-        proxy_pass http://backend:8000;
+        proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -28,7 +32,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass http://backend:8000/;
+        proxy_pass ${BACKEND_URL}/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -39,7 +43,13 @@ server {
         try_files $uri $uri/ /index.html;
     }
 }
-EOF
+TEMPLATE
+
+# nginx:alpine auto-processes /etc/nginx/templates/*.template via envsubst
+# Only substitute our vars, leaving nginx vars ($host, $uri etc.) untouched
+ENV NGINX_ENVSUBST_FILTER="PORT|BACKEND_URL"
+ENV PORT=80
+ENV BACKEND_URL=http://backend:8000
 
 EXPOSE 80
 

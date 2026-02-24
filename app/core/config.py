@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,6 +6,14 @@ class Settings(BaseSettings):
     # Required secrets / connection strings
     database_url: str
     SECRET_KEY: str
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def ensure_async_driver(cls, v: str) -> str:
+        """Railway gives postgresql://… but SQLAlchemy async needs asyncpg."""
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
     # Non-sensitive defaults
     echo_sql: bool = False

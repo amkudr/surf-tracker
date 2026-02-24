@@ -59,7 +59,9 @@ services:
       - surf-network
 
   worker:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
     command: python -m app.worker
     env_file:
       - .env
