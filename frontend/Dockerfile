@@ -6,13 +6,18 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# VITE_API_URL is baked in at build time
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm run build
 
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Write nginx config with safe placeholders (not $-prefixed, so envsubst won't touch them)
+# Simple SPA config — no reverse proxy, just serve static files
 RUN cat > /etc/nginx/nginx-template.conf <<'EOF'
 server {
     listen __LISTEN_PORT__;
@@ -21,44 +26,25 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    location = /api {
-        proxy_pass __BACKEND_URL__;
-        proxy_ssl_server_name on;
-        proxy_set_header Host $proxy_host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /api/ {
-        proxy_pass __BACKEND_URL__/;
-        proxy_ssl_server_name on;
-        proxy_set_header Host $proxy_host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
     location / {
         try_files $uri $uri/ /index.html;
     }
 }
 EOF
 
-# Remove default nginx template dir to prevent envsubst from running
+# Remove default nginx template dir
 RUN rm -rf /etc/nginx/templates
 
-# Custom entrypoint: substitute only our placeholders via sed
+# Custom entrypoint: substitute port via sed
 RUN cat > /docker-entrypoint-custom.sh <<'SCRIPT'
 #!/bin/sh
 set -e
 LISTEN_PORT="${PORT:-80}"
-BACKEND="${BACKEND_URL:-http://backend:8000}"
 
-sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g; s|__BACKEND_URL__|${BACKEND}|g" \
+sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g" \
     /etc/nginx/nginx-template.conf > /etc/nginx/conf.d/default.conf
 
-echo "nginx config: listen=${LISTEN_PORT}, backend=${BACKEND}"
+echo "nginx: listening on port ${LISTEN_PORT}"
 exec nginx -g 'daemon off;'
 SCRIPT
 RUN chmod +x /docker-entrypoint-custom.sh
