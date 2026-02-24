@@ -24,6 +24,16 @@ test('register → create surfboard → create session with review → delete se
     localStorage.setItem('token', token);
   }, accessToken);
 
+  // Background API setup: Create a spot so we have one to select
+  await api.post('/spot/', {
+    data: {
+      name: `Background Spot ${unique}`,
+      latitude: 0,
+      longitude: 0,
+    },
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
   // Go straight to Surfboards (skip dashboard render)
   await page.goto('/');
   await page.getByRole('link', { name: 'Surfboards' }).click();
