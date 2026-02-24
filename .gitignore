@@ -1,4 +1,8 @@
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 .cursor
 .todo/
 demo*
@@ -9,8 +13,10 @@ demo*
 
 node_modules/
 dist/
+*.tsbuildinfo
 
 htmlcov/
+.coverage
 test-results/
 playwright-report/
 output/
@@ -18,3 +24,6 @@ output/
 .ruff_cache/
 .pytest_cache/
 .vscode/
+
+.DS_Store
+*.log
