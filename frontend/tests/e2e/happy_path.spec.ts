@@ -87,11 +87,10 @@ test('register → create surfboard → create session with review → delete se
   // Delete the session we just created
   const deleteSessionBtn = page.locator('table button[title="Delete session"]').first();
   await expect(deleteSessionBtn).toBeVisible({ timeout: 10000 });
-  await deleteSessionBtn.click();
   
-  // Wait for the delete to finish
+  // Set up response listener before clicking so we don't miss the DELETE response
   const deleteSessionPromise = page.waitForResponse(response => response.url().includes('/surf_session/') && response.request().method() === 'DELETE');
-  await deleteSessionBtn.click({ force: true });
+  await deleteSessionBtn.click();
   await deleteSessionPromise;
   
   // Now delete the surfboard
