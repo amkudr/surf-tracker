@@ -24,6 +24,64 @@ A comprehensive surf session tracking application built with FastAPI that helps 
 - **Testing**: pytest with async support
 - **Containerization**: Docker & Docker Compose for easy deployment
 
+<details>
+<summary>📐 Architecture — Request Flow</summary>
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Browser as 🌐 React (Vite)
+    participant Axios as 📡 Axios
+    participant Nginx as 🔀 Nginx
+    participant FastAPI as 🚀 FastAPI
+    participant Auth as 🔐 JWT Auth
+    participant Pydantic as 📋 Pydantic
+    participant Service as ⚙️ Service Layer
+    participant DB as 🐘 PostgreSQL
+
+    Browser ->> Axios: User action (e.g. form submit)
+    Note over Axios: Interceptor adds<br/>Authorization: Bearer JWT
+
+    Axios ->> Nginx: HTTPS/REST request
+    Nginx ->> FastAPI: HTTP/1.1 (proxy_pass)
+
+    FastAPI ->> Auth: Depends(get_current_user)
+    Auth ->> DB: SELECT user (asyncpg/TCP)
+    DB -->> Auth: User row
+    Auth -->> FastAPI: CurrentUser
+
+    FastAPI ->> Pydantic: Parse & validate JSON body
+    Note over Pydantic: JSON → Pydantic Model
+
+    alt Validation error
+        Pydantic -->> Axios: 422 Unprocessable Entity
+    end
+
+    FastAPI ->> Service: Call service function
+    Note over Service: Business logic:<br/>resolve relations,<br/>fetch external data
+
+    Service ->> DB: SQL query (asyncpg/TCP)
+    DB -->> Service: Result rows
+
+    Service ->> DB: COMMIT
+    DB -->> Service: OK
+
+    alt DB failure
+        DB --x Service: ConnectionError
+        Service -->> Axios: 500 Internal Server Error
+    end
+
+    Service -->> FastAPI: ORM object
+    Note over FastAPI: ORM → Pydantic<br/>response model
+
+    FastAPI -->> Nginx: JSON response
+    Nginx -->> Axios: HTTPS response
+    Axios -->> Browser: Update UI
+```
+
+</details>
+
+
 ## Requirements
 
 - Python 3.10
