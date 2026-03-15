@@ -1,8 +1,31 @@
 # Surf Tracker
 
 [![CI](https://github.com/amkudr/surf-tracker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/amkudr/surf-tracker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**[Live Demo](https://surf-tracker.up.railway.app)** | **[API Docs](https://surf-tracker-production.up.railway.app/docs)**
 
 A comprehensive surf session tracking application built with FastAPI that helps surfers log their sessions, track conditions, and discover new surf spots.
+
+## Table of Contents
+
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture--request-flow)
+- [Project Structure](#project-structure)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running](#running)
+- [Running with Docker Compose](#running-with-docker-compose)
+- [Web Security](#web-security-cors-csrf-headers)
+- [Testing](#testing)
+- [Health](#health)
+- [Seeding](#seeding-optional-dev)
+- [Authentication](#authentication)
+- [API Endpoints](#api-endpoints)
+- [Development](#development)
+- [License](#license)
 
 ## Features
 
@@ -16,12 +39,15 @@ A comprehensive surf session tracking application built with FastAPI that helps 
 
 ## Technology Stack
 
-- **Backend**: FastAPI (Python async web framework)
+- **Backend**: FastAPI (Python 3.11, async web framework)
+- **Frontend**: React 18 (TypeScript, Vite, TailwindCSS)
+- **Maps**: Leaflet / React-Leaflet
+- **Charts**: Recharts
 - **Database**: PostgreSQL with SQLAlchemy ORM
 - **Authentication**: JWT tokens with password hashing
 - **Weather API**: Open-Meteo for real-time weather data
 - **Migrations**: Alembic for database schema management
-- **Testing**: pytest with async support
+- **Testing**: pytest (backend), Vitest + Playwright (frontend)
 - **Containerization**: Docker & Docker Compose for easy deployment
 
 <details>
@@ -82,9 +108,33 @@ sequenceDiagram
 </details>
 
 
+## Project Structure
+
+```
+surf-tracker/
+├── app/                    # Backend application
+│   ├── api/v1/             # REST API endpoints (auth, sessions, spots, surfboards)
+│   ├── models/             # SQLAlchemy ORM models
+│   ├── schemas/            # Pydantic request/response schemas
+│   ├── services/           # Business logic layer
+│   ├── scripts/            # CLI utilities (seed, admin creation)
+│   ├── external_apis/      # Third-party API integrations
+│   ├── core/               # App configuration & security
+│   ├── admin/              # SQLAdmin panel
+│   └── worker.py           # Background scraper (APScheduler + Playwright)
+├── frontend/               # React SPA (Vite + TypeScript + TailwindCSS)
+│   ├── src/
+│   └── tests/              # Vitest unit tests & Playwright e2e tests
+├── alembic/                # Database migrations
+├── tests/                  # Backend pytest suite
+├── docker-compose.yml
+├── Dockerfile
+└── Dockerfile.worker
+```
+
 ## Requirements
 
-- Python 3.10
+- Python 3.11
 - PostgreSQL 16+
 - Docker and Docker Compose (optional)
 
@@ -95,14 +145,11 @@ sequenceDiagram
 pip install -r requirements.txt
 ```
 
-2. Create `.env` file (required) using `.env.example` as a template:
+2. Create `.env` file using `.env.example` as a template:
 ```bash
 cp .env.example .env
 ```
-Then fill in at least:
-- `DATABASE_URL` – your Postgres connection string (async driver for app, sync driver for Alembic is derived automatically)
-- `SECRET_KEY` – strong random string used for JWTs and session cookies
-- `ADMIN_BOOTSTRAP_TOKEN` – strong token required by the admin creation CLI
+See [Configuration](#configuration) section for details on required variables.
 
 3. Start PostgreSQL with Docker Compose (optional):
 ```bash
@@ -113,6 +160,33 @@ docker compose up -d postgres
 ```bash
 alembic upgrade head
 ```
+
+5. Frontend setup (optional if not using Docker):
+```bash
+cd frontend
+npm install
+```
+
+## Configuration
+
+The application is configured using environment variables. The easiest way to manage them is via a `.env` file in the project root.
+
+### Required Variables
+
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | PostgreSQL connection string (e.g., `postgresql://user:pass@host:5432/db`). |
+| `SECRET_KEY` | High-entropy string for JWT tokens and session cookies. |
+| `ADMIN_BOOTSTRAP_TOKEN` | Guard token required by the `create_admin` CLI script. |
+| `CORS_ALLOWED_ORIGINS` | JSON array of allowed origins (e.g., `["http://localhost:5173"]`).|
+
+### Other Tunables
+
+Refer to [.env.example](.env.example) for a complete list of optional settings, including:
+- Token lifetimes (`ACCESS_TOKEN_EXPIRE_MINUTES`)
+- Database pool tuning (`POOL_SIZE`, `MAX_OVERFLOW`)
+- Security flags (`SESSION_COOKIE_SECURE`, `SECURITY_ENABLE_HSTS`)
+- Background worker schedule (`SCHEDULE_START_HOUR`, `SCHEDULE_END_HOUR`)
 
 ## Running
 
@@ -183,14 +257,6 @@ Optional:
   - `SECURITY_ENABLE_HSTS=true`
   - request scheme is HTTPS
 
-### Environment variables
-
-```env
-CORS_ALLOWED_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
-SESSION_COOKIE_SECURE=false
-SECURITY_ENABLE_HSTS=false
-```
-
 ### Production recommendations
 
 - Set `CORS_ALLOWED_ORIGINS` to explicit production frontend origin(s).
@@ -213,7 +279,13 @@ npm run lint
 npm test
 ```
 
-Tests use an in-memory SQLite database and still call `Base.metadata.create_all` inside fixtures; no change needed.
+Frontend (Playwright e2e — requires running backend + frontend):
+
+```bash
+cd frontend
+npm run test:e2e
+```
+
 
 ## Health
 
@@ -276,7 +348,27 @@ If an admin with that email already exists, the script reports and exits without
 - `PUT /surf_session/{id}` - Update a session
 - `DELETE /surf_session/{id}` - Delete a session
 
+### Surfboards
+- `POST /surfboard/` - Create a surfboard
+- `GET /surfboard/` - List user's surfboards
+- `GET /surfboard/{id}` - Get a surfboard
+- `PUT /surfboard/{id}` - Update a surfboard
+- `DELETE /surfboard/{id}` - Delete a surfboard
+
 ### Surf Spots
 - `POST /spot/` - Create a spot
 - `GET /spot/` - List spots
 - `GET /spot/{id}` - Get a spot
+
+## Development
+
+```bash
+make install-dev          # install all dependencies (incl. dev)
+make lint                 # ruff + black + mypy
+make format               # auto-fix style issues
+pre-commit install        # enable git hooks
+```
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
