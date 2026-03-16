@@ -26,7 +26,7 @@ server {
     }
 
     location /api/ {
-        proxy_pass         http://backend:8000/;
+        proxy_pass         __BACKEND_URL__/;
         proxy_set_header   Host $host;
         proxy_set_header   X-Real-IP $remote_addr;
         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -43,12 +43,13 @@ RUN cat > /docker-entrypoint-custom.sh <<'SCRIPT'
 #!/bin/sh
 set -e
 LISTEN_PORT="${PORT:-80}"
+API_URL="${BACKEND_URL:-http://backend:8000}"
 
 # Generate nginx config
-sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g" \
+sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g; s|__BACKEND_URL__|${API_URL}|g" \
     /etc/nginx/nginx-template.conf > /etc/nginx/conf.d/default.conf
 
-echo "nginx: listening on port ${LISTEN_PORT}"
+echo "nginx: listening on port ${LISTEN_PORT}, routing /api/ to ${API_URL}"
 exec nginx -g 'daemon off;'
 SCRIPT
 RUN chmod +x /docker-entrypoint-custom.sh
