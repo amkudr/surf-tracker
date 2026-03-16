@@ -24,13 +24,21 @@ server {
     location / {
         try_files $uri $uri/ /index.html;
     }
+
+    location /api/ {
+        proxy_pass         http://backend:8000/;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
 }
 EOF
 
 # Remove default nginx template dir
 RUN rm -rf /etc/nginx/templates
 
-# Custom entrypoint: inject runtime config + start nginx
+# Custom entrypoint: generate nginx config + start nginx
 RUN cat > /docker-entrypoint-custom.sh <<'SCRIPT'
 #!/bin/sh
 set -e
@@ -39,14 +47,6 @@ LISTEN_PORT="${PORT:-80}"
 # Generate nginx config
 sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g" \
     /etc/nginx/nginx-template.conf > /etc/nginx/conf.d/default.conf
-
-# Inject runtime API URL into a JS file loaded before the app
-if [ -n "$VITE_API_URL" ]; then
-  echo "window.__API_URL__ = '${VITE_API_URL}';" > /usr/share/nginx/html/config.js
-  echo "Injected API URL: ${VITE_API_URL}"
-else
-  echo "// no runtime API URL configured" > /usr/share/nginx/html/config.js
-fi
 
 echo "nginx: listening on port ${LISTEN_PORT}"
 exec nginx -g 'daemon off;'
