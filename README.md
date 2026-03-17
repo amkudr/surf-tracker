@@ -178,11 +178,11 @@ The application is configured using environment variables. The easiest way to ma
 | `DATABASE_URL` | PostgreSQL connection string (e.g., `postgresql://user:pass@host:5432/db`). |
 | `SECRET_KEY` | High-entropy string for JWT tokens and session cookies. |
 | `ADMIN_BOOTSTRAP_TOKEN` | Guard token required by the `create_admin` CLI script. |
-| `CORS_ALLOWED_ORIGINS` | JSON array of allowed origins (e.g., `["http://localhost:5173"]`).|
 
 ### Other Tunables
 
 Refer to [.env.example](.env.example) for a complete list of optional settings, including:
+- CORS allowed origins (`CORS_ALLOWED_ORIGINS`, disabled by default)
 - Token lifetimes (`ACCESS_TOKEN_EXPIRE_MINUTES`)
 - Database pool tuning (`POOL_SIZE`, `MAX_OVERFLOW`)
 - Security flags (`SESSION_COOKIE_SECURE`, `SECURITY_ENABLE_HSTS`)
@@ -204,9 +204,9 @@ API documentation: http://localhost:8000/docs
 docker compose up --build
 ```
 
-- Frontend (Vite): http://localhost:5173
-- Backend API: http://localhost:8000
-- API docs: http://localhost:8000/docs
+- Frontend & API Proxy (Nginx): http://localhost:5173
+  - API is routed through `/api/` (e.g., `http://localhost:5173/api/health`)
+  - API docs (Swagger): `http://localhost:5173/api/docs`
 - PgAdmin: http://localhost:5050
 
 Migrations are applied automatically by the `migrations` service before backend/worker start. You can also run them manually with:
@@ -231,7 +231,8 @@ The backend now applies a minimal web security baseline:
 
 ### CORS policy
 
-- `CORS_ALLOWED_ORIGINS` must be set as a JSON array of allowed origins.
+- The frontend interacts with the backend through an Nginx reverse proxy (same-origin), so CORS is generally not needed in production.
+- `CORS_ALLOWED_ORIGINS` must be set as a JSON array of allowed origins (mainly used for local development).
 - Allowed methods: `GET, POST, PUT, PATCH, DELETE, OPTIONS`
 - Allowed request headers: `Authorization, Content-Type, X-Request-ID`
 - Exposed response headers: `X-Request-ID`
