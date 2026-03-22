@@ -2,10 +2,10 @@ import asyncio
 import logging
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.database import async_session
@@ -18,6 +18,9 @@ from app.services.scraper import SurfScraper
 DEFAULT_START_HOUR = 5
 DEFAULT_END_HOUR = 23
 DEFAULT_PERIOD_HOURS = 4  # fixed step between runs
+
+FORECAST_RETENTION_DAYS = int(os.getenv("FORECAST_RETENTION_DAYS", "7"))
+CLEANUP_HOUR = int(os.getenv("CLEANUP_HOUR", "4"))
 
 logger = logging.getLogger(__name__)
 
@@ -162,6 +165,40 @@ async def scrape_all_spots():
         logger.info("scrape_job_completed", extra={"job_id": job_id})
         request_id_var.reset(token)
 
+
+async def cleanup_stale_forecasts():
+    """Delete SurfForecast and Tide rows whose timestamp is older than FORECAST_RETENTION_DAYS."""
+    job_id = str(uuid.uuid4())
+    token = request_id_var.set(job_id)
+    logger.info(
+        "cleanup_started",
+        extra={"job_id": job_id, "retention_days": FORECAST_RETENTION_DAYS},
+    )
+
+    cutoff = datetime.utcnow() - timedelta(days=FORECAST_RETENTION_DAYS)
+    try:
+        async with async_session() as session:
+            fc_result = await session.execute(
+                delete(SurfForecast).where(SurfForecast.timestamp < cutoff)
+            )
+            tide_result = await session.execute(
+                delete(Tide).where(Tide.timestamp < cutoff)
+            )
+            await session.commit()
+
+            logger.info(
+                "cleanup_completed",
+                extra={
+                    "job_id": job_id,
+                    "forecasts_deleted": fc_result.rowcount,
+                    "tides_deleted": tide_result.rowcount,
+                },
+            )
+    except Exception:
+        logger.exception("cleanup_failed", extra={"job_id": job_id})
+    finally:
+        request_id_var.reset(token)
+
 async def main():
     configure_logging()
     # 8. Setup Scheduler
@@ -169,6 +206,7 @@ async def main():
 
     # Schedule jobs using configured hours (defaults: every ~4h from 05:00 through 23:00)
     scheduler.add_job(scrape_all_spots, 'cron', hour=SCHEDULE_HOURS_FIELD, minute=0)
+    scheduler.add_job(cleanup_stale_forecasts, 'cron', hour=CLEANUP_HOUR, minute=0)
 
     logger.info("scheduler_configured", extra={"hours": SCHEDULE_HOURS, "hours_field": SCHEDULE_HOURS_FIELD})
     logger.info("scheduler_started")
