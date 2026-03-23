@@ -22,6 +22,7 @@ A comprehensive surf session tracking application built with FastAPI that helps 
 - [Testing](#testing)
 - [Health](#health)
 - [Seeding](#seeding-optional-dev)
+- [Background Worker (Scraper)](#background-worker-scraper)
 - [Authentication](#authentication)
 - [API Endpoints](#api-endpoints)
 - [Development](#development)
@@ -46,6 +47,7 @@ A comprehensive surf session tracking application built with FastAPI that helps 
 - **Database**: PostgreSQL with SQLAlchemy ORM
 - **Authentication**: JWT tokens with password hashing
 - **Weather API**: Open-Meteo for real-time weather data
+- **Worker**: APScheduler & Playwright (background scraping)
 - **Migrations**: Alembic for database schema management
 - **Testing**: pytest (backend), Vitest + Playwright (frontend)
 - **Containerization**: Docker & Docker Compose for easy deployment
@@ -121,12 +123,19 @@ surf-tracker/
 │   ├── external_apis/      # Third-party API integrations
 │   ├── core/               # App configuration & security
 │   ├── admin/              # SQLAdmin panel
-│   └── worker.py           # Background scraper (APScheduler + Playwright)
+│   ├── routers/            # Additional API routers (weather)
+│   ├── worker.py           # Background scraper (APScheduler + Playwright)
+│   ├── main.py             # FastAPI application entry point
+│   ├── database.py         # Database connection & session management
+│   └── logging.py          # Structured logging configuration
 ├── frontend/               # React SPA (Vite + TypeScript + TailwindCSS)
 │   ├── src/
 │   └── tests/              # Vitest unit tests & Playwright e2e tests
 ├── alembic/                # Database migrations
 ├── tests/                  # Backend pytest suite
+├── pyproject.toml          # Project metadata & dependencies
+├── uv.lock                 # Locked dependency versions
+├── Makefile                # Development tasks (lint, format, install)
 ├── docker-compose.yml
 ├── Dockerfile
 └── Dockerfile.worker
@@ -167,6 +176,11 @@ cd frontend
 npm install
 ```
 
+6. Worker setup (optional if running locally without Docker):
+```bash
+playwright install chromium
+```
+
 ## Configuration
 
 The application is configured using environment variables. The easiest way to manage them is via a `.env` file in the project root.
@@ -187,6 +201,7 @@ Refer to [.env.example](.env.example) for a complete list of optional settings, 
 - Database pool tuning (`POOL_SIZE`, `MAX_OVERFLOW`)
 - Security flags (`SESSION_COOKIE_SECURE`, `SECURITY_ENABLE_HSTS`)
 - Background worker schedule (`SCHEDULE_START_HOUR`, `SCHEDULE_END_HOUR`)
+- Forecast cleanup retention and schedule (`FORECAST_RETENTION_DAYS`, `CLEANUP_HOUR`)
 
 ## Running
 
@@ -320,6 +335,19 @@ python -m app.scripts.seed_sri_lanka_west_spots
 ```
 
 This seeds 14 common breaks around Weligama, Midigama, Madiha, Dewata, and Hikkaduwa with surf-forecast slugs so the scraper can pull conditions.
+
+## Background Worker (Scraper)
+
+The `worker` service is a standalone background process built with **APScheduler** and **Playwright**. Its main responsibilities are:
+
+1. **Scraping Surf Conditions**: It runs on a fixed schedule (every 4 hours between `SCHEDULE_START_HOUR` and `SCHEDULE_END_HOUR`) to fetch real-time wave heights, wind, energy, and tide data from `surf-forecast.com` for every active surf spot in the database.
+2. **Data Retention**: It runs a daily cleanup task (at `CLEANUP_HOUR` UTC) to delete forecast records older than `FORECAST_RETENTION_DAYS` preventing database bloat.
+
+To run the worker locally without Docker, ensure you have installed the expected Playwright browsers (`playwright install chromium`) and run:
+
+```bash
+python -m app.worker
+```
 
 ## Authentication
 
