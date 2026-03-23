@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.v1.auth import CurrentUser
 from app.api.deps import db_dependency
+from app.api.v1.auth import CurrentUser
 from app.schemas.surfboard import SurfboardCreate, SurfboardResponse, SurfboardUpdate
 from app.services.surfboard_service import (
     create_surfboard,
