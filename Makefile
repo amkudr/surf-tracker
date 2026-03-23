@@ -5,7 +5,7 @@ MYPY_PATHS = app/core app/schemas
 .PHONY: install-dev lint format pre-commit-install pre-commit-update
 
 install-dev:
-	$(PYTHON) -m pip install -r requirements.txt -r requirements-dev.txt
+	uv pip install -e ".[api,worker,dev]"
 
 lint:
 	ruff check $(LINT_PATHS)

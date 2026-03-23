@@ -142,7 +142,7 @@ surf-tracker/
 
 1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+uv pip install -e ".[api,worker,dev]"
 ```
 
 2. Create `.env` file using `.env.example` as a template:
