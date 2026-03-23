@@ -38,6 +38,9 @@ EOF
 # Remove default nginx template dir
 RUN rm -rf /etc/nginx/templates
 
+# Change global nginx error log level to warn to suppress notices
+RUN sed -i 's|^error_log.*|error_log /var/log/nginx/error.log warn;|' /etc/nginx/nginx.conf
+
 # Custom entrypoint: generate nginx config + start nginx
 RUN cat > /docker-entrypoint-custom.sh <<'SCRIPT'
 #!/bin/sh
