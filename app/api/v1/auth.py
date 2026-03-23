@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from app.core.config import settings
 from app.core.security import create_access_token, verify_password, verify_token
-from app.database import db_dependency
+from app.api.deps import db_dependency
 from app.models import User
 from app.schemas.user import TokenResponse, UserCreate, UserResponse
 from app.services.user_service import create_user, get_user, get_user_by_email

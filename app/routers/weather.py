@@ -2,15 +2,10 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, status
 
-from app.worker import scrape_all_spots
-
 router = APIRouter(prefix="/weather", tags=["weather"])
 
 async def run_scrape_task():
-    try:
-        await scrape_all_spots()
-    except Exception as e:
-        print(f"Error in manual scrape trigger: {e}")
+    print("Manual scrape trigger is currently disabled in the backend.")
 
 @router.post("/update", status_code=status.HTTP_202_ACCEPTED)
 async def update_weather_forecast(background_tasks: BackgroundTasks) -> Any:

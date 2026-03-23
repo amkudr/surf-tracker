@@ -1,7 +1,3 @@
-from collections.abc import AsyncGenerator
-from typing import Annotated
-
-from fastapi import Depends
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -20,11 +16,3 @@ if not url.drivername.startswith("sqlite"):
     })
 async_engine = create_async_engine(settings.database_url, **engine_kwargs)
 async_session = async_sessionmaker(bind=async_engine, expire_on_commit=False)
-
-
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session() as session:
-        yield session
-
-
-db_dependency = Annotated[AsyncSession, Depends(get_db)]
