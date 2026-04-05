@@ -13,7 +13,7 @@ from app.schemas.user import TokenResponse, UserCreate, UserResponse
 from app.services.user_service import create_user, get_user, get_user_by_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 async def register_user_endpoint(db: db_dependency, user_create: UserCreate) -> UserResponse:
