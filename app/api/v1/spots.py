@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.deps import db_dependency
-from app.api.v1.auth import CurrentUser
-from app.schemas.spot import SpotCreate, SpotResponse
+from app.api.v1.auth import AdminUser, CurrentUser
+from app.schemas.spot import SpotCreate, SpotResponse, SpotUpdate
 from app.schemas.surf_session_review import SpotReviewResponse
-from app.services.spot_service import create_spot, get_spot_by_id, list_spots, spot_exists
+from app.services.spot_service import create_spot, delete_spot, get_spot_by_id, list_spots, spot_exists, update_spot
 from app.services.surf_session_review_service import list_spot_reviews
 
 router = APIRouter(prefix="/spot", tags=["spot"])
@@ -55,7 +55,7 @@ async def list_spot_reviews_endpoint(
     "/", status_code=status.HTTP_201_CREATED, response_model=SpotResponse
 )
 async def create_spot_endpoint(
-    current_user: CurrentUser,
+    admin_user: AdminUser,
     db: db_dependency,
     spot_create: SpotCreate,
 ) -> SpotResponse:
@@ -68,3 +68,32 @@ async def create_spot_endpoint(
         surf_forecast_name=spot_create.surf_forecast_name,
     )
     return created
+
+@router.put(
+    "/{spot_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=SpotResponse,
+)
+async def update_spot_endpoint(
+    spot_id: int,
+    admin_user: AdminUser,
+    db: db_dependency,
+    spot_update: SpotUpdate,
+) -> SpotResponse:
+    updated = await update_spot(db, spot_id, spot_update)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    return updated
+
+@router.delete(
+    "/{spot_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_spot_endpoint(
+    spot_id: int,
+    admin_user: AdminUser,
+    db: db_dependency,
+):
+    result = await delete_spot(db, spot_id)
+    if result is False:
+        raise HTTPException(status_code=404, detail="Spot not found")

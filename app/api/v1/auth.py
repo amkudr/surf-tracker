@@ -75,8 +75,18 @@ async def get_current_user(
         )
     return user
 
-
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+async def require_admin_user(current_user: CurrentUser) -> User:
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_user
+
+
+AdminUser = Annotated[User, Depends(require_admin_user)]
 
 @router.get("/me", status_code=status.HTTP_200_OK, response_model=UserResponse)
 async def get_current_user_endpoint(current_user: CurrentUser) -> UserResponse:

@@ -1,9 +1,10 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BusinessLogicError
 from app.models.spot import Spot
+from app.schemas.spot import SpotUpdate
 from app.services.surf_session_review_service import (
     get_recent_spot_reviews,
     get_spot_review_summary,
@@ -96,3 +97,50 @@ async def spot_exists(
 ) -> bool:
     result = await db.execute(select(Spot.id).where(Spot.id == spot_id))
     return result.scalars().first() is not None
+
+
+async def update_spot(
+    db: AsyncSession,
+    spot_id: int,
+    spot_update: SpotUpdate,
+) -> Spot | None:
+    result = await db.execute(select(Spot).where(Spot.id == spot_id))
+    spot_model = result.scalars().first()
+    if spot_model is None:
+        return None
+
+    update_data = spot_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(spot_model, field, value)
+
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        error_msg = str(e.orig) if hasattr(e, "orig") else str(e)
+        if "ix_spots_name" in error_msg or "unique constraint" in error_msg.lower():
+            raise BusinessLogicError(
+                "Spot name already exists",
+                code="SPOT_NAME_EXISTS"
+            ) from e
+        elif "ck_spots_difficulty_adjacent" in error_msg:
+            raise BusinessLogicError(
+                "Difficulty levels must be consecutive and in ascending order",
+                code="INVALID_DIFFICULTY_SEQUENCE"
+            ) from e
+        raise BusinessLogicError(
+            "Failed to update spot due to data validation error",
+            code="DATA_INTEGRITY_ERROR"
+        ) from e
+
+    await db.refresh(spot_model)
+    return spot_model
+
+
+async def delete_spot(
+    db: AsyncSession,
+    spot_id: int,
+) -> bool:
+    result = await db.execute(delete(Spot).where(Spot.id == spot_id))
+    await db.commit()
+    return result.rowcount > 0

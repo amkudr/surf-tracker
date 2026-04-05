@@ -12,6 +12,15 @@ class SpotCreate(BaseModel):
     surf_forecast_name: str | None = None
 
 
+class SpotUpdate(BaseModel):
+    """Schema for updating an existing surf spot."""
+    name: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    difficulty: list[int] | None = None
+    surf_forecast_name: str | None = None
+
+
 class SpotResponse(BaseModel):
     """Schema for spot API responses."""
     model_config = ConfigDict(from_attributes=True)
