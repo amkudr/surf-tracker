@@ -1,4 +1,6 @@
 import { test, expect, request } from '@playwright/test';
+import { execSync } from 'child_process';
+import * as path from 'path';
 
 test('register → create surfboard → create session with review → delete session & surfboard', async ({ page }) => {
   const unique = Date.now();
@@ -9,6 +11,8 @@ test('register → create surfboard → create session with review → delete se
   // Register & login via API to avoid UI dependency
   const apiBase = process.env.API_BASE_URL ?? 'http://localhost:8000';
   const api = await request.newContext({ baseURL: apiBase });
+  
+  // Register regular user
   await api.post('/auth/register', { data: { email, password } });
   const loginResp = await api.post('/auth/login', {
     form: {
@@ -19,20 +23,39 @@ test('register → create surfboard → create session with review → delete se
   });
   const { access_token: accessToken } = await loginResp.json();
 
-  // Prime token before any page scripts run
-  await page.addInitScript((token) => {
-    localStorage.setItem('token', token);
-  }, accessToken);
+  // Create admin user for background setup
+  const adminEmail = `admin_${unique}@example.com`;
+  const adminTokenStr = process.env.ADMIN_BOOTSTRAP_TOKEN || 'e2e-token';
+  const pythonCmd = process.env.PYTHON_CMD || 'python3';
+  execSync(`${pythonCmd} -m app.scripts.create_admin --email "${adminEmail}" --password "${password}" --token "${adminTokenStr}"`, {
+    cwd: path.resolve('..'),
+    stdio: 'inherit',
+    env: { ...process.env, ADMIN_BOOTSTRAP_TOKEN: adminTokenStr }
+  });
 
-  // Background API setup: Create a spot so we have one to select
+  const adminLoginResp = await api.post('/auth/login', {
+    form: {
+      username: adminEmail,
+      password,
+      remember_me: 'false',
+    },
+  });
+  const { access_token: adminAccessToken } = await adminLoginResp.json();
+
+  // Background API setup: Create a spot so we have one to select (Requires Admin)
   await api.post('/spot/', {
     data: {
       name: `Background Spot ${unique}`,
       latitude: 0,
       longitude: 0,
     },
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${adminAccessToken}` },
   });
+
+  // Prime regular user token before any page scripts run
+  await page.addInitScript((token) => {
+    localStorage.setItem('token', token);
+  }, accessToken);
 
   // Go straight to Surfboards (skip dashboard render)
   await page.goto('/');
