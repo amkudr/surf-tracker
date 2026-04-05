@@ -7,8 +7,10 @@ import { PageHero } from '../components/PageHero';
 import { MapProvider } from '../components/MapProvider';
 import { SpotMap } from '../components/SpotMap';
 import { cn } from '../utils/cn';
+import { useAuth } from '../hooks/useAuth';
 
 const SurfSpotsPage = () => {
+  const { user } = useAuth();
   const [spots, setSpots] = useState<SpotResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -296,22 +298,24 @@ const SurfSpotsPage = () => {
         subtitle="Discover and manage surf locations"
         actions={
           <div className="inline-flex items-center gap-2">
-            <Button
-              variant={showForm ? 'secondary' : 'primary'}
-              size="md"
-              onClick={() => setShowForm(!showForm)}
-              className="whitespace-nowrap"
-            >
-              {showForm ? (
-                <>
-                  <span>Cancel</span>
-                </>
-              ) : (
-                <>
-                  <span>Add Spot</span>
-                </>
-              )}
-            </Button>
+            {user?.is_admin && (
+              <Button
+                variant={showForm ? 'secondary' : 'primary'}
+                size="md"
+                onClick={() => setShowForm(!showForm)}
+                className="whitespace-nowrap"
+              >
+                {showForm ? (
+                  <>
+                    <span>Cancel</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Add Spot</span>
+                  </>
+                )}
+              </Button>
+            )}
             <SegmentedControl
               options={[
                 { value: 'grid', label: <LayoutGrid className="h-4 w-4" /> },
@@ -467,10 +471,10 @@ const SurfSpotsPage = () => {
                     icon={<MapPin className="h-12 w-12" />}
                     title="No surf spots yet"
                     description="Add your favorite surf locations to start tracking sessions at different spots."
-                    action={{
+                    action={user?.is_admin ? {
                       label: "Add Your First Spot",
                       onClick: () => setShowForm(true)
-                    }}
+                    } : undefined}
                   />
                 </Card>
               </div>

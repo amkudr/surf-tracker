@@ -93,5 +93,6 @@ async def get_current_user_endpoint(current_user: CurrentUser) -> UserResponse:
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
-        created_at=current_user.created_at
+        created_at=current_user.created_at,
+        is_admin=current_user.is_admin
     )
