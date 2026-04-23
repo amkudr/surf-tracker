@@ -3,7 +3,7 @@
 [![CI](https://github.com/amkudr/surf-tracker/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/amkudr/surf-tracker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**[Live Demo](https://surf-tracker.up.railway.app/demo)** | **[API Docs](https://surf-tracker-production.up.railway.app/docs)**
+**[Live Demo](https://surf-tracker.up.railway.app/demo)** 
 
 A comprehensive surf session tracking application built with FastAPI that helps surfers log their sessions, track conditions, and discover new surf spots.
 
