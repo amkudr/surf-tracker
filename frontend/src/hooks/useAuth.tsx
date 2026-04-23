@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   login: (credentials: UserLogin, rememberMe?: boolean) => Promise<void>;
   register: (user: UserCreate) => Promise<void>;
+  demoLogin: () => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -58,6 +59,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     await login({ email: userData.email, password: userData.password }, false);
   };
 
+  const demoLogin = async () => {
+    const response = await authAPI.demoLogin();
+    storeToken(response.access_token, false); // sessionStorage — session only
+    const userData = await authAPI.getCurrentUser();
+    setUser(userData);
+  };
+
   const logout = () => {
     clearToken();
     setUser(null);
@@ -67,6 +75,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     login,
     register,
+    demoLogin,
     logout,
     isLoading,
     isAuthenticated: !!user,

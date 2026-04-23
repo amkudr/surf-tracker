@@ -9,6 +9,7 @@ import SurfSpotsPage from './pages/SurfSpotsPage';
 import SurfboardsPage from './pages/SurfboardsPage';
 import Layout from './components/Layout';
 import { Loading } from './components/ui';
+import DemoLoginPage from './pages/DemoLoginPage';
 import './App.css';
 
 // Protected Route component
@@ -31,6 +32,7 @@ function App() {
     <AuthProvider>
       <div className="App">
         <Routes>
+          <Route path="/demo" element={<DemoLoginPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route

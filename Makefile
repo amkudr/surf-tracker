@@ -7,6 +7,9 @@ MYPY_PATHS = app/core app/schemas
 install-dev:
 	uv pip install -e ".[api,worker,dev]"
 
+seed-demo:
+	uv run python -m app.scripts.seed_dev_data
+
 lint:
 	ruff check $(LINT_PATHS)
 	black --check $(LINT_PATHS)

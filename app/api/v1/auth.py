@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from datetime import timedelta
 from typing import Annotated
 
@@ -10,15 +11,18 @@ from app.core.config import settings
 from app.core.security import create_access_token, verify_password, verify_token
 from app.models import User
 from app.schemas.user import TokenResponse, UserCreate, UserResponse
+from app.services.demo_service import reset_demo_data
 from app.services.user_service import create_user, get_user, get_user_by_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
+
 @router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 async def register_user_endpoint(db: db_dependency, user_create: UserCreate) -> UserResponse:
     user = await create_user(db, user_create)
     return user
+
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=TokenResponse)
 async def login_user_endpoint(
@@ -39,10 +43,8 @@ async def login_user_endpoint(
     access_token = create_access_token({"sub": str(user.id)}, expires_delta=expires_delta)
     return TokenResponse(access_token=access_token, token_type="Bearer")
 
-async def get_current_user(
-    db: db_dependency,
-    token: str = Depends(oauth2_scheme)
-) -> User:
+
+async def get_current_user(db: db_dependency, token: str = Depends(oauth2_scheme)) -> User:
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -75,7 +77,9 @@ async def get_current_user(
         )
     return user
 
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
 
 async def require_admin_user(current_user: CurrentUser) -> User:
     if not current_user.is_admin:
@@ -88,11 +92,36 @@ async def require_admin_user(current_user: CurrentUser) -> User:
 
 AdminUser = Annotated[User, Depends(require_admin_user)]
 
+
 @router.get("/me", status_code=status.HTTP_200_OK, response_model=UserResponse)
 async def get_current_user_endpoint(current_user: CurrentUser) -> UserResponse:
     return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        created_at=current_user.created_at,
-        is_admin=current_user.is_admin
+        id=current_user.id, email=current_user.email, created_at=current_user.created_at, is_admin=current_user.is_admin
     )
+
+
+@router.post("/demo-login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
+async def demo_login_endpoint(db: db_dependency) -> TokenResponse:
+    """
+    Log in as the demo user.
+    Resets all demo data to initial seed state before returning a token.
+    """
+    user = await get_user_by_email(db, settings.DEMO_USER_EMAIL)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Demo mode is not configured. Contact the administrator.",
+        )
+
+    try:
+        await reset_demo_data(db, user)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in reset_demo_data: {str(e)}",
+        ) from e
+
+    expires_delta = timedelta(hours=settings.DEMO_TOKEN_EXPIRE_HOURS)
+    token = create_access_token({"sub": str(user.id)}, expires_delta=expires_delta)
+    return TokenResponse(access_token=token, token_type="Bearer")

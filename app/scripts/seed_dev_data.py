@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import json
+import random
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Sequence
@@ -157,11 +158,11 @@ async def ensure_surf_sessions(
             if not review_payload:
                 review_payload = {
                     "observed_at": dt,
-                    "quality": 6 + (idx % 5),           # 6–10
-                    "crowded_level": 2 + (idx % 4),     # 2–5
-                    "wave_height_index": 3 + (idx % 5), # 3–7
+                    "quality": 6 + (idx % 5),  # 6–10
+                    "crowded_level": 2 + (idx % 4),  # 2–5
+                    "wave_height_index": 3 + (idx % 5),  # 3–7
                     "short_long_index": 4 + (idx % 3),  # 4–6
-                    "wind_index": 3 + (idx % 5),        # 3–7
+                    "wind_index": 3 + (idx % 5),  # 3–7
                 }
             review_payload = _normalize_review(review_payload, dt)
 
@@ -190,29 +191,44 @@ def load_spots(spots_path: Path) -> list[dict]:
     return payload
 
 
-def build_feb_sessions(spots: Sequence[dict], surfboard_names: list[str], count: int = 20) -> list[dict]:
-    """Build deterministic surf sessions in February 2026 cycling through spots and quiver."""
+def build_recent_sessions(spots: Sequence[dict], surfboard_names: list[str], count: int = 20) -> list[dict]:
+    """Build deterministic surf sessions ending close to current date cycling through spots and quiver."""
 
     sessions: list[dict] = []
-    base_dt = datetime(2026, 2, 1, 7, 0)
+    now = datetime.now()
+    base_dt = datetime(now.year, now.month, now.day, 7, 0) - timedelta(days=count)
+
     for i in range(count):
         spot = spots[i % len(spots)]
         surfboard_name = surfboard_names[i % len(surfboard_names)]
-        dt = base_dt + timedelta(days=i, minutes=5 * (i % 6))
+
+        current_day = base_dt + timedelta(days=i)
+        dt = current_day.replace(hour=random.randint(6, 17), minute=random.randint(0, 59))
+
         sessions.append(
             {
                 "spot_name": spot["name"],
                 "datetime": dt.isoformat(),
-                "duration_minutes": 60 + (i % 5) * 10,  # 60–100 mins
-                "notes": f"Auto-seeded session {i+1} at {spot['name']} (Feb 2026).",
+                "duration_minutes": random.randint(45, 150),
+                "notes": f"Auto-seeded session {i+1} at {spot['name']} (Recent).",
                 "surfboard_name": surfboard_name,
+                "wave_height_m": round(0.8 + (i % 5) * 0.2, 2),
+                "wave_period": 8.0 + (i % 4) * 2.0,
+                "wave_dir": ["SW", "WSW", "W", "SSW"][i % 4],
+                "wind_speed_kmh": round(5.0 + (i % 6) * 3.0, 1),
+                "wind_dir": ["N", "NE", "E", "SE", "NW", "W"][i % 6],
+                "energy": float(150 + (i % 5) * 50),
+                "rating": 2 + (i % 4),
+                "tide_height_m": round(0.5 + (i % 3) * 0.3, 2),
+                "tide_low_m": 0.2,
+                "tide_high_m": 1.5,
                 "review": {
                     "observed_at": dt,
-                    "quality": 6 + (i % 5),           # 6–10
-                    "crowded_level": 2 + (i % 4),     # 2–5
-                    "wave_height_index": 3 + (i % 5), # 3–7
-                    "short_long_index": 4 + (i % 3),  # 4–6
-                    "wind_index": 3 + (i % 5),        # 3–7
+                    "quality": random.randint(2, 10),  # 2–10
+                    "crowded_level": random.randint(0, 8),  # 0–8
+                    "wave_height_index": random.randint(2, 8),  # 2–8
+                    "short_long_index": random.randint(3, 7),  # 3–7
+                    "wind_index": random.randint(1, 9),  # 1–9
                 },
             }
         )
@@ -241,7 +257,7 @@ async def seed_sample_data() -> None:
         surfboard_names_in_quiver = list(board_lookup.keys())
         sessions = user_data["sessions"]
         if not sessions:
-            sessions = build_feb_sessions(SRI_LANKA_SPOTS, surfboard_names_in_quiver, count=20)
+            sessions = build_recent_sessions(SRI_LANKA_SPOTS, surfboard_names_in_quiver, count=20)
 
         session_results = await ensure_surf_sessions(user.id, sessions, board_lookup)
         print("  Surf sessions:")

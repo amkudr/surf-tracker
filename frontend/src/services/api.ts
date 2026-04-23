@@ -56,6 +56,11 @@ export const authAPI = {
     const response = await api.get('/auth/me');
     return response.data;
   },
+
+  demoLogin: async (): Promise<TokenResponse> => {
+    const response = await api.post('/auth/demo-login');
+    return response.data;
+  },
 };
 
 // Surf Sessions API
