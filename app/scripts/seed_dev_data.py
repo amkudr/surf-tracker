@@ -10,9 +10,9 @@ from sqlalchemy import select
 
 from app.database import async_session
 from app.models import SurfSession
+from app.schemas.spot import SpotUpdate
 from app.schemas.surfboard import SurfboardCreate
 from app.schemas.user import UserCreate
-from app.schemas.spot import SpotUpdate
 from app.services.spot_service import create_spot, get_spot_by_name, update_spot
 from app.services.surf_session_service import create_surf_session
 from app.services.surfboard_service import create_surfboard, get_surfboards_by_owner_id
