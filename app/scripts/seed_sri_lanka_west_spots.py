@@ -65,8 +65,9 @@ SPOTS: Sequence[dict] = [
 
 def _summarize(results: dict[str, str]) -> str:
     created = sum(1 for status in results.values() if status == "created")
+    updated = sum(1 for status in results.values() if status == "updated")
     existing = sum(1 for status in results.values() if status == "existing")
-    return f"created={created}, existing={existing}"
+    return f"created={created}, updated={updated}, existing={existing}"
 
 
 async def main() -> int:

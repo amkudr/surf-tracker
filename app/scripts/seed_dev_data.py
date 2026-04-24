@@ -12,7 +12,8 @@ from app.database import async_session
 from app.models import SurfSession
 from app.schemas.surfboard import SurfboardCreate
 from app.schemas.user import UserCreate
-from app.services.spot_service import create_spot, get_spot_by_name
+from app.schemas.spot import SpotUpdate
+from app.services.spot_service import create_spot, get_spot_by_name, update_spot
 from app.services.surf_session_service import create_surf_session
 from app.services.surfboard_service import create_surfboard, get_surfboards_by_owner_id
 from app.services.user_service import create_user, get_user_by_email
@@ -87,19 +88,46 @@ async def ensure_spots(spots: Sequence[dict]) -> dict[str, str]:
     results: dict[str, str] = {}
     async with async_session() as session:
         for spot in spots:
-            existing = await get_spot_by_name(session, spot["name"])
+            name = spot["name"]
+            lat = spot.get("lat")
+            lon = spot.get("lon")
+            diff = spot.get("difficulty")
+            sfn = spot.get("surf_forecast_name")
+
+            existing = await get_spot_by_name(session, name)
             if existing:
-                results[spot["name"]] = "existing"
+                # Check if update is needed
+                changed = (
+                    existing.latitude != lat or
+                    existing.longitude != lon or
+                    existing.difficulty != diff or
+                    existing.surf_forecast_name != sfn
+                )
+                if changed:
+                    await update_spot(
+                        session,
+                        existing.id,
+                        SpotUpdate(
+                            latitude=lat,
+                            longitude=lon,
+                            difficulty=diff,
+                            surf_forecast_name=sfn,
+                        ),
+                    )
+                    results[name] = "updated"
+                else:
+                    results[name] = "existing"
                 continue
+
             await create_spot(
                 session,
-                name=spot["name"],
-                lat=spot.get("lat"),
-                lon=spot.get("lon"),
-                difficulty=spot.get("difficulty"),
-                surf_forecast_name=spot.get("surf_forecast_name"),
+                name=name,
+                lat=lat,
+                lon=lon,
+                difficulty=diff,
+                surf_forecast_name=sfn,
             )
-            results[spot["name"]] = "created"
+            results[name] = "created"
     return results
 
 
