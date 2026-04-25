@@ -7,6 +7,40 @@
 
 A comprehensive surf session tracking application built with FastAPI that helps surfers log their sessions, track conditions, and discover new surf spots.
 
+<details>
+<summary>📸 <strong>View Screenshots</strong></summary>
+
+<blockquote>
+<details>
+<summary>💻 <strong>Desktop Screenshots</strong></summary>
+<br>
+<p align="center">
+  <img src="screenshots/dashboard.png" width="800"><br><em>Dashboard</em>
+</p>
+<p align="center">
+  <img src="screenshots/sessions.png" width="800"><br><em>Sessions</em>
+</p>
+<p align="center">
+  <img src="screenshots/spots_map.png" width="800"><br><em>Spots Map</em>
+</p>
+</details>
+
+<details>
+<summary>📱 <strong>Mobile Screenshots</strong></summary>
+<br>
+<p align="center">
+  <img src="screenshots/mobile/dashboard.png" height="400">
+  <img src="screenshots/mobile/sessions_wide.png" height="400">
+  <img src="screenshots/mobile/spots.png" height="400">
+  <img src="screenshots/mobile/surfboards.png" height="400">
+</p>
+</details>
+</blockquote>
+
+</details>
+
+
+
 ## Table of Contents
 
 - [Features](#features)
