@@ -18,6 +18,8 @@ server {
     listen __LISTEN_PORT__;
     server_name _;
 
+    resolver __DNS_RESOLVER__ valid=10s;
+
     root /usr/share/nginx/html;
     index index.html;
 
@@ -26,12 +28,16 @@ server {
     }
 
     location /api/ {
-        proxy_pass         __BACKEND_URL__;
+        set $backend __BACKEND_URL__;
+        proxy_pass         $backend;
         proxy_set_header   Host $http_host;
         proxy_set_header   X-Real-IP $remote_addr;
         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
         proxy_set_header   X-Forwarded-Prefix /api;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout    30s;
+        proxy_read_timeout    30s;
     }
 }
 EOF
@@ -48,9 +54,11 @@ RUN cat > /docker-entrypoint-custom.sh <<'SCRIPT'
 set -e
 LISTEN_PORT="${PORT:-80}"
 API_URL="${BACKEND_URL:-http://backend:8000}"
+DNS_RESOLVER=$(grep -m1 '^nameserver' /etc/resolv.conf | awk '{print $2}')
 
-# Generate nginx config
-sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g; s|__BACKEND_URL__|${API_URL}|g" \
+echo "nginx: using DNS resolver ${DNS_RESOLVER}"
+
+sed "s|__LISTEN_PORT__|${LISTEN_PORT}|g; s|__BACKEND_URL__|${API_URL}|g; s|__DNS_RESOLVER__|${DNS_RESOLVER}|g" \
     /etc/nginx/nginx-template.conf > /etc/nginx/conf.d/default.conf
 
 echo "nginx: listening on port ${LISTEN_PORT}, routing /api/ to ${API_URL}"
