@@ -55,6 +55,10 @@ set -e
 LISTEN_PORT="${PORT:-80}"
 API_URL="${BACKEND_URL:-http://backend:8000}"
 DNS_RESOLVER=$(grep -m1 '^nameserver' /etc/resolv.conf | awk '{print $2}')
+# nginx requires IPv6 addresses wrapped in brackets
+if echo "$DNS_RESOLVER" | grep -q ':'; then
+    DNS_RESOLVER="[${DNS_RESOLVER}]"
+fi
 
 echo "nginx: using DNS resolver ${DNS_RESOLVER}"
 
