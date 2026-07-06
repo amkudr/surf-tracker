@@ -18,8 +18,8 @@ class SurfScraper:
         # Initialize Playwright and launch the browser
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
-            headless=True, # Run in headless mode for server environments
-            args=["--disable-blink-features=AutomationControlled"]
+            headless=True,  # Run in headless mode for server environments
+            args=["--disable-blink-features=AutomationControlled"],
         )
 
     async def stop(self):
@@ -55,8 +55,8 @@ class SurfScraper:
 
             try:
                 await page.wait_for_timeout(2500)
-                if await page.locator('.forecast-table-days__button').count() > 0:
-                    await page.click('.forecast-table-days__button')
+                if await page.locator(".forecast-table-days__button").count() > 0:
+                    await page.click(".forecast-table-days__button")
                     await page.wait_for_timeout(2000)
             except Exception as e:
                 logger.warning("interaction_failed", extra={"url": url, "error": str(e)})
@@ -82,19 +82,18 @@ class SurfScraper:
             return {"forecasts": [], "tides": []}
 
         def get_row_by_data_name(row_name: str):
-            return table.select_one(f'tr[data-row-name="{row_name}"]')
+            return table.select_one(f'tr[data-row="{row_name}"]')
 
         # 2. Locate key data rows
-        time_row = table.find("tr", class_="forecast-table-time")
-        day_row = table.find("tr", class_="forecast-table-days")
-        rating_row = table.find("tr", class_="forecast-table-rating")
+        time_row = get_row_by_data_name("time")
+        day_row = get_row_by_data_name("days")
+        rating_row = get_row_by_data_name("rating")
 
-        wh_row = get_row_by_data_name("wave-height")
-        period_row = get_row_by_data_name("periods")
-        energy_row = get_row_by_data_name("energy-maxenergy")
+        wh_row = get_row_by_data_name("swell")
+        energy_row = get_row_by_data_name("wave-energy")
         wind_row = get_row_by_data_name("wind")
-        high_tide_row = get_row_by_data_name("high-tide")
-        low_tide_row = get_row_by_data_name("low-tide")
+        high_tide_row = get_row_by_data_name("tide-high")
+        low_tide_row = get_row_by_data_name("tide-low")
 
         if not all([time_row, wh_row, wind_row]):
             return {"forecasts": [], "tides": []}
@@ -102,7 +101,6 @@ class SurfScraper:
         # 3. Extract cells from rows
         time_cells = time_row.find_all("td")
         wh_cells = wh_row.find_all("td")
-        period_cells = period_row.find_all("td") if period_row else []
         energy_cells = energy_row.find_all("td") if energy_row else []
         wind_cells = wind_row.find_all("td")
         rating_cells = rating_row.find_all("td") if rating_row else []
@@ -165,11 +163,9 @@ class SurfScraper:
                             i,
                         )
                         continue
-                    extracted_tides.append({
-                        "timestamp": timestamp,
-                        "height": height_val,
-                        "tide_type": tide_type
-                    })
+                    extracted_tides.append(
+                        {"timestamp": timestamp, "height": height_val, "tide_type": tide_type}
+                    )
             return extracted_tides
 
         high_tides = build_tide_list(tide_high_cells, "HIGH")
@@ -196,57 +192,71 @@ class SurfScraper:
                     )
                     continue
 
-                # 6b. Extract Wave Height and Direction
-                wh_text = wh_cells[i].get_text(strip=True) if i < len(wh_cells) else ""
-                wh_match = re.search(r"(\d+(\.\d+)?)", wh_text)
+                # 6b. Extract Wave Height, Direction and Period
+                wh_td = wh_cells[i] if i < len(wh_cells) else None
                 wave_height = None
                 wave_direction = ""
-                if wh_match:
-                    wave_height = float(wh_match.group(1))
-                    wave_direction = wh_text.replace(wh_match.group(1), "").strip()
+                period_value = None
 
-                # 6c. Extract Period
-                period_text = period_cells[i].get_text(strip=True) if i < len(period_cells) else ""
-                period_value = self._safe_float(period_text)
+                if wh_td:
+                    container = wh_td.find("div", class_="forecast-table__container--swell")
+                    if container:
+                        height_div = container.find("div", class_="swell-icon")
+                        if height_div and height_div.get("data-height"):
+                            wave_height = float(height_div.get("data-height"))
+
+                        divs = container.find_all("div", recursive=False)
+                        if len(divs) >= 2:
+                            wave_direction = divs[1].get_text(strip=True)
+
+                        period_div = container.find("div", class_="forecast-table__swell-period")
+                        if period_div:
+                            period_value = self._safe_float(period_div.get_text(strip=True))
 
                 # 6d. Extract Energy
                 energy_text = energy_cells[i].get_text(strip=True) if i < len(energy_cells) else ""
                 energy_value = self._safe_float(energy_text)
 
                 # 6e. Extract Wind Speed and Direction
-                wind_text = wind_cells[i].get_text(strip=True) if i < len(wind_cells) else ""
-                wind_match = re.search(r"(\d+)", wind_text)
+                wind_td = wind_cells[i] if i < len(wind_cells) else None
                 wind_speed = None
                 wind_direction = ""
-                if wind_match:
-                    wind_speed = float(wind_match.group(1))
-                    wind_direction = wind_text.replace(wind_match.group(1), "").strip()
+                if wind_td:
+                    wind_text = wind_td.get_text(separator=" ", strip=True)
+                    wind_match = re.search(r"(\d+)", wind_text)
+                    if wind_match:
+                        wind_speed = float(wind_match.group(1))
+                        wind_direction = wind_text.replace(wind_match.group(1), "").strip()
 
                 # 6f. Extract Rating
                 rating_text = rating_cells[i].get_text(strip=True) if i < len(rating_cells) else ""
                 rating = int(rating_text) if rating_text.isdigit() else 0
 
-                forecasts.append({
-                    "timestamp": timestamp,
-                    "wave_height": wave_height,
-                    "wave_direction": wave_direction,
-                    "period": period_value,
-                    "energy": energy_value,
-                    "wind_speed": wind_speed,
-                    "wind_direction": wind_direction,
-                    "rating": rating
-                })
+                forecasts.append(
+                    {
+                        "timestamp": timestamp,
+                        "wave_height": wave_height,
+                        "wave_direction": wave_direction,
+                        "period": period_value,
+                        "energy": energy_value,
+                        "wind_speed": wind_speed,
+                        "wind_direction": wind_direction,
+                        "rating": rating,
+                    }
+                )
             except Exception as e:
-                logger.error("parse_column_failed", extra={"column": i, "error": str(e)}, exc_info=e)
+                logger.error(
+                    "parse_column_failed", extra={"column": i, "error": str(e)}, exc_info=e
+                )
                 continue
 
         return {"forecasts": forecasts, "tides": all_tides}
 
     def _convert_to_24h(self, time_str: str) -> str:
-        # Helper to convert "6PM" or "6:00PM" to "18:00"
+        # Helper to convert "6PM", "6:00PM", or "6 PM" to "18:00"
         if not time_str:
             return ""
-        cleaned = time_str.strip().upper()
+        cleaned = time_str.strip().upper().replace(" ", "")
         try:
             dt = datetime.strptime(cleaned, "%I:%M%p")
             return dt.strftime("%H:%M")
@@ -267,7 +277,7 @@ class SurfScraper:
         try:
             parts = time_str.split()
             day_num = int(parts[1])
-            time_parts = parts[2].split(':')
+            time_parts = parts[2].split(":")
             hour = int(time_parts[0])
             minute = int(time_parts[1])
 
@@ -285,6 +295,7 @@ class SurfScraper:
         except Exception as e:
             logger.info(
                 "Timestamp parse failed, row will be skipped (time_str=%r, error=%s)",
-                time_str, e,
+                time_str,
+                e,
             )
             return None

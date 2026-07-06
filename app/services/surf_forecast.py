@@ -1,4 +1,3 @@
-
 import logging
 import re
 from datetime import datetime, timedelta
@@ -11,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models import Forecast
 
 logger = logging.getLogger(__name__)
+
 
 class SurfForecastService:
     def __init__(self, db: Session):
@@ -46,59 +46,55 @@ class SurfForecastService:
 
         forecasts = []
 
-        # Find the basic 6-day table
-        table = soup.find("table", class_="forecast-table__basic")
+        # The site changed its UI. It now uses a different class for the table and data-row attributes.
+        table = soup.find("table", class_="forecast-table__table--content")
         if not table:
-            logger.warning("Could not find basic forecast table.")
+            logger.warning("Could not find forecast table.")
             return []
 
-        # Find the row with dates/days to locate "today" columns
-        # Note: This is simplified. Robust parsing requires mapping columns to timestamps carefully.
-        # For this demo, we will try to grab the first few columns if they correspond to today.
-        # Usually each day has 3 columns (AM, PM, Night) or similar (3-hourly steps).
+        swell_row = table.find("tr", attrs={"data-row": "swell"})
+        energy_row = table.find("tr", attrs={"data-row": "wave-energy"})
+        rating_row = table.find("tr", attrs={"data-row": "rating"})
 
-        # For the demo, let's extract what we can from the first day block.
-        # Ideally we find the 'data-date' or similar attributes.
+        if not swell_row or not energy_row or not rating_row:
+            logger.warning("Could not find all required rows (swell, energy, rating).")
+            return []
 
-        # Let's target the rows:
-        # wave-height
-        # period
-        # wind
-        # energy
-
-        # NOTE: This is a fragile scraper. Changes in class names will break it.
-        # We will iterate through columns for the first day.
-
-        # Attempt to find the "Time" row to establish timestamps.
-        # Simplified: We will assume the API returns standard 3-hour blocks starting from now/today.
-        # But actually, let's try to be a bit smarter.
-
-        # Locate the table cells for wave height
-        wave_cells = table.find_all("td", class_="forecast-table__cell--wave-height")
-        period_cells = table.find_all("td", class_="forecast-table__cell--period")
-        energy_cells = table.find_all("td", class_="forecast-table__cell--energy")
-        rating_cells = table.find_all("td", class_="forecast-table__cell--rating")
+        swell_cells = swell_row.find_all("td")
+        energy_cells = energy_row.find_all("td")
+        rating_cells = rating_row.find_all("td")
 
         # Assume today is covered by the first 3-8 cells depending on time of day.
         # Let's just grab the first 3 for the demo to show it works.
         today = datetime.now().date()
-        base_time = datetime(today.year, today.month, today.day, 6, 0, 0) # Fake start time 6 AM
+        base_time = datetime(today.year, today.month, today.day, 6, 0, 0)  # Fake start time 6 AM
 
-        limit = 3 # Grab 3 entries
+        limit = 3  # Grab 3 entries
 
-        for i in range(min(len(wave_cells), limit)):
+        # Ensure we don't go out of bounds
+        limit = min(limit, len(swell_cells), len(energy_cells), len(rating_cells))
+
+        for i in range(limit):
             f = Forecast(spot_id=spot_id)
-            f.timestamp = base_time + timedelta(hours=i*6) # Rough guess: 6 hour blocks often
+            f.timestamp = base_time + timedelta(hours=i * 6)  # Rough guess: 6 hour blocks often
+
+            swell_td = swell_cells[i]
 
             # Wave Height
-            # content can be like "1.5" or range
-            wh_text = wave_cells[i].get_text(strip=True)
-            f.wave_height_max = self._extract_float(wh_text)
-            f.wave_height_min = f.wave_height_max # Simplified
+            height_div = swell_td.find("div", class_="swell-icon")
+            if height_div and height_div.get("data-height"):
+                f.wave_height_max = float(height_div.get("data-height"))
+            else:
+                # Fallback to text parsing
+                f.wave_height_max = self._extract_float(swell_td.get_text())
+            f.wave_height_min = f.wave_height_max  # Simplified
 
             # Period
-            p_text = period_cells[i].get_text(strip=True)
-            f.period = self._extract_float(p_text)
+            period_div = swell_td.find("div", class_="forecast-table__swell-period")
+            if period_div:
+                f.period = self._extract_float(period_div.get_text(strip=True))
+            else:
+                f.period = None
 
             # Energy
             e_text = energy_cells[i].get_text(strip=True)
